@@ -12,4 +12,8 @@ const paymentSchema = new mongoose.Schema({
   verifiedAt: Date,
 }, { timestamps: true })
 
+paymentSchema.index({ order: 1 })
+paymentSchema.index({ transactionId: 1 })
+paymentSchema.index({ status: 1 })
+
 export default mongoose.model('Payment', paymentSchema)

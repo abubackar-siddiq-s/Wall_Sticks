@@ -32,5 +32,10 @@ productSchema.pre('validate', function (next) {
 })
 
 productSchema.index({ name: 'text', description: 'text' })
+productSchema.index({ category: 1, active: 1 })
+productSchema.index({ price: 1 })
+productSchema.index({ trending: 1, active: 1 })
+productSchema.index({ bestSeller: 1, active: 1 })
+productSchema.index({ createdAt: -1 })
 
 export default mongoose.model('Product', productSchema)

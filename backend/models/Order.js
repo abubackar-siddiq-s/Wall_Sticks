@@ -52,4 +52,8 @@ const orderSchema = new mongoose.Schema({
   }],
 }, { timestamps: true })
 
+orderSchema.index({ 'shipping.phone': 1 })
+orderSchema.index({ status: 1 })
+orderSchema.index({ createdAt: -1 })
+
 export default mongoose.model('Order', orderSchema)

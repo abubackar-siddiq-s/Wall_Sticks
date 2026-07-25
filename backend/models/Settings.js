@@ -19,6 +19,17 @@ const settingsSchema = new mongoose.Schema({
 
   pickupAddress: String,
   pickupTime: String,
+  sizePrices: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {
+      A5: 259,
+      A4: 319,
+      A3: 399,
+      '12x18': 499,
+      '18x24': 699,
+      '24x36': 997,
+    },
+  },
 }, { timestamps: true })
 
 export default mongoose.model('Settings', settingsSchema)
