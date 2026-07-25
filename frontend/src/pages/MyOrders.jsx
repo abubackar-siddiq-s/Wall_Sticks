@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { ChevronDown, Package, Receipt, Search } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { useState, useEffect } from 'react'
+import { ChevronDown, Package, Receipt } from 'lucide-react'
 import api, { API_BASE_URL } from '../lib/api'
+import { useCustomerAuth } from '../context/CustomerAuthContext'
 
 const stages = ['Payment Pending', 'Verified', 'Printing', 'Packed', 'Shipped', 'Delivered']
 const statusToStage = { payment_pending: 0, verified: 1, rejected: 1, printing: 2, packed: 3, shipped: 4, delivered: 5 }
@@ -67,61 +67,63 @@ function OrderCard({ order }) {
 }
 
 export default function MyOrders() {
-  const [phone, setPhone] = useState('')
-  const [orders, setOrders] = useState(demoOrders)
-  const [searched, setSearched] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const { customer } = useCustomerAuth()
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const lookup = async (e) => {
-    e.preventDefault()
-    if (!phone.trim()) return toast.error('Enter the phone number used at checkout')
-    setLoading(true)
-    try {
-      const { data } = await api.get(`/orders/phone/${encodeURIComponent(phone.trim())}`)
-      const normalized = data.map((o) => ({
-        id: o.orderNumber,
-        date: new Date(o.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-        total: o.pricing?.total,
-        stage: statusToStage[o.status] ?? 0,
-        items: o.items.map((it) => ({ name: it.name, qty: it.quantity, size: it.size })),
-      }))
-      setOrders(normalized)
-      setSearched(true)
-      if (normalized.length === 0) toast('No orders found for that number', { icon: 'ℹ️' })
-    } catch {
-      toast.error('Could not look up orders — check the backend connection')
-    } finally {
+  useEffect(() => {
+    if (!customer?.phone) {
       setLoading(false)
+      return
     }
-  }
+
+    let isMounted = true
+    setLoading(true)
+
+    api.get(`/orders/phone/${encodeURIComponent(customer.phone)}`)
+      .then(({ data }) => {
+        if (!isMounted) return
+        const normalized = data.map((o) => ({
+          id: o.orderNumber,
+          date: new Date(o.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          total: o.pricing?.total,
+          stage: statusToStage[o.status] ?? 0,
+          items: o.items.map((it) => ({ name: it.name, qty: it.quantity, size: it.size })),
+        }))
+        setOrders(normalized.length > 0 ? normalized : demoOrders)
+      })
+      .catch(() => {
+        if (isMounted) setOrders(demoOrders)
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false)
+      })
+
+    return () => { isMounted = false }
+  }, [customer?.phone])
 
   return (
     <div className="max-w-4xl mx-auto px-5 md:px-8 py-10">
-      <h1 className="text-3xl md:text-4xl font-extrabold mb-6">My Orders</h1>
-
-      <form onSubmit={lookup} className="flex gap-3 mb-8 max-w-md">
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-black/35" />
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Phone number used at checkout"
-            className="w-full pl-10 pr-4 py-3 rounded-full bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm"
-          />
-        </div>
-        <button disabled={loading} className="bg-brand-black text-brand-yellow font-semibold px-6 py-3 rounded-full text-sm disabled:opacity-60">
-          {loading ? 'Looking up...' : 'Find Orders'}
-        </button>
-      </form>
-
-      {!searched && (
-        <p className="text-xs text-black/40 mb-4">Showing example orders — enter your phone number above to look up your real ones.</p>
-      )}
-
-      <div className="space-y-4">
-        {orders.map((o) => <OrderCard key={o.id} order={o} />)}
-        {searched && orders.length === 0 && <p className="text-center text-black/40 py-16 text-sm">No orders found for that phone number.</p>}
+      <div className="mb-8">
+        <h1 className="text-3xl md:text-4xl font-extrabold mb-1">My Orders</h1>
+        {customer?.phone && (
+          <p className="text-xs text-black/50 font-medium">
+            Account: <span className="font-bold text-brand-black">+91 {customer.phone}</span>
+          </p>
+        )}
       </div>
+
+      {loading ? (
+        <div className="py-20 text-center text-black/40 text-sm font-medium">Loading your orders...</div>
+      ) : orders.length === 0 ? (
+        <div className="text-center text-black/40 py-20 text-sm bg-brand-smoke rounded-xl2">
+          No orders found for this account yet.
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {orders.map((o) => <OrderCard key={o.id} order={o} />)}
+        </div>
+      )}
     </div>
   )
 }

@@ -2,10 +2,10 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import api from '../lib/api'
 import { getSessionId } from '../lib/session'
+import { useCustomerAuth } from './CustomerAuthContext'
 
 const CartContext = createContext(null)
 
-// Converts our local cart-item shape into the shape backend/models/Cart.js expects.
 const toServerItem = (i) => ({
   product: i.product?.isCustom ? undefined : i.product?._id,
   customImage: i.product?.isCustom ? { url: i.product.images?.[0] } : undefined,
@@ -14,7 +14,6 @@ const toServerItem = (i) => ({
   quantity: i.quantity, notes: i.notes, priceAtAdd: i.product?.price,
 })
 
-// Converts a server cart item (with a populated `product`) back into our local shape.
 const fromServerItem = (i) => ({
   key: `${i.product?._id || 'custom'}-${i.size || ''}-${i.finish || ''}-${i.border || ''}`,
   product: i.isCustom
@@ -24,36 +23,58 @@ const fromServerItem = (i) => ({
 })
 
 export function CartProvider({ children }) {
-  const [items, setItems] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('pw_cart')) || [] } catch { return [] }
-  })
+  const { customer, isCustomerLoggedIn, openLoginModal } = useCustomerAuth()
+  
+  const getStorageKey = () => (customer ? `pw_cart_${customer.phone}` : null)
+
+  const [items, setItems] = useState([])
   const hydrated = useRef(false)
   const syncTimer = useRef(null)
 
-  // On mount: try to hydrate from the backend (cross-device persistence via the anonymous
-  // session ID). If the backend isn't reachable, we silently keep whatever was in localStorage.
+  // Reload cart whenever customer changes (log in / log out / switch account)
   useEffect(() => {
-    const sessionId = getSessionId()
+    const key = getStorageKey()
+    if (!key) {
+      setItems([])
+      return
+    }
+    try {
+      const saved = localStorage.getItem(key)
+      setItems(saved ? JSON.parse(saved) : [])
+    } catch {
+      setItems([])
+    }
+
+    const sessionId = customer?.phone || getSessionId()
     api.get(`/cart/${sessionId}`)
       .then(({ data }) => {
         if (data?.items?.length) setItems(data.items.map(fromServerItem))
       })
-      .catch(() => { /* offline / no backend yet — localStorage cart stands */ })
+      .catch(() => {})
       .finally(() => { hydrated.current = true })
-  }, [])
+  }, [customer?.phone])
 
+  // Sync to local storage & backend
   useEffect(() => {
-    localStorage.setItem('pw_cart', JSON.stringify(items))
-    if (!hydrated.current) return // don't push the pre-hydration local snapshot back over live server data
+    const key = getStorageKey()
+    if (!key) return
+    localStorage.setItem(key, JSON.stringify(items))
+    if (!hydrated.current) return
     clearTimeout(syncTimer.current)
     syncTimer.current = setTimeout(() => {
-      const sessionId = getSessionId()
-      api.put(`/cart/${sessionId}`, { items: items.map(toServerItem) }).catch(() => { /* best-effort sync */ })
+      const sessionId = customer?.phone || getSessionId()
+      api.put(`/cart/${sessionId}`, { items: items.map(toServerItem) }).catch(() => {})
     }, 600)
     return () => clearTimeout(syncTimer.current)
-  }, [items])
+  }, [items, customer?.phone])
 
   const addToCart = (product, options = {}) => {
+    if (!isCustomerLoggedIn) {
+      toast('Please login with your mobile number to add items to cart', { icon: '📱' })
+      openLoginModal()
+      return
+    }
+
     const size = options.size || product.sizes?.[2] || 'A3'
     const finish = options.finish || product.finishes?.[0] || 'Premium Matte'
     const border = options.border || 'White'
@@ -80,11 +101,13 @@ export function CartProvider({ children }) {
 
   const clearCart = () => {
     setItems([])
-    const sessionId = getSessionId()
+    const key = getStorageKey()
+    if (key) localStorage.removeItem(key)
+    const sessionId = customer?.phone || getSessionId()
     api.delete(`/cart/${sessionId}`).catch(() => {})
   }
 
-  const subtotal = items.reduce((sum, i) => sum + (i.product.price * i.quantity), 0)
+  const subtotal = items.reduce((sum, i) => sum + ((i.product?.price || 0) * i.quantity), 0)
 
   return (
     <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, subtotal }}>

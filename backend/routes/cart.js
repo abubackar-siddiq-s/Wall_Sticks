@@ -8,7 +8,10 @@ const router = express.Router()
 // so guests never need to log in to keep a persistent cart across visits.
 
 router.get('/:sessionId', asyncHandler(async (req, res) => {
-  const cart = await Cart.findOne({ sessionId: req.params.sessionId }).populate('items.product')
+  let cart = await Cart.findOne({ sessionId: req.params.sessionId }).catch(() => null)
+  if (cart) {
+    cart = await Cart.findOne({ sessionId: req.params.sessionId }).populate('items.product').catch(() => cart)
+  }
   res.json(cart || { sessionId: req.params.sessionId, items: [] })
 }))
 

@@ -4,7 +4,8 @@ import { products as mockProducts } from '../data/mockData'
 // Backend shape is { products, total, page, pages } — normalize to a plain array either way.
 export function useProducts(query = '') {
   const { data, loading, isLive } = useApiData(`/products${query}`, { products: mockProducts }, [query])
-  const products = Array.isArray(data) ? data : (data?.products || mockProducts)
+  const raw = Array.isArray(data) ? data : (data?.products ?? [])
+  const products = raw.length > 0 ? raw : mockProducts
   return { products, loading, isLive }
 }
 

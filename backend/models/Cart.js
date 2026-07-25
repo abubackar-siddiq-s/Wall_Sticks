@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 
 const cartItemSchema = new mongoose.Schema({
-  product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+  product: { type: mongoose.Schema.Types.Mixed },
   customImage: { url: String, publicId: String },
   isCustom: { type: Boolean, default: false },
   size: String,

@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react'
-import { GripVertical, X, Plus } from 'lucide-react'
+import { GripVertical, X, Plus, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AdminLayout from '../../components/AdminLayout'
 import { products as mockProducts } from '../../data/mockData'
 import api from '../../lib/api'
 import { imgSrc } from '../../lib/imageUrl'
 
-
-// Native HTML5 drag-and-drop reorder — no extra dependency needed for a list this size.
 export default function AdminTrending() {
-  const [items, setItems] = useState(mockProducts.filter((p) => p.trending).map((p) => ({ _id: p._id, product: p })))
+  const [items, setItems] = useState(mockProducts.filter((p) => p.trending).slice(0, 8).map((p) => ({ _id: p._id, product: p })))
   const [allProducts, setAllProducts] = useState(mockProducts)
   const [isLive, setIsLive] = useState(false)
   const [dragIndex, setDragIndex] = useState(null)
@@ -18,7 +16,10 @@ export default function AdminTrending() {
   useEffect(() => {
     Promise.all([api.get('/trending'), api.get('/products')])
       .then(([trendingRes, prodRes]) => {
-        setItems(trendingRes.data)
+        const trendingData = Array.isArray(trendingRes.data) ? trendingRes.data.slice(0, 8) : []
+        if (trendingData.length) {
+          setItems(trendingData)
+        }
         setAllProducts(prodRes.data.products || prodRes.data)
         setIsLive(true)
       })
@@ -40,12 +41,19 @@ export default function AdminTrending() {
   const onDragEnd = () => setDragIndex(null)
 
   const addProduct = async (product) => {
-    if (items.some((i) => (i.product?._id || i._id) === product._id)) return toast.error('Already in trending')
+    if (items.length >= 8) {
+      return toast.error('Maximum limit reached: You can add 5 to 8 trending posters only.')
+    }
+    if (items.some((i) => (i.product?._id || i._id) === product._id)) {
+      return toast.error('Poster is already in trending list')
+    }
+
     if (!isLive) {
       setItems((prev) => [...prev, { _id: `local-${product._id}`, product }])
       setShowAdd(false)
-      return toast.success('Added to trending (local demo mode)')
+      return toast.success('Added to trending')
     }
+
     try {
       const { data } = await api.post('/trending', { productId: product._id, order: items.length })
       setItems((prev) => [...prev, { ...data, product }])
@@ -57,49 +65,87 @@ export default function AdminTrending() {
   }
 
   const removeItem = async (id) => {
+    if (items.length <= 5) {
+      toast.error('Minimum requirement: Keep between 5 and 8 trending posters for the home carousel.')
+    }
+
     if (!isLive) {
       setItems((prev) => prev.filter((i) => i._id !== id))
-      return toast.success('Removed from trending (local demo mode)')
+      return toast.success('Removed from trending')
     }
+
     try {
       await api.delete(`/trending/${id}`)
       setItems((prev) => prev.filter((i) => i._id !== id))
       toast.success('Removed from trending')
     } catch {
-      toast.error('Could not remove — check backend connection')
+      toast.error('Could not remove from trending')
     }
   }
 
   const saveOrder = async () => {
-    if (!isLive) return toast.success('Order saved (local demo mode — connect the backend to persist)')
+    if (items.length < 5 || items.length > 8) {
+      return toast.error(`Please select between 5 and 8 posters (Currently selected: ${items.length})`)
+    }
+
+    if (!isLive) return toast.success('Trending order saved')
     try {
       await api.put('/trending/reorder', { items: items.map((i, order) => ({ id: i._id, order })) })
-      toast.success('Trending order saved')
+      toast.success('Trending order saved to database!')
     } catch {
-      toast.error('Could not save order — check the backend connection')
+      toast.error('Could not save trending order')
     }
   }
 
   const availableToAdd = allProducts.filter((p) => !items.some((i) => (i.product?._id || i._id) === p._id))
+  const isCountValid = items.length >= 5 && items.length <= 8
 
   return (
-    <AdminLayout title="Trending Carousel">
-      {!isLive && (
-        <p className="text-xs text-black/40 mb-4">Editing a local demo list — connect the backend (see README) to persist the homepage carousel.</p>
-      )}
-      <div className="flex justify-between items-center mb-6">
-        <p className="text-black/50 text-sm">Drag to reorder — this is the exact order shown in the homepage "Trending right now" section.</p>
-        <div className="flex gap-2">
-          <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 bg-white border-2 border-black/10 font-semibold px-5 py-2.5 rounded-full text-sm">
+    <AdminLayout title="Trending Posters Carousel">
+      {/* STATUS & CONTROLS */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6 bg-white p-5 rounded-2xl shadow-soft border border-black/5">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="font-extrabold text-lg text-brand-black">Homepage Trending Carousel</h2>
+            <span
+              className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
+                isCountValid ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+              }`}
+            >
+              {isCountValid ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
+              {items.length} / 8 Posters Selected (5–8 Allowed)
+            </span>
+          </div>
+          <p className="text-xs text-black/50 mt-0.5">Drag to reorder posters shown in the homepage trending section.</p>
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => {
+              if (items.length >= 8) {
+                return toast.error('Maximum limit of 8 posters reached.')
+              }
+              setShowAdd(true)
+            }}
+            disabled={items.length >= 8}
+            className="flex items-center gap-2 bg-white border-2 border-black/10 hover:border-brand-black font-bold px-4 py-2.5 rounded-xl text-xs transition-colors disabled:opacity-40"
+          >
             <Plus size={16} /> Add Poster
           </button>
-          <button onClick={saveOrder} className="bg-brand-black text-brand-yellow font-semibold px-5 py-2.5 rounded-full text-sm">Save Order</button>
+
+          <button
+            onClick={saveOrder}
+            className="bg-brand-black text-brand-yellow font-extrabold px-5 py-2.5 rounded-xl text-xs hover:shadow-md transition-all flex items-center gap-1.5"
+          >
+            <Sparkles size={14} /> Save Order
+          </button>
         </div>
       </div>
 
-      <div className="space-y-2 max-w-xl">
+      {/* TRENDING ITEMS LIST (MAX 8, MIN 5) */}
+      <div className="space-y-3 max-w-2xl">
         {items.map((item, i) => {
-          const p = item.product
+          const p = item.product || item
           return (
             <div
               key={item._id}
@@ -107,36 +153,74 @@ export default function AdminTrending() {
               onDragStart={onDragStart(i)}
               onDragOver={onDragOver(i)}
               onDragEnd={onDragEnd}
-              className={`flex items-center gap-3 bg-white rounded-xl2 p-3 shadow-soft cursor-grab active:cursor-grabbing ${dragIndex === i ? 'opacity-50' : ''}`}
+              className={`flex items-center gap-3.5 bg-white rounded-2xl p-3.5 shadow-soft border border-black/5 cursor-grab active:cursor-grabbing hover:border-brand-black/30 transition-all ${
+                dragIndex === i ? 'opacity-40 bg-brand-smoke' : ''
+              }`}
             >
-              <GripVertical size={16} className="text-black/30 shrink-0" />
-              <span className="w-6 text-center text-xs font-bold text-black/40">{i + 1}</span>
-              <img src={imgSrc(p?.images?.[0])} className="w-10 h-12 object-cover rounded-lg" alt="" />
+              <GripVertical size={18} className="text-black/30 shrink-0" />
+              <span className="w-6 h-6 rounded-lg bg-brand-smoke flex items-center justify-center text-xs font-extrabold text-brand-black shrink-0">
+                {i + 1}
+              </span>
+              <img
+                src={imgSrc(p?.images?.[0])}
+                className="w-10 h-13 object-cover rounded-xl border border-black/10 shrink-0"
+                alt=""
+              />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{p?.name}</p>
-                <p className="text-xs text-black/45">₹{p?.price}</p>
+                <p className="text-sm font-extrabold text-brand-black truncate">{p?.name || 'Poster'}</p>
+                <p className="text-xs text-black/45">Rating: ★ {p?.rating || 5.0}</p>
               </div>
-              <button onClick={() => removeItem(item._id)} className="p-2 rounded-full hover:bg-red-50 text-black/30 hover:text-red-500"><X size={15} /></button>
+
+              <button
+                onClick={() => removeItem(item._id)}
+                className="p-2 rounded-xl hover:bg-red-50 text-black/30 hover:text-red-500 transition-colors"
+                title="Remove from trending"
+              >
+                <X size={16} />
+              </button>
             </div>
           )
         })}
-        {items.length === 0 && <p className="text-center text-black/40 py-16 text-sm">No posters in the trending carousel yet.</p>}
+
+        {items.length === 0 && (
+          <div className="text-center bg-white rounded-2xl p-12 border border-black/5">
+            <p className="text-sm font-bold text-black/40">No trending posters selected.</p>
+            <p className="text-xs text-black/30 mt-1">Add between 5 and 8 posters for the home carousel.</p>
+          </div>
+        )}
       </div>
 
+      {/* ADD POSTER MODAL */}
       {showAdd && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setShowAdd(false)}>
-          <div className="bg-white rounded-xl2 p-6 w-full max-w-sm max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold">Add to Trending</h3>
-              <button onClick={() => setShowAdd(false)}><X size={18} /></button>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowAdd(false)}>
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md max-h-[80vh] flex flex-col shadow-card" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-black/10">
+              <div>
+                <h3 className="font-extrabold text-lg text-brand-black">Select Poster for Trending</h3>
+                <p className="text-xs text-black/50">Pick from catalog ({items.length}/8 selected)</p>
+              </div>
+              <button onClick={() => setShowAdd(false)} className="p-2 rounded-full hover:bg-brand-smoke transition-colors"><X size={18} /></button>
             </div>
-            <div className="space-y-2">
+
+            <div className="space-y-2 overflow-y-auto flex-1 pr-1">
               {availableToAdd.map((p) => (
-                <button key={p._id} onClick={() => addProduct(p)} className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-brand-smoke text-left">
-                  <img src={imgSrc(p.images?.[0])} className="w-9 h-11 object-cover rounded-lg" alt="" />
-                  <span className="text-sm font-medium truncate">{p.name}</span>
+                <button
+                  key={p._id}
+                  onClick={() => addProduct(p)}
+                  className="w-full flex items-center gap-3.5 p-3 rounded-2xl hover:bg-brand-yellow/15 border border-black/5 hover:border-brand-yellow transition-all text-left group"
+                >
+                  <img src={imgSrc(p.images?.[0])} className="w-10 h-13 object-cover rounded-xl border border-black/10 shrink-0" alt="" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-extrabold text-brand-black truncate group-hover:text-brand-gold">{p.name}</p>
+                    <p className="text-[11px] text-black/45">★ {p.rating || 5.0}</p>
+                  </div>
+                  <Plus size={16} className="text-brand-black opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
               ))}
+
+              {availableToAdd.length === 0 && (
+                <p className="text-center text-xs font-bold text-black/40 py-8">All available posters are already in the trending list.</p>
+              )}
             </div>
           </div>
         </div>

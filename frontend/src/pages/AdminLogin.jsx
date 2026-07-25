@@ -31,7 +31,7 @@ export default function AdminLogin() {
           <Lock size={20} className="text-brand-black" />
         </div>
         <h1 className="text-2xl font-extrabold text-center mb-1">Admin Login</h1>
-        <p className="text-center text-black/45 text-sm mb-8">PosterWall admin dashboard</p>
+        <p className="text-center text-black/45 text-sm mb-8">WallSticks admin dashboard</p>
         <form onSubmit={submit} className="space-y-4">
           <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Admin email" className="w-full px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm" />
           <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="w-full px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm" />

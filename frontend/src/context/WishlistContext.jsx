@@ -2,28 +2,50 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import api from '../lib/api'
 import { getSessionId } from '../lib/session'
+import { useCustomerAuth } from './CustomerAuthContext'
 
 const WishlistContext = createContext(null)
 
 export function WishlistProvider({ children }) {
-  const [items, setItems] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('pw_wishlist')) || [] } catch { return [] }
-  })
-  const isLive = useRef(false)
+  const { customer, isCustomerLoggedIn, openLoginModal } = useCustomerAuth()
+
+  const getStorageKey = () => (customer ? `pw_wishlist_${customer.phone}` : null)
+
+  const [items, setItems] = useState([])
 
   useEffect(() => {
-    const sessionId = getSessionId()
+    const key = getStorageKey()
+    if (!key) {
+      setItems([])
+      return
+    }
+    try {
+      const saved = localStorage.getItem(key)
+      setItems(saved ? JSON.parse(saved) : [])
+    } catch {
+      setItems([])
+    }
+
+    const sessionId = customer?.phone || getSessionId()
     api.get(`/wishlist/${sessionId}`)
       .then(({ data }) => {
-        isLive.current = true
         if (data?.products?.length) setItems(data.products)
       })
-      .catch(() => { /* offline / no backend yet — localStorage wishlist stands */ })
-  }, [])
+      .catch(() => {})
+  }, [customer?.phone])
 
-  useEffect(() => { localStorage.setItem('pw_wishlist', JSON.stringify(items)) }, [items])
+  useEffect(() => {
+    const key = getStorageKey()
+    if (key) localStorage.setItem(key, JSON.stringify(items))
+  }, [items, customer?.phone])
 
   const toggleWishlist = (product) => {
+    if (!isCustomerLoggedIn) {
+      toast('Please login with your mobile number to save items to wishlist', { icon: '📱' })
+      openLoginModal()
+      return
+    }
+
     setItems((prev) => {
       const exists = prev.find((p) => p._id === product._id)
       if (exists) {
@@ -35,15 +57,15 @@ export function WishlistProvider({ children }) {
     })
 
     if (!product._id?.startsWith?.('custom-')) {
-      const sessionId = getSessionId()
-      api.post(`/wishlist/${sessionId}/toggle`, { productId: product._id }).catch(() => { /* best-effort sync */ })
+      const sessionId = customer?.phone || getSessionId()
+      api.post(`/wishlist/${sessionId}/toggle`, { productId: product._id }).catch(() => {})
     }
   }
 
   const isWishlisted = (id) => items.some((p) => p._id === id)
   const removeFromWishlist = (id) => {
     setItems((prev) => prev.filter((p) => p._id !== id))
-    const sessionId = getSessionId()
+    const sessionId = customer?.phone || getSessionId()
     api.post(`/wishlist/${sessionId}/toggle`, { productId: id }).catch(() => {})
   }
 

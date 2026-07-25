@@ -28,7 +28,7 @@ export default function About() {
         <p className="text-brand-gold font-bold text-xs tracking-widest uppercase mb-3">Our story</p>
         <h1 className="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">Built for people who take their walls seriously</h1>
         <p className="text-black/55 text-lg max-w-2xl mx-auto">
-          PosterWall started with a simple frustration: most poster printers treat every image the same, regardless of quality.
+          WallSticks started with a simple frustration: most poster printers treat every image the same, regardless of quality.
           We built a print process obsessed with color accuracy, paper weight, and finishing — so what you see is what hangs on your wall.
         </p>
       </section>

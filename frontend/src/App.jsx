@@ -3,6 +3,8 @@ import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ProtectedRoute from './components/ProtectedRoute'
+import CustomerProtectedRoute from './components/CustomerProtectedRoute'
+import MobileLoginModal from './components/MobileLoginModal'
 import PageLoader from './components/PageLoader'
 
 // Every route is its own chunk. This keeps the initial JS payload small — a first-time
@@ -25,13 +27,15 @@ const AdminLogin = lazy(() => import('./pages/AdminLogin'))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const AdminProducts = lazy(() => import('./pages/admin/AdminProducts'))
 const AdminTrending = lazy(() => import('./pages/admin/AdminTrending'))
+const AdminBestSellers = lazy(() => import('./pages/admin/AdminBestSellers'))
 const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'))
-const AdminMessages = lazy(() => import('./pages/admin/AdminMessages'))
+const AdminSizePricing = lazy(() => import('./pages/admin/AdminSizePricing'))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'))
 
 export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
+      <MobileLoginModal />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Admin routes render their own chrome (sidebar), so keep them outside Navbar/Footer */}
@@ -39,8 +43,9 @@ export default function App() {
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/products" element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />
           <Route path="/admin/trending" element={<ProtectedRoute><AdminTrending /></ProtectedRoute>} />
+          <Route path="/admin/best-sellers" element={<ProtectedRoute><AdminBestSellers /></ProtectedRoute>} />
           <Route path="/admin/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
-          <Route path="/admin/messages" element={<ProtectedRoute><AdminMessages /></ProtectedRoute>} />
+          <Route path="/admin/size-pricing" element={<ProtectedRoute><AdminSizePricing /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
 
           <Route path="*" element={
@@ -53,12 +58,12 @@ export default function App() {
                     <Route path="/shop" element={<Shop />} />
                     <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/create-your-own" element={<CreatePoster />} />
-                    <Route path="/cart" element={<Cart />} />
-                    <Route path="/wishlist" element={<Wishlist />} />
-                    <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/payment" element={<Payment />} />
+                    <Route path="/cart" element={<CustomerProtectedRoute><Cart /></CustomerProtectedRoute>} />
+                    <Route path="/wishlist" element={<CustomerProtectedRoute><Wishlist /></CustomerProtectedRoute>} />
+                    <Route path="/checkout" element={<CustomerProtectedRoute><Checkout /></CustomerProtectedRoute>} />
+                    <Route path="/payment" element={<CustomerProtectedRoute><Payment /></CustomerProtectedRoute>} />
                     <Route path="/order-success/:orderId" element={<OrderSuccess />} />
-                    <Route path="/my-orders" element={<MyOrders />} />
+                    <Route path="/my-orders" element={<CustomerProtectedRoute><MyOrders /></CustomerProtectedRoute>} />
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="*" element={<NotFound />} />

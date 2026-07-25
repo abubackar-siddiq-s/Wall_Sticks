@@ -56,7 +56,7 @@ router.get('/:orderNumber/receipt', asyncHandler(async (req, res) => {
 <body>
   <div class="header">
     <div>
-      <div class="brand">${escapeHtml(settings.businessName || 'PosterWall')}</div>
+      <div class="brand">${escapeHtml(settings.businessName || 'WallSticks')}</div>
       <div class="muted">${escapeHtml(settings.address || '')}</div>
     </div>
     <div style="text-align:right">
@@ -92,7 +92,7 @@ router.get('/:orderNumber/receipt', asyncHandler(async (req, res) => {
     <div class="grand"><span>Total</span><span>₹${order.pricing?.total ?? 0}</span></div>
   </div>
 
-  <div class="footer">Thank you for shopping with ${escapeHtml(settings.businessName || 'PosterWall')}. Questions? ${escapeHtml(settings.email || '')}</div>
+  <div class="footer">Thank you for shopping with ${escapeHtml(settings.businessName || 'WallSticks')}. Questions? ${escapeHtml(settings.email || '')}</div>
 </body>
 </html>`
 

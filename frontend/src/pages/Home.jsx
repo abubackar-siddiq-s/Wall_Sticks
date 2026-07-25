@@ -4,13 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Star, ShieldCheck, Truck, Sparkles } from 'lucide-react'
 import HeroFallback from '../components/HeroFallback'
 import ProductCard from '../components/ProductCard'
-import CategoryChip from '../components/CategoryChip'
 import Newsletter from '../components/Newsletter'
 import QuickViewModal from '../components/QuickViewModal'
 import ProductGridSkeleton from '../components/ProductGridSkeleton'
 import { reviews } from '../data/mockData'
 import { useProducts, useTrendingProducts } from '../hooks/useProducts'
-import { useCategories } from '../hooks/useCategories'
 import { useDeviceCapability } from '../hooks/useDeviceCapability'
 
 // The interactive Three.js/R3F hero is its own chunk — only fetched for visitors whose
@@ -27,7 +25,6 @@ export default function Home() {
   const [quickView, setQuickView] = useState(null)
   const { products, loading: productsLoading } = useProducts()
   const { products: trending, loading: trendingLoading } = useTrendingProducts()
-  const { categories } = useCategories()
   const { lite } = useDeviceCapability()
   const bestSellers = products.filter((p) => p.bestSeller).slice(0, 4)
   const featured = products.filter((p) => p.featured).slice(0, 6)
@@ -35,7 +32,8 @@ export default function Home() {
   return (
     <div>
       {/* HERO */}
-      <section className="relative min-h-[92vh] flex items-center overflow-hidden bg-white">
+      <section className="relative min-h-[80vh] lg:min-h-[92vh] py-16 lg:py-0 flex items-center overflow-hidden bg-white">
+        <div className="absolute top-0 right-0 w-72 h-72 lg:w-[500px] lg:h-[500px] bg-brand-yellow/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         {lite ? (
           <HeroFallback />
         ) : (
@@ -44,18 +42,15 @@ export default function Home() {
           </Suspense>
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/0 to-white pointer-events-none" />
-        <div className="relative max-w-7xl mx-auto px-5 md:px-8 w-full pointer-events-none">
+        <div className="relative z-10 max-w-7xl mx-auto px-5 md:px-8 w-full pointer-events-none">
           <motion.div initial="hidden" animate="show" variants={fadeUp} className="max-w-xl pointer-events-auto">
-            <span className="inline-flex items-center gap-2 bg-brand-yellow/15 text-brand-black text-xs font-bold px-3.5 py-1.5 rounded-full mb-6 border border-brand-yellow/30">
-              <Sparkles size={13} /> New drops every Friday
-            </span>
             <h1 className="text-5xl md:text-7xl font-extrabold leading-[0.95] tracking-tight mb-6">
               Walls worth
               <br />
               <span className="text-gradient-gold">looking twice</span> at.
             </h1>
-            <p className="text-black/55 text-lg mb-9 max-w-md">
-              Museum-grade posters, printed on premium archival paper. Upload your own art, or pick from hundreds of ready-to-hang designs.
+            <p className="text-black/60 text-lg mb-9 max-w-lg leading-relaxed">
+              Give your room an instant upgrade. Choose from hundreds of exclusive poster designs or print your custom art with pan-India fast delivery.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link to="/shop" className="group bg-brand-black text-brand-yellow font-bold px-7 py-4 rounded-full flex items-center gap-2 hover:shadow-glow transition-shadow">
@@ -71,7 +66,7 @@ export default function Home() {
       </section>
 
       {/* TRUST STRIP */}
-      <section className="max-w-7xl mx-auto px-5 md:px-8 -mt-4 md:mt-0 relative z-10">
+      {/* <section className="max-w-7xl mx-auto px-5 md:px-8 -mt-4 md:mt-0 relative z-10">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { icon: ShieldCheck, title: 'Archival-grade printing', sub: 'Fade-resistant for 75+ years' },
@@ -89,20 +84,7 @@ export default function Home() {
             </div>
           ))}
         </div>
-      </section>
-
-      {/* CATEGORIES */}
-      <section className="max-w-7xl mx-auto px-5 md:px-8 mt-24">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <p className="text-brand-gold font-bold text-xs tracking-widest uppercase mb-2">Browse</p>
-            <h2 className="text-3xl md:text-4xl font-extrabold">Shop by category</h2>
-          </div>
-        </div>
-        <div className="flex gap-6 overflow-x-auto pb-2 scrollbar-hide">
-          {categories.map((c) => <CategoryChip key={c.slug} category={c} />)}
-        </div>
-      </section>
+      </section> */}
 
       {/* TRENDING */}
       <section className="max-w-7xl mx-auto px-5 md:px-8 mt-24">
@@ -131,7 +113,7 @@ export default function Home() {
             <p className="text-brand-gold font-bold text-xs tracking-widest uppercase mb-3">Featured collection</p>
             <h3 className="text-3xl md:text-4xl font-extrabold mb-4 leading-tight">The Minimalist Edit</h3>
             <p className="text-black/55 mb-7 max-w-sm">Clean lines, quiet color palettes, and typography built for calm spaces.</p>
-            <Link to="/shop?category=minimal" className="inline-flex items-center gap-2 bg-brand-black text-brand-yellow font-bold px-6 py-3.5 rounded-full">
+            <Link to="/shop" className="inline-flex items-center gap-2 bg-brand-black text-brand-yellow font-bold px-6 py-3.5 rounded-full">
               Explore collection <ArrowRight size={16} />
             </Link>
           </div>
@@ -181,7 +163,6 @@ export default function Home() {
         </div>
       </section>
 
-      <Newsletter />
       <AnimatePresence>
         {quickView && <QuickViewModal product={quickView} onClose={() => setQuickView(null)} />}
       </AnimatePresence>

@@ -48,17 +48,15 @@ export const reviews = [
 ]
 
 export const settings = {
-  businessName: 'PosterWall',
-  ownerName: 'Abu',
-  phone: '+91 98765 43210',
-  whatsapp: '+91 98765 43210',
-  email: 'hello@posterwall.in',
-  instagram: '@posterwall.in',
-  address: '14, Cambridge Layout, Salem, Tamil Nadu, India',
-  businessHours: 'Mon–Sat, 10:00 AM – 7:00 PM',
-  upiId: 'posterwall@okhdfcbank',
+  businessName: 'WallSticks',
+  ownerName: 'Palani Kumar',
+  phone: '+91 88705 58436',
+  whatsapp: '+91 88705 58436',
+  email: 'wallsticks0319@gmail.com',
+  instagram: '@wallsticks',
+  address: 'Perundurai, Erode, Tamil Nadu, India',
+  upiId: 'wallsticks@okhdfcbank',
   courierCharge: 79,
   gstPercent: 0,
-  pickupAddress: '14, Cambridge Layout, Salem, Tamil Nadu',
-  pickupTime: 'Mon–Sat, 11 AM – 6 PM',
+  pickupAddress: 'Perundurai, Erode, Tamil Nadu',
 }

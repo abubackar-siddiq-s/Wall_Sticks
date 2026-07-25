@@ -8,13 +8,19 @@ export default function Footer() {
     <footer className="bg-brand-black text-white mt-24">
       <div className="max-w-7xl mx-auto px-5 md:px-8 py-16 grid grid-cols-2 md:grid-cols-4 gap-10">
         <div className="col-span-2 md:col-span-1">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="w-9 h-9 rounded-xl2 bg-brand-yellow flex items-center justify-center">
-              <span className="text-brand-black font-extrabold text-lg leading-none">P</span>
+          <div className="flex items-center gap-2.5 mb-4">
+            <img
+              src="/logo.jpeg"
+              alt="WallSticks Logo"
+              className="w-10 h-10 object-contain rounded-xl"
+              onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling.style.display = 'flex' }}
+            />
+            <span className="w-9 h-9 rounded-xl2 bg-brand-yellow hidden items-center justify-center">
+              <span className="text-brand-black font-extrabold text-lg leading-none">W</span>
             </span>
-            <span className="font-extrabold text-xl">PosterWall</span>
+            <span className="font-extrabold text-xl">WallSticks</span>
           </div>
-          <p className="text-white/50 text-sm leading-relaxed">Museum-grade prints for walls that mean something. Designed, printed, and packed with care.</p>
+          <p className="text-white/50 text-sm leading-relaxed">Cinematic Poster Designs</p>
           <div className="flex gap-3 mt-5">
             <a href={`https://instagram.com/${(settings.instagram || '').replace('@','')}`} className="p-2 rounded-full bg-white/10 hover:bg-brand-yellow hover:text-black transition-colors" aria-label="Instagram"><Instagram size={16} /></a>
             <a href={`mailto:${settings.email || ''}`} className="p-2 rounded-full bg-white/10 hover:bg-brand-yellow hover:text-black transition-colors" aria-label="Email"><Mail size={16} /></a>
@@ -26,7 +32,7 @@ export default function Footer() {
           <ul className="space-y-2.5 text-sm text-white/60">
             <li><Link to="/shop" className="hover:text-white transition-colors">All Posters</Link></li>
             <li><Link to="/create-your-own" className="hover:text-white transition-colors">Create Your Own</Link></li>
-            <li><Link to="/shop?sort=popular" className="hover:text-white transition-colors">Best Sellers</Link></li>
+            <li><Link to="/shop" className="hover:text-white transition-colors">Best Sellers</Link></li>
             <li><Link to="/wishlist" className="hover:text-white transition-colors">Wishlist</Link></li>
           </ul>
         </div>
@@ -51,7 +57,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="border-t border-white/10 py-6 text-center text-white/40 text-xs">
-        © {new Date().getFullYear()} PosterWall. All rights reserved.
+        © {new Date().getFullYear()} WallSticks. All rights reserved.
       </div>
     </footer>
   )

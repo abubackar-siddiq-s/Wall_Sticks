@@ -10,7 +10,7 @@ const router = express.Router()
 router.get('/stats', protectAdmin, asyncHandler(async (req, res) => {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
-  const [revenueAgg, totalOrders, pending, completed, topProducts] = await Promise.all([
+  const [revenueAgg, totalOrders, pending, completed, topProducts, recentOrders] = await Promise.all([
     Order.aggregate([
       { $match: { createdAt: { $gte: thirtyDaysAgo }, status: { $nin: ['payment_pending', 'rejected'] } } },
       { $group: { _id: null, total: { $sum: '$pricing.total' } } },
@@ -18,7 +18,8 @@ router.get('/stats', protectAdmin, asyncHandler(async (req, res) => {
     Order.countDocuments(),
     Order.countDocuments({ status: 'payment_pending' }),
     Order.countDocuments({ status: 'delivered' }),
-    Product.find({ trending: true }).sort('-reviewsCount').limit(5),
+    Product.find({ active: true }).sort('-reviewsCount').limit(5),
+    Order.find().sort('-createdAt').limit(5),
   ])
 
   res.json({
@@ -27,6 +28,7 @@ router.get('/stats', protectAdmin, asyncHandler(async (req, res) => {
     pendingVerification: pending,
     completedOrders: completed,
     topProducts,
+    recentOrders,
   })
 }))
 

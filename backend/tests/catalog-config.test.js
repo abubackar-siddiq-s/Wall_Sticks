@@ -68,7 +68,7 @@ describe('Settings (singleton)', () => {
   test('GET creates a default settings document on first access', async () => {
     const res = await request(app).get('/api/settings')
     expect(res.status).toBe(200)
-    expect(res.body.businessName).toBe('PosterWall')
+    expect(res.body.businessName).toBe('WallSticks')
   })
 
   test('rejects a negative courier charge', async () => {

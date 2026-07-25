@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ShoppingBag, Heart, Menu, X, Search, Package } from 'lucide-react'
+import { ShoppingBag, Heart, Menu, X, Package, Smartphone, LogOut, User } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
+import { useCustomerAuth } from '../context/CustomerAuthContext'
 
 const links = [
   { to: '/', label: 'Home' },
@@ -17,6 +18,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const { items } = useCart()
   const { items: wishItems } = useWishlist()
+  const { customer, isCustomerLoggedIn, openLoginModal, logoutCustomer } = useCustomerAuth()
   const cartCount = items.reduce((s, i) => s + i.quantity, 0)
 
   useEffect(() => {
@@ -28,11 +30,17 @@ export default function Navbar() {
   return (
     <header className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'glass shadow-soft' : 'bg-white/95'}`}>
       <div className="max-w-7xl mx-auto px-5 md:px-8 h-20 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 group">
-          <span className="w-9 h-9 rounded-xl2 bg-brand-black flex items-center justify-center">
-            <span className="text-brand-yellow font-extrabold text-lg leading-none">P</span>
+        <Link to="/" className="flex items-center gap-2.5 group">
+          <img
+            src="/logo.jpeg"
+            alt="WallSticks Logo"
+            className="w-10 h-10 object-contain rounded-xl drop-shadow-md group-hover:scale-105 transition-transform"
+            onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling.style.display = 'flex' }}
+          />
+          <span className="w-9 h-9 rounded-xl2 bg-brand-black hidden items-center justify-center">
+            <span className="text-brand-yellow font-extrabold text-lg leading-none">W</span>
           </span>
-          <span className="font-extrabold text-xl tracking-tight">Poster<span className="text-brand-yellow" style={{ WebkitTextStroke: '1px #0A0A0A' }}>Wall</span></span>
+          <span className="font-extrabold text-xl tracking-tight">Wall<span className="text-brand-yellow">Sticks</span></span>
         </Link>
 
         <nav className="hidden lg:flex items-center gap-9">
@@ -62,31 +70,58 @@ export default function Navbar() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-1.5 md:gap-3">
-          <button aria-label="Search" className="p-2.5 rounded-full hover:bg-brand-smoke transition-colors hidden sm:flex">
-            <Search size={20} />
-          </button>
-          <Link aria-label="Wishlist" to="/wishlist" className="p-2.5 rounded-full hover:bg-brand-smoke transition-colors relative">
-            <Heart size={20} />
-            {wishItems.length > 0 && (
-              <span className="absolute top-0 right-0 w-4 h-4 bg-brand-yellow rounded-full text-[10px] font-bold flex items-center justify-center">{wishItems.length}</span>
-            )}
-          </Link>
-          <Link aria-label="My orders" to="/my-orders" className="p-2.5 rounded-full hover:bg-brand-smoke transition-colors hidden sm:flex">
-            <Package size={20} />
-          </Link>
-          <Link aria-label="Cart" to="/cart" className="p-2.5 rounded-full hover:bg-brand-smoke transition-colors relative">
-            <ShoppingBag size={20} />
-            {cartCount > 0 && (
-              <motion.span
-                key={cartCount}
-                initial={{ scale: 0 }} animate={{ scale: 1 }}
-                className="absolute top-0 right-0 w-4 h-4 bg-brand-yellow rounded-full text-[10px] font-bold flex items-center justify-center"
-              >
-                {cartCount}
-              </motion.span>
-            )}
-          </Link>
+        <div className="flex items-center gap-2 md:gap-3">
+          {isCustomerLoggedIn ? (
+            <>
+              <Link aria-label="Wishlist" to="/wishlist" className="p-2.5 rounded-full hover:bg-brand-smoke transition-colors relative">
+                <Heart size={20} />
+                {wishItems.length > 0 && (
+                  <span className="absolute top-0 right-0 w-4 h-4 bg-brand-yellow rounded-full text-[10px] font-bold flex items-center justify-center">{wishItems.length}</span>
+                )}
+              </Link>
+
+              <Link aria-label="My orders" to="/my-orders" className="p-2.5 rounded-full hover:bg-brand-smoke transition-colors hidden sm:flex">
+                <Package size={20} />
+              </Link>
+
+              <Link aria-label="Cart" to="/cart" className="p-2.5 rounded-full hover:bg-brand-smoke transition-colors relative">
+                <ShoppingBag size={20} />
+                {cartCount > 0 && (
+                  <motion.span
+                    key={cartCount}
+                    initial={{ scale: 0 }} animate={{ scale: 1 }}
+                    className="absolute top-0 right-0 w-4 h-4 bg-brand-yellow rounded-full text-[10px] font-bold flex items-center justify-center"
+                  >
+                    {cartCount}
+                  </motion.span>
+                )}
+              </Link>
+
+              <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-black/10">
+                <div className="flex items-center gap-1.5 bg-brand-smoke px-3 py-1.5 rounded-full text-xs font-bold text-black/80">
+                  <User size={13} className="text-brand-black" />
+                  +91 {customer.phone.slice(-4).padStart(customer.phone.length, '•')}
+                </div>
+                <button
+                  onClick={logoutCustomer}
+                  title="Logout"
+                  className="p-2 rounded-full hover:bg-red-50 text-black/50 hover:text-red-600 transition-colors"
+                  aria-label="Logout"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            </>
+          ) : (
+            <button
+              onClick={openLoginModal}
+              className="flex items-center gap-2 bg-brand-black text-brand-yellow font-bold px-4 py-2.5 rounded-full text-xs hover:shadow-glow transition-all"
+            >
+              <Smartphone size={15} />
+              <span>Login</span>
+            </button>
+          )}
+
           <button className="lg:hidden p-2.5 rounded-full hover:bg-brand-smoke" onClick={() => setOpen(true)} aria-label="Open menu">
             <Menu size={22} />
           </button>
@@ -114,8 +149,35 @@ export default function Navbar() {
                   {l.label}
                 </NavLink>
               ))}
-              <NavLink to="/my-orders" onClick={() => setOpen(false)} className="text-lg font-semibold">My Orders</NavLink>
-              <Link to="/create-your-own" onClick={() => setOpen(false)} className="text-center font-bold bg-brand-black text-brand-yellow px-5 py-3 rounded-full">
+
+              {isCustomerLoggedIn ? (
+                <>
+                  <NavLink to="/wishlist" onClick={() => setOpen(false)} className="text-lg font-semibold flex items-center justify-between">
+                    <span>Wishlist</span>
+                    {wishItems.length > 0 && <span className="bg-brand-yellow text-xs font-bold px-2 py-0.5 rounded-full">{wishItems.length}</span>}
+                  </NavLink>
+                  <NavLink to="/my-orders" onClick={() => setOpen(false)} className="text-lg font-semibold">My Orders</NavLink>
+                  <NavLink to="/cart" onClick={() => setOpen(false)} className="text-lg font-semibold flex items-center justify-between">
+                    <span>Cart</span>
+                    {cartCount > 0 && <span className="bg-brand-yellow text-xs font-bold px-2 py-0.5 rounded-full">{cartCount}</span>}
+                  </NavLink>
+                  <button
+                    onClick={() => { logoutCustomer(); setOpen(false) }}
+                    className="flex items-center gap-2 text-red-600 font-semibold text-sm pt-4 border-t border-black/10"
+                  >
+                    <LogOut size={16} /> Logout (+91 {customer.phone})
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => { setOpen(false); openLoginModal() }}
+                  className="flex items-center justify-center gap-2 font-bold bg-brand-black text-brand-yellow px-5 py-3 rounded-full text-sm"
+                >
+                  <Smartphone size={16} /> Login with Mobile
+                </button>
+              )}
+
+              <Link to="/create-your-own" onClick={() => setOpen(false)} className="text-center font-bold bg-brand-yellow text-brand-black px-5 py-3 rounded-full text-sm mt-auto">
                 Create Your Own
               </Link>
             </motion.div>

@@ -23,9 +23,13 @@ import trendingRoutes from './routes/trending.js'
 import adminRoutes from './routes/admin.js'
 import settingsRoutes from './routes/settings.js'
 import contactRoutes from './routes/contact.js'
+import autoSeed from './utils/autoSeed.js'
+
+import fs from 'node:fs'
+import path from 'node:path'
 
 dotenv.config()
-connectDB()
+connectDB().then(() => autoSeed())
 
 const app = express()
 
@@ -61,4 +65,4 @@ app.use(notFound)
 app.use(errorHandler)
 
 const PORT = process.env.PORT || 5000
-app.listen(PORT, () => console.log(`PosterWall API running on port ${PORT}`))
+app.listen(PORT, () => console.log(`WallSticks API running on port ${PORT}`))

@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 
 // Singleton document — one row holds all storefront/business configuration.
 const settingsSchema = new mongoose.Schema({
-  businessName: { type: String, default: 'PosterWall' },
+  businessName: { type: String, default: 'WallSticks' },
   ownerName: String,
   phone: String,
   email: String,

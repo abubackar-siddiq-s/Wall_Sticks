@@ -82,17 +82,17 @@ const seeds = ['hero1', 'hero2', 'hero3', 'hero4', 'hero5']
 
 export default function Hero3D() {
   const posters = useMemo(() => ([
-    { position: [-2.6, 0.3, -1.2], rotation: [0, 0.35, 0], scale: 1.05, seed: seeds[0] },
-    { position: [-0.9, -0.5, 0.6], rotation: [0, 0.12, 0], scale: 1.25, seed: seeds[1] },
-    { position: [0.9, 0.5, 0.4], rotation: [0, -0.15, 0], scale: 1.2, seed: seeds[2] },
-    { position: [2.6, -0.2, -1], rotation: [0, -0.35, 0], scale: 1.0, seed: seeds[3] },
-    { position: [0, 1.4, -2], rotation: [0, 0, 0], scale: 0.85, seed: seeds[4] },
+    { position: [-1.6, 0.3, -0.8], rotation: [0, 0.3, 0], scale: 1.0, seed: seeds[0] },
+    { position: [-0.2, -0.6, 0.6], rotation: [0, 0.12, 0], scale: 1.25, seed: seeds[1] },
+    { position: [1.4, 0.6, 0.3], rotation: [0, -0.18, 0], scale: 1.15, seed: seeds[2] },
+    { position: [2.8, -0.3, -1.0], rotation: [0, -0.35, 0], scale: 0.95, seed: seeds[3] },
+    { position: [0.6, 1.3, -1.8], rotation: [0, 0.05, 0], scale: 0.85, seed: seeds[4] },
   ]), [])
 
   return (
-    <div className="absolute inset-0">
+    <div className="hidden lg:block absolute top-0 bottom-0 right-0 w-[58%] pointer-events-none">
       <Canvas
-        camera={{ position: [0, 0.2, 6.5], fov: 42 }}
+        camera={{ position: [0.4, 0.2, 6.2], fov: 42 }}
         dpr={[1, 1.75]}
         gl={{ antialias: true, alpha: true }}
       >

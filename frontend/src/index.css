@@ -15,9 +15,22 @@ body {
 
 ::selection { background: #FFD000; color: #0A0A0A; }
 
-::-webkit-scrollbar { width: 10px; }
-::-webkit-scrollbar-track { background: #F7F7F5; }
-::-webkit-scrollbar-thumb { background: #0A0A0A; border-radius: 8px; }
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F7F7F5;
+}
+::-webkit-scrollbar-thumb {
+  background: #0A0A0A;
+  border-radius: 9999px;
+  border: 2px solid #F7F7F5;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #FFD000;
+}
 
 .glass {
   background: rgba(255,255,255,0.6);

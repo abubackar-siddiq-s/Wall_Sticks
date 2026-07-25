@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Package, ShoppingCart, Settings, LogOut, Sparkles, Mail, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, Settings, LogOut, Sparkles, Tag, Award, Menu, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -8,8 +8,9 @@ const nav = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/products', label: 'Products', icon: Package },
   { to: '/admin/trending', label: 'Trending', icon: Sparkles },
+  { to: '/admin/best-sellers', label: 'Best Sellers', icon: Award },
   { to: '/admin/orders', label: 'Orders', icon: ShoppingCart },
-  { to: '/admin/messages', label: 'Messages', icon: Mail },
+  { to: '/admin/size-pricing', label: 'Size Pricing', icon: Tag },
   { to: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 
@@ -23,10 +24,8 @@ export default function AdminLayout({ children, title }) {
       {/* Mobile Top Header */}
       <header className="md:hidden bg-brand-black text-white px-5 py-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-2">
-          <span className="w-8 h-8 rounded-xl bg-brand-yellow flex items-center justify-center">
-            <span className="text-brand-black font-extrabold text-sm leading-none">P</span>
-          </span>
-          <span className="font-extrabold text-md">PosterWall</span>
+          <img src="/logo.jpeg" alt="WallSticks Logo" className="w-8 h-8 object-contain rounded-lg" />
+          <span className="font-extrabold text-md">WallSticks</span>
         </div>
         <button onClick={() => setMobileOpen(true)} className="p-1 rounded-md hover:bg-white/10" aria-label="Open navigation menu">
           <Menu size={20} />
@@ -35,11 +34,9 @@ export default function AdminLayout({ children, title }) {
 
       {/* Desktop Sidebar */}
       <aside className="w-64 bg-brand-black text-white shrink-0 hidden md:flex flex-col p-6">
-        <div className="flex items-center gap-2 mb-10">
-          <span className="w-9 h-9 rounded-xl2 bg-brand-yellow flex items-center justify-center">
-            <span className="text-brand-black font-extrabold text-lg leading-none">P</span>
-          </span>
-          <span className="font-extrabold text-lg">PosterWall</span>
+        <div className="flex items-center gap-2.5 mb-10">
+          <img src="/logo.jpeg" alt="WallSticks Logo" className="w-9 h-9 object-contain rounded-xl" />
+          <span className="font-extrabold text-lg">WallSticks</span>
         </div>
         <nav className="flex-1 space-y-1.5">
           {nav.map((n) => (
@@ -76,9 +73,9 @@ export default function AdminLayout({ children, title }) {
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-2">
                   <span className="w-8 h-8 rounded-xl bg-brand-yellow flex items-center justify-center">
-                    <span className="text-brand-black font-extrabold text-sm leading-none">P</span>
+                    <span className="text-brand-black font-extrabold text-sm leading-none">W</span>
                   </span>
-                  <span className="font-extrabold text-md">PosterWall</span>
+                  <span className="font-extrabold text-md">WallSticks</span>
                 </div>
                 <button onClick={() => setMobileOpen(false)} aria-label="Close navigation menu" className="p-1 rounded-md hover:bg-white/10">
                   <X size={20} />

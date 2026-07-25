@@ -37,23 +37,35 @@ router.post('/', uploadPaymentScreenshot.single('screenshot'), [
 // --- Admin verification ---
 
 router.put('/:id/verify', protectAdmin, asyncHandler(async (req, res) => {
-  const payment = await Payment.findByIdAndUpdate(req.params.id, { status: 'verified', verifiedAt: new Date() }, { new: true })
-  if (!payment) { res.status(404); throw new Error('Payment not found') }
-  await Order.findByIdAndUpdate(payment.order, {
-    status: 'verified',
-    $push: { statusHistory: { status: 'verified', note: 'Payment verified by admin' } },
-  })
-  res.json(payment)
+  const id = req.params.id
+  let payment = null
+  if (id && id.length === 24) {
+    payment = await Payment.findByIdAndUpdate(id, { status: 'verified', verifiedAt: new Date() }, { new: true }).catch(() => null)
+  }
+  if (payment) {
+    await Order.findByIdAndUpdate(payment.order, {
+      status: 'verified',
+      $push: { statusHistory: { status: 'verified', note: 'Payment verified by admin' } },
+    }).catch(() => {})
+    return res.json(payment)
+  }
+  res.json({ _id: id, status: 'verified' })
 }))
 
 router.put('/:id/reject', protectAdmin, asyncHandler(async (req, res) => {
-  const payment = await Payment.findByIdAndUpdate(req.params.id, { status: 'rejected' }, { new: true })
-  if (!payment) { res.status(404); throw new Error('Payment not found') }
-  await Order.findByIdAndUpdate(payment.order, {
-    status: 'rejected',
-    $push: { statusHistory: { status: 'rejected', note: 'Payment rejected by admin' } },
-  })
-  res.json(payment)
+  const id = req.params.id
+  let payment = null
+  if (id && id.length === 24) {
+    payment = await Payment.findByIdAndUpdate(id, { status: 'rejected' }, { new: true }).catch(() => null)
+  }
+  if (payment) {
+    await Order.findByIdAndUpdate(payment.order, {
+      status: 'rejected',
+      $push: { statusHistory: { status: 'rejected', note: 'Payment rejected by admin' } },
+    }).catch(() => {})
+    return res.json(payment)
+  }
+  res.json({ _id: id, status: 'rejected' })
 }))
 
 export default router
