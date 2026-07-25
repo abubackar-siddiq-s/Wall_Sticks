@@ -3,19 +3,19 @@ import { useNavigate } from 'react-router-dom'
 import { Upload, ImageIcon } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useCart } from '../context/CartContext'
+import { useSettings } from '../hooks/useSettings'
 
-const sizes = ['A5', 'A4', 'A3', '12x18', '18x24', '24x36']
-const finishes = ['Premium Matte', 'Gloss', 'Canvas', 'Framed']
-const borders = ['White', 'Black', 'No Border']
-const orientations = ['Portrait', 'Landscape', 'Square']
+const defaultSizes = ['A5', 'A4', 'A3', '12x18', '18x24', '24x36']
 
 export default function CreatePoster() {
   const [preview, setPreview] = useState(null)
   const [fileName, setFileName] = useState('')
-  const [size, setSize] = useState(sizes[2])
-  const [finish, setFinish] = useState(finishes[0])
-  const [border, setBorder] = useState('White')
-  const [orientation, setOrientation] = useState('Portrait')
+  const { settings } = useSettings()
+  const availableSizes = settings?.sizePrices && typeof settings.sizePrices === 'object' ? Object.keys(settings.sizePrices) : defaultSizes
+
+  const [selectedSize, setSelectedSize] = useState('A3')
+  const size = availableSizes.includes(selectedSize) ? selectedSize : availableSizes[0]
+
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState('')
   const fileInput = useRef()
@@ -31,17 +31,19 @@ export default function CreatePoster() {
     reader.readAsDataURL(file)
   }
 
+  const customPrice = settings?.sizePrices?.[size] || { A5: 259, A4: 319, A3: 399, '12x18': 499, '18x24': 699, '24x36': 997 }[size] || 399
+
   const customProduct = {
     _id: `custom-${Date.now()}`,
     name: `Custom Poster (${fileName || 'your upload'})`,
-    price: { A5: 299, A4: 399, A3: 549, '12x18': 649, '18x24': 899, '24x36': 1199 }[size],
-    images: [preview || 'https://picsum.photos/seed/customplaceholder/800/1100'],
+    price: customPrice,
+    images: [preview || ''],
     isCustom: true,
   }
 
   const handleAdd = (buyNow) => {
     if (!preview) return toast.error('Upload an image first')
-    addToCart(customProduct, { size, finish, border, orientation, quantity, notes })
+    addToCart(customProduct, { size, quantity, notes })
     if (buyNow) navigate('/checkout')
   }
 
@@ -87,35 +89,12 @@ export default function CreatePoster() {
           <div className="mb-6">
             <p className="font-semibold text-sm mb-3">Poster Size</p>
             <div className="flex flex-wrap gap-2">
-              {sizes.map((s) => (
-                <button key={s} onClick={() => setSize(s)} className={`px-4 py-2 rounded-full text-sm font-medium border-2 ${size === s ? 'bg-brand-black text-brand-yellow border-brand-black' : 'border-black/10'}`}>{s}</button>
+              {availableSizes.map((s) => (
+                <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 rounded-full text-sm font-medium border-2 ${size === s ? 'bg-brand-black text-brand-yellow border-brand-black' : 'border-black/10'}`}>{s}</button>
               ))}
             </div>
           </div>
-          <div className="mb-6">
-            <p className="font-semibold text-sm mb-3">Poster Finish</p>
-            <div className="flex flex-wrap gap-2">
-              {finishes.map((f) => (
-                <button key={f} onClick={() => setFinish(f)} className={`px-4 py-2 rounded-full text-sm font-medium border-2 ${finish === f ? 'bg-brand-black text-brand-yellow border-brand-black' : 'border-black/10'}`}>{f}</button>
-              ))}
-            </div>
-          </div>
-          <div className="mb-6">
-            <p className="font-semibold text-sm mb-3">Border</p>
-            <div className="flex flex-wrap gap-2">
-              {borders.map((b) => (
-                <button key={b} onClick={() => setBorder(b)} className={`px-4 py-2 rounded-full text-sm font-medium border-2 ${border === b ? 'bg-brand-black text-brand-yellow border-brand-black' : 'border-black/10'}`}>{b}</button>
-              ))}
-            </div>
-          </div>
-          <div className="mb-6">
-            <p className="font-semibold text-sm mb-3">Orientation</p>
-            <div className="flex flex-wrap gap-2">
-              {orientations.map((o) => (
-                <button key={o} onClick={() => setOrientation(o)} className={`px-4 py-2 rounded-full text-sm font-medium border-2 ${orientation === o ? 'bg-brand-black text-brand-yellow border-brand-black' : 'border-black/10'}`}>{o}</button>
-              ))}
-            </div>
-          </div>
+
           <div className="mb-6">
             <p className="font-semibold text-sm mb-3">Special Instructions</p>
             <textarea

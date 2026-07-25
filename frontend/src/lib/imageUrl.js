@@ -1,11 +1,4 @@
-// Product images come in two shapes depending on data source:
-//   - demo data:      a plain URL string ("https://picsum.photos/...")
-//   - live API:       { url, publicId } (publicId is a Cloudinary asset ID)
-// imgSrc() normalizes either into a usable <img src>. srcSet() additionally builds a
-// responsive srcset using Cloudinary's URL-based transforms when a Cloudinary URL is
-// detected, so a phone doesn't download the same 2400px poster photo as a 4K desktop.
-
-const FALLBACK = 'https://picsum.photos/seed/posterwall-placeholder/800/1100'
+const FALLBACK = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1100" viewBox="0 0 800 1100"><rect width="800" height="1100" fill="%2318181b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23FFD000" font-family="sans-serif" font-size="48" font-weight="bold">WALLSTICKS</text></svg>'
 
 export function imgSrc(image) {
   if (!image) return FALLBACK
@@ -18,17 +11,12 @@ function isCloudinaryUrl(url) {
   return typeof url === 'string' && url.includes('res.cloudinary.com') && url.includes(CLOUDINARY_UPLOAD_MARKER)
 }
 
-// Inserts a Cloudinary transformation string right after `/upload/`, e.g.
-// https://res.cloudinary.com/x/image/upload/v123/f.jpg
-//   -> https://res.cloudinary.com/x/image/upload/w_600,q_auto,f_auto/v123/f.jpg
 function withTransform(url, transform) {
   return url.replace(CLOUDINARY_UPLOAD_MARKER, `${CLOUDINARY_UPLOAD_MARKER}${transform}/`)
 }
 
 const RESPONSIVE_WIDTHS = [400, 800, 1200, 1600]
 
-// Returns { src, srcSet, sizes } ready to spread onto an <img>. Falls back to a plain
-// src with no srcSet for non-Cloudinary images (demo data, or before Cloudinary is wired up).
 export function responsiveImgProps(image, { sizes = '(max-width: 768px) 100vw, 50vw' } = {}) {
   const url = imgSrc(image)
   if (!isCloudinaryUrl(url)) return { src: url }

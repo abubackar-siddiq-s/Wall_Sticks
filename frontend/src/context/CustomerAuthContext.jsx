@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import api from '../lib/api'
 
 const CustomerAuthContext = createContext(null)
 
@@ -19,12 +20,18 @@ export function CustomerAuthProvider({ children }) {
       localStorage.setItem('wallsticks_customer', JSON.stringify(customer))
     } else {
       localStorage.removeItem('wallsticks_customer')
+      localStorage.removeItem('wallsticks_customer_token')
     }
   }, [customer])
 
-  const loginCustomer = (phone, name = 'Customer') => {
+  const loginCustomer = async (phone, name = 'Customer') => {
     const cleanedPhone = phone.replace(/\D/g, '')
-    const userData = { phone: cleanedPhone, name }
+    const { data } = await api.post('/auth/customer/login', { phone: cleanedPhone, name })
+    
+    if (data.token) {
+      localStorage.setItem('wallsticks_customer_token', data.token)
+    }
+    const userData = { id: data.user.id, phone: data.user.phone, name: data.user.name }
     setCustomer(userData)
     setIsLoginModalOpen(false)
     return userData
@@ -32,6 +39,8 @@ export function CustomerAuthProvider({ children }) {
 
   const logoutCustomer = () => {
     setCustomer(null)
+    localStorage.removeItem('wallsticks_customer')
+    localStorage.removeItem('wallsticks_customer_token')
   }
 
   const openLoginModal = () => setIsLoginModalOpen(true)

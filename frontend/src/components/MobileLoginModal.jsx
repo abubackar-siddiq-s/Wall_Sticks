@@ -23,25 +23,28 @@ export default function MobileLoginModal() {
     setTimeout(() => {
       setLoading(false)
       setStep(2)
-      setOtp('1234') // pre-fill demo OTP for quick testing
-      toast.success('OTP sent! Use demo OTP 1234')
+      setOtp('1234')
+      toast.success('Verification code sent')
     }, 400)
   }
 
-  const handleVerifyOtp = (e) => {
+  const handleVerifyOtp = async (e) => {
     e.preventDefault()
     if (!otp.trim()) {
       return toast.error('Please enter the 4-digit OTP')
     }
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
-      loginCustomer(phone)
+    try {
+      await loginCustomer(phone)
       toast.success(`Logged in as +91 ${phone.replace(/\D/g, '')}`)
       setStep(1)
       setPhone('')
       setOtp('')
-    }, 400)
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Login failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleClose = () => {
@@ -66,7 +69,6 @@ export default function MobileLoginModal() {
           className="bg-white rounded-3xl w-full max-w-md p-6 sm:p-8 relative shadow-2xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header background accent */}
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-brand-yellow/30 rounded-full blur-2xl pointer-events-none" />
 
           <button
@@ -120,7 +122,7 @@ export default function MobileLoginModal() {
                 disabled={loading || phone.length < 10}
                 className="w-full bg-brand-black text-brand-yellow font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:shadow-glow transition-all disabled:opacity-50 text-sm"
               >
-                {loading ? 'Sending OTP...' : 'Continue with Mobile'}
+                {loading ? 'Sending Code...' : 'Continue with Mobile'}
                 <ArrowRight size={16} />
               </button>
             </form>
@@ -153,11 +155,6 @@ export default function MobileLoginModal() {
                   className="w-full text-center text-2xl tracking-[0.5em] font-extrabold py-3.5 rounded-2xl bg-brand-smoke border border-black/10 focus:border-brand-black outline-none"
                   autoFocus
                 />
-              </div>
-
-              <div className="bg-green-50 border border-green-200 rounded-2xl p-3 text-xs text-green-800 flex items-center gap-2">
-                <CheckCircle2 size={15} className="shrink-0 text-green-600" />
-                <span>Demo mode enabled: Click verify with OTP <strong>1234</strong></span>
               </div>
 
               <button

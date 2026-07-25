@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { ChevronDown, Package, Receipt } from 'lucide-react'
-import api, { API_BASE_URL } from '../lib/api'
+import api from '../lib/api'
 import { useCustomerAuth } from '../context/CustomerAuthContext'
 
 const stages = ['Payment Pending', 'Verified', 'Printing', 'Packed', 'Shipped', 'Delivered']
 const statusToStage = { payment_pending: 0, verified: 1, rejected: 1, printing: 2, packed: 3, shipped: 4, delivered: 5 }
 
-const demoOrders = [
-  { id: 'PW482913', date: '18 Jul 2026', total: 748, stage: 3, items: [{ name: 'Midnight Skyline Motivational', qty: 1, size: 'A3' }] },
-  { id: 'PW471820', date: '02 Jul 2026', total: 1278, stage: 5, items: [{ name: 'Discipline Equals Freedom', qty: 2, size: '18x24' }] },
-]
+
 
 function OrderCard({ order }) {
   const [open, setOpen] = useState(false)
@@ -53,13 +51,13 @@ function OrderCard({ order }) {
               </div>
             ))}
           </div>
-          <a
-            href={`${API_BASE_URL}/orders/${order.id}/receipt`}
+          <Link
+            to={`/receipt/${order.id}`}
             target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs font-semibold underline text-black/60 hover:text-black"
           >
             <Receipt size={13} /> View Receipt
-          </a>
+          </Link>
         </div>
       )}
     </div>
@@ -90,10 +88,10 @@ export default function MyOrders() {
           stage: statusToStage[o.status] ?? 0,
           items: o.items.map((it) => ({ name: it.name, qty: it.quantity, size: it.size })),
         }))
-        setOrders(normalized.length > 0 ? normalized : demoOrders)
+        setOrders(normalized)
       })
       .catch(() => {
-        if (isMounted) setOrders(demoOrders)
+        if (isMounted) setOrders([])
       })
       .finally(() => {
         if (isMounted) setLoading(false)

@@ -30,7 +30,7 @@ export default function Navbar() {
   return (
     <header className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'glass shadow-soft' : 'bg-white/95'}`}>
       <div className="max-w-7xl mx-auto px-5 md:px-8 h-20 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5 group">
+        <Link to="/" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="flex items-center gap-2.5 group">
           <img
             src="/logo.jpeg"
             alt="WallSticks Logo"
@@ -48,6 +48,7 @@ export default function Navbar() {
             <NavLink
               key={l.to}
               to={l.to}
+              onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })}
               className={({ isActive }) =>
                 `relative text-sm font-semibold tracking-wide transition-colors ${isActive ? 'text-brand-black' : 'text-black/50 hover:text-black'}`
               }
@@ -64,6 +65,7 @@ export default function Navbar() {
           ))}
           <Link
             to="/create-your-own"
+            onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })}
             className="text-sm font-bold bg-brand-black text-brand-yellow px-5 py-2.5 rounded-full hover:shadow-glow transition-shadow"
           >
             Create Your Own

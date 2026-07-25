@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Sparkles, Upload, Check, Store, ShieldCheck, CreditCard, MapPin } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AdminLayout from '../../components/AdminLayout'
-import { settings as mockSettings } from '../../data/mockData'
 import api from '../../lib/api'
 import { imgSrc } from '../../lib/imageUrl'
 
@@ -18,25 +17,24 @@ function Field({ label, ...props }) {
   )
 }
 
-export default function AdminSettings() {
-  const [form, setForm] = useState({
-    ...mockSettings,
-    businessName: 'WallSticks',
-    ownerName: 'Palani Kumar',
-    phone: '+91 88705 58436',
-    whatsapp: '+91 88705 58436',
-    email: 'wallsticks0319@gmail.com',
-    instagram: '@wallsticks',
-    address: 'Perundurai, Erode, Tamil Nadu',
-    upiId: 'wallsticks@okhdfcbank',
-    courierCharge: 79,
-    gstPercent: 0,
-    pickupAddress: 'Perundurai, Erode, Tamil Nadu',
-  })
+const defaultFormState = {
+  businessName: 'WallSticks',
+  ownerName: 'Palani Kumar',
+  phone: '+91 88705 58436',
+  whatsapp: '+91 88705 58436',
+  email: 'wallsticks0319@gmail.com',
+  instagram: '@wallsticks',
+  address: 'Perundurai, Erode, Tamil Nadu',
+  upiId: 'wallsticks@okhdfcbank',
+  courierCharge: 79,
+  gstPercent: 0,
+  pickupAddress: 'Perundurai, Erode, Tamil Nadu',
+}
 
+export default function AdminSettings() {
+  const [form, setForm] = useState(defaultFormState)
   const [qrPreview, setQrPreview] = useState('')
   const [qrFile, setQrFile] = useState(null)
-  const [isLive, setIsLive] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
@@ -48,23 +46,13 @@ export default function AdminSettings() {
           setForm((prev) => ({
             ...prev,
             ...data,
-            businessName: data.businessName || 'WallSticks',
-            ownerName: data.ownerName || 'Palani Kumar',
-            phone: data.phone || '+91 88705 58436',
-            whatsapp: data.whatsapp || '+91 88705 58436',
-            email: data.email || 'wallsticks0319@gmail.com',
-            instagram: data.instagram || '@wallsticks',
-            address: data.address || 'Perundurai, Erode, Tamil Nadu',
           }))
           if (data.upiQr?.url) {
             setQrPreview(imgSrc(data.upiQr))
           }
         }
-        setIsLive(true)
       })
-      .catch(() => {
-        setIsLive(false)
-      })
+      .catch(() => {})
   }, [])
 
   const handleQrChange = (e) => {
@@ -91,11 +79,6 @@ export default function AdminSettings() {
 
     delete payload.businessHours
 
-    if (!isLive) {
-      setSaving(false)
-      return toast.success('Settings updated locally')
-    }
-
     try {
       if (qrFile) {
         const formData = new FormData()
@@ -111,9 +94,9 @@ export default function AdminSettings() {
       } else {
         await api.put('/settings', payload)
       }
-      toast.success('Store settings saved to MongoDB Atlas!')
-    } catch {
-      toast.error('Could not save settings')
+      toast.success('Store settings saved to database!')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not save settings')
     } finally {
       setSaving(false)
     }

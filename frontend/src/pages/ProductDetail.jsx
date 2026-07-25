@@ -17,22 +17,16 @@ const defaultSizePrices = {
   '24x36': 997,
 }
 
-const defaultPosterReviews = [
-  { id: 'd1', name: 'Ananya R.', rating: 5, text: 'Vibrant colors, super crisp detail!', date: '2 days ago' },
-  { id: 'd2', name: 'Karthik M.', rating: 5, text: 'Top tier print quality. Very satisfied!', date: '1 week ago' },
-  { id: 'd3', name: 'Priya S.', rating: 4, text: '', date: '2 weeks ago' },
-]
-
 export default function ProductDetail() {
   const { id } = useParams()
   const { product: fetched } = useProduct(id)
 
   const product = {
     sizes: ['A5', 'A4', 'A3', '12x18', '18x24', '24x36'],
-    images: ['https://picsum.photos/seed/fallback/800/1100'],
+    images: [],
     price: 399,
-    rating: 4.8,
-    reviewsCount: 14,
+    rating: 5.0,
+    reviewsCount: 0,
     ...fetched,
   }
 
@@ -43,7 +37,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1)
 
   // Reviews state for this specific poster
-  const [posterReviews, setPosterReviews] = useState(defaultPosterReviews)
+  const [posterReviews, setPosterReviews] = useState([])
   const [submittingReview, setSubmittingReview] = useState(false)
 
   const [newRating, setNewRating] = useState(5)
@@ -59,7 +53,7 @@ export default function ProductDetail() {
 
     api.get(`/reviews/product/${id}`)
       .then(({ data }) => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           const formatted = data.map((r) => ({
             id: r._id,
             name: r.name,
@@ -69,11 +63,11 @@ export default function ProductDetail() {
           }))
           setPosterReviews(formatted)
         } else {
-          setPosterReviews(defaultPosterReviews)
+          setPosterReviews([])
         }
       })
       .catch(() => {
-        setPosterReviews(defaultPosterReviews)
+        setPosterReviews([])
       })
   }, [id, product._id])
 
@@ -82,11 +76,6 @@ export default function ProductDetail() {
   let activeSizePrices = defaultSizePrices
   if (settings?.sizePrices && typeof settings.sizePrices === 'object') {
     activeSizePrices = { ...defaultSizePrices, ...settings.sizePrices }
-  } else {
-    try {
-      const saved = localStorage.getItem('ws_size_prices')
-      if (saved) activeSizePrices = { ...defaultSizePrices, ...JSON.parse(saved) }
-    } catch {}
   }
 
   const currentPrice = activeSizePrices[selectedSize] || 399
@@ -121,25 +110,13 @@ export default function ProductDetail() {
         text: data.text || '',
         date: 'Just now'
       }
-      setPosterReviews([newObj, ...posterReviews.filter(r => !String(r.id).startsWith('d'))])
-      toast.success('Thank you for rating this poster!')
-      setNewReviewText('')
-      setNewReviewerName('')
-      setShowReviewForm(false)
-    } catch {
-      // Fallback for offline demo mode
-      const newObj = {
-        id: Date.now(),
-        name: newReviewerName.trim(),
-        rating: newRating,
-        text: newReviewText.trim(),
-        date: 'Just now'
-      }
       setPosterReviews([newObj, ...posterReviews])
       toast.success('Thank you for rating this poster!')
       setNewReviewText('')
       setNewReviewerName('')
       setShowReviewForm(false)
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not submit review')
     } finally {
       setSubmittingReview(false)
     }

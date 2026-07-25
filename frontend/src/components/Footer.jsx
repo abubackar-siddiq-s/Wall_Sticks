@@ -30,20 +30,20 @@ export default function Footer() {
         <div>
           <h4 className="font-semibold text-brand-yellow mb-4 text-sm tracking-wide">Shop</h4>
           <ul className="space-y-2.5 text-sm text-white/60">
-            <li><Link to="/shop" className="hover:text-white transition-colors">All Posters</Link></li>
-            <li><Link to="/create-your-own" className="hover:text-white transition-colors">Create Your Own</Link></li>
-            <li><Link to="/shop" className="hover:text-white transition-colors">Best Sellers</Link></li>
-            <li><Link to="/wishlist" className="hover:text-white transition-colors">Wishlist</Link></li>
+            <li><Link to="/shop" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">All Posters</Link></li>
+            <li><Link to="/create-your-own" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Create Your Own</Link></li>
+            <li><Link to="/shop" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Best Sellers</Link></li>
+            <li><Link to="/wishlist" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Wishlist</Link></li>
           </ul>
         </div>
 
         <div>
           <h4 className="font-semibold text-brand-yellow mb-4 text-sm tracking-wide">Company</h4>
           <ul className="space-y-2.5 text-sm text-white/60">
-            <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
-            <li><Link to="/contact" className="hover:text-white transition-colors">Contact</Link></li>
-            <li><Link to="/my-orders" className="hover:text-white transition-colors">Track Order</Link></li>
-            <li><Link to="/about#faq" className="hover:text-white transition-colors">FAQs</Link></li>
+            <li><Link to="/about" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">About Us</Link></li>
+            <li><Link to="/contact" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Contact</Link></li>
+            <li><Link to="/my-orders" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Track Order</Link></li>
+            <li><Link to="/cart" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">My Cart</Link></li>
           </ul>
         </div>
 

@@ -2,6 +2,8 @@ import { Suspense, useRef, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useTexture, Environment, Float } from '@react-three/drei'
 import * as THREE from 'three'
+import { useTrendingProducts } from '../hooks/useProducts'
+import { imgSrc } from '../lib/imageUrl'
 
 // A single framed poster: black frame + textured canvas + subtle rim light
 function FramedPoster({ position, rotation, textureUrl, scale = 1 }) {
@@ -38,56 +40,60 @@ function FramedPoster({ position, rotation, textureUrl, scale = 1 }) {
   )
 }
 
-function Particles({ count = 90 }) {
-  const points = useMemo(() => {
+function Particles() {
+  const count = 35
+  const positions = useMemo(() => {
     const arr = new Float32Array(count * 3)
-    for (let i = 0; i < count; i++) {
-      arr[i * 3] = (Math.random() - 0.5) * 14
-      arr[i * 3 + 1] = (Math.random() - 0.5) * 8
-      arr[i * 3 + 2] = (Math.random() - 0.5) * 8
+    for (let i = 0; i < count * 3; i += 3) {
+      arr[i] = (Math.random() - 0.5) * 10
+      arr[i + 1] = (Math.random() - 0.5) * 8
+      arr[i + 2] = (Math.random() - 0.5) * 6
     }
     return arr
-  }, [count])
+  }, [])
 
   const ref = useRef()
   useFrame((state) => {
-    if (ref.current) ref.current.rotation.y = state.clock.elapsedTime * 0.02
+    if (ref.current) {
+      ref.current.rotation.y = state.clock.elapsedTime * 0.02
+    }
   })
 
   return (
     <points ref={ref}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={points} itemSize={3} />
+        <bufferAttribute
+          attach="attributes-position"
+          args={[positions, 3]}
+        />
       </bufferGeometry>
-      <pointsMaterial color="#FFD000" size={0.035} transparent opacity={0.55} sizeAttenuation />
+      <pointsMaterial size={0.03} color="#FFD000" transparent opacity={0.5} sizeAttenuation />
     </points>
   )
 }
 
 function Rig() {
   const { camera, pointer } = useThree()
-  const target = useRef(new THREE.Vector3(0, 0, 6))
-
   useFrame(() => {
-    target.current.x = pointer.x * 1.1
-    target.current.y = pointer.y * 0.6 + 0.2
-    camera.position.x += (target.current.x - camera.position.x) * 0.03
-    camera.position.y += (target.current.y - camera.position.y) * 0.03
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, 0.4 + pointer.x * 0.4, 0.05)
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, 0.2 + pointer.y * 0.3, 0.05)
     camera.lookAt(0, 0, 0)
   })
   return null
 }
 
-const seeds = ['hero1', 'hero2', 'hero3', 'hero4', 'hero5']
+const posterLayouts = [
+  { position: [-1.6, 0.3, -0.8], rotation: [0, 0.3, 0], scale: 1.0 },
+  { position: [-0.2, -0.6, 0.6], rotation: [0, 0.12, 0], scale: 1.25 },
+  { position: [1.4, 0.6, 0.3], rotation: [0, -0.18, 0], scale: 1.15 },
+  { position: [2.8, -0.3, -1.0], rotation: [0, -0.35, 0], scale: 0.95 },
+  { position: [0.6, 1.3, -1.8], rotation: [0, 0.05, 0], scale: 0.85 },
+]
 
 export default function Hero3D() {
-  const posters = useMemo(() => ([
-    { position: [-1.6, 0.3, -0.8], rotation: [0, 0.3, 0], scale: 1.0, seed: seeds[0] },
-    { position: [-0.2, -0.6, 0.6], rotation: [0, 0.12, 0], scale: 1.25, seed: seeds[1] },
-    { position: [1.4, 0.6, 0.3], rotation: [0, -0.18, 0], scale: 1.15, seed: seeds[2] },
-    { position: [2.8, -0.3, -1.0], rotation: [0, -0.35, 0], scale: 0.95, seed: seeds[3] },
-    { position: [0.6, 1.3, -1.8], rotation: [0, 0.05, 0], scale: 0.85, seed: seeds[4] },
-  ]), [])
+  const { products } = useTrendingProducts()
+
+  const defaultSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800"><rect width="600" height="800" fill="%23111111"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23FFD000" font-family="sans-serif" font-size="42" font-weight="bold">WALLSTICKS</text></svg>'
 
   return (
     <div className="hidden lg:block absolute top-0 bottom-0 right-0 w-[58%] pointer-events-none">
@@ -100,15 +106,19 @@ export default function Hero3D() {
         <directionalLight position={[5, 5, 5]} intensity={1.1} color="#FFD000" />
         <directionalLight position={[-5, -2, 3]} intensity={0.4} color="#ffffff" />
         <Suspense fallback={null}>
-          {posters.map((p, i) => (
-            <FramedPoster
-              key={i}
-              position={p.position}
-              rotation={p.rotation}
-              scale={p.scale}
-              textureUrl={`https://picsum.photos/seed/${p.seed}/600/800`}
-            />
-          ))}
+          {posterLayouts.map((p, i) => {
+            const product = products[i % (products.length || 1)]
+            const textureUrl = product?.images?.[0] ? imgSrc(product.images[0]) : defaultSvg
+            return (
+              <FramedPoster
+                key={i}
+                position={p.position}
+                rotation={p.rotation}
+                scale={p.scale}
+                textureUrl={textureUrl}
+              />
+            )
+          })}
           <Particles />
           <Environment preset="city" />
         </Suspense>

@@ -4,50 +4,7 @@ import toast from 'react-hot-toast'
 import AdminLayout from '../../components/AdminLayout'
 import api from '../../lib/api'
 
-const initialOrders = [
-  {
-    _id: 'o1',
-    id: 'PW482913',
-    name: 'Rahul Verma',
-    phone: '8870558436',
-    address: '221B Anna Salai, Chennai, TN 600002',
-    size: 'A3',
-    qty: 1,
-    txnId: 'UPI2026071812345',
-    total: 748,
-    status: 'pending',
-    date: '18 Jul 2026',
-    items: [{ name: 'Midnight Skyline', qty: 1, size: 'A3', price: 748 }],
-  },
-  {
-    _id: 'o2',
-    id: 'PW471820',
-    name: 'Sneha Iyer',
-    phone: '9876543210',
-    address: '14 MG Road, Bengaluru, KA 560001',
-    size: '18x24',
-    qty: 2,
-    txnId: 'UPI2026071609876',
-    total: 1278,
-    status: 'verified',
-    date: '16 Jul 2026',
-    items: [{ name: 'Discipline Equals Freedom', qty: 2, size: '18x24', price: 639 }],
-  },
-  {
-    _id: 'o3',
-    id: 'PW460112',
-    name: 'Aditya Rao',
-    phone: '9443212345',
-    address: '9 Park Street, Kolkata, WB 700016',
-    size: '12x18',
-    qty: 1,
-    txnId: 'UPI2026071011223',
-    total: 649,
-    status: 'shipped',
-    date: '10 Jul 2026',
-    items: [{ name: 'Quiet Mountains', qty: 1, size: '12x18', price: 649 }],
-  },
-]
+
 
 const statusFlow = ['pending', 'verified', 'printing', 'packed', 'shipped', 'delivered']
 
@@ -75,7 +32,7 @@ function OrderModal({ order, onClose, onUpdate }) {
   const currentIndex = statusFlow.indexOf(order.status)
   const nextStatus = statusFlow[currentIndex + 1]
 
-  const receiptUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/orders/${order.id}/receipt`
+  const receiptUrl = `/receipt/${order.id}`
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -197,15 +154,14 @@ function OrderModal({ order, onClose, onUpdate }) {
 }
 
 export default function AdminOrders() {
-  const [orders, setOrders] = useState(initialOrders)
-  const [isLive, setIsLive] = useState(false)
+  const [orders, setOrders] = useState([])
   const [selected, setSelected] = useState(null)
   const [activeTab, setActiveTab] = useState('all')
 
-  useEffect(() => {
+  const fetchOrders = () => {
     api.get('/orders')
       .then(({ data }) => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           const normalized = data.map((o) => ({
             _id: o._id,
             paymentId: o.payment?._id,
@@ -230,21 +186,20 @@ export default function AdminOrders() {
           }))
           setOrders(normalized)
         } else {
-          setOrders(initialOrders)
+          setOrders([])
         }
-        setIsLive(true)
       })
       .catch(() => {
-        setOrders(initialOrders)
-        setIsLive(false)
+        setOrders([])
       })
+  }
+
+  useEffect(() => {
+    fetchOrders()
   }, [])
 
   const updateStatus = async (order, status) => {
     const backendStatus = status === 'pending' ? 'payment_pending' : status
-    setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, status } : o)))
-
-    if (!isLive) return
     try {
       if (status === 'verified' && order.paymentId) {
         await api.put(`/payments/${order.paymentId}/verify`)
@@ -253,8 +208,10 @@ export default function AdminOrders() {
       } else {
         await api.put(`/orders/${order._id}/status`, { status: backendStatus })
       }
-    } catch {
-      toast.error('Could not save update to server')
+      setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, status } : o)))
+      toast.success(`Order status updated to ${status}`)
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not save update to server')
     }
   }
 

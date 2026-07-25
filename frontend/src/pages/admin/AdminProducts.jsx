@@ -2,13 +2,12 @@ import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, Star, X, Sparkles, Check, Upload, Image as ImageIcon } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AdminLayout from '../../components/AdminLayout'
-import { products as mockProducts } from '../../data/mockData'
 import api from '../../lib/api'
 import { imgSrc } from '../../lib/imageUrl'
 
 function ProductModal({ product, onClose, onSave }) {
   const [name, setName] = useState(product?.name || '')
-  const [featured, setFeatured] = useState(!!product?.featured)
+  const featured = false
   const [bestSeller, setBestSeller] = useState(!!product?.bestSeller)
   const [trending, setTrending] = useState(!!product?.trending)
   const [imagePreview, setImagePreview] = useState(
@@ -39,7 +38,7 @@ function ProductModal({ product, onClose, onSave }) {
       await onSave({
         _id: product?._id,
         name: name.trim(),
-        images: imagePreview ? [imagePreview] : ['https://picsum.photos/seed/poster/800/1100'],
+        images: imagePreview ? [imagePreview] : [],
         featured,
         bestSeller,
         trending,
@@ -112,9 +111,8 @@ function ProductModal({ product, onClose, onSave }) {
           {/* BADGES */}
           <div>
             <label className="block text-xs font-bold text-black/70 mb-2 uppercase tracking-wider">Catalog Badges</label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {[
-                { label: 'Featured', value: featured, setter: setFeatured },
                 { label: 'Best Seller', value: bestSeller, setter: setBestSeller },
                 { label: 'Trending', value: trending, setter: setTrending },
               ].map((b) => (
@@ -149,45 +147,25 @@ function ProductModal({ product, onClose, onSave }) {
 }
 
 export default function AdminProducts() {
-  const [list, setList] = useState(mockProducts)
-  const [isLive, setIsLive] = useState(false)
+  const [list, setList] = useState([])
   const [modal, setModal] = useState(null)
 
-  useEffect(() => {
+  const fetchProducts = () => {
     api.get('/products')
       .then(({ data }) => {
         const prodData = data.products || data
-        if (Array.isArray(prodData) && prodData.length > 0) {
-          setList(prodData)
-        } else {
-          setList(mockProducts)
-        }
-        setIsLive(true)
+        setList(Array.isArray(prodData) ? prodData : [])
       })
       .catch(() => {
-        setList(mockProducts)
-        setIsLive(false)
+        setList([])
       })
+  }
+
+  useEffect(() => {
+    fetchProducts()
   }, [])
 
   const save = async (form) => {
-    if (!isLive) {
-      if (form._id) {
-        setList((l) => l.map((p) => (p._id === form._id ? { ...p, ...form } : p)))
-      } else {
-        setList((l) => [
-          {
-            ...form,
-            _id: `p${Date.now()}`,
-            rating: 5.0,
-            reviewsCount: 0,
-          },
-          ...l,
-        ])
-      }
-      return toast.success(form._id ? 'Poster updated' : 'Poster added')
-    }
-
     try {
       if (form._id) {
         const { data } = await api.put(`/products/${form._id}`, form)
@@ -198,21 +176,19 @@ export default function AdminProducts() {
         setList((l) => [data, ...l])
         toast.success('Poster published!')
       }
-    } catch {
-      toast.error('Could not save poster')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not save poster')
     }
   }
 
   const remove = async (id) => {
     if (!window.confirm('Are you sure you want to remove this poster?')) return
-
-    setList((l) => l.filter((p) => p._id !== id))
-    if (!isLive) return toast.success('Poster removed')
     try {
       await api.delete(`/products/${id}`)
+      setList((l) => l.filter((p) => p._id !== id))
       toast.success('Poster removed')
-    } catch {
-      toast.error('Could not delete poster')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not delete poster')
     }
   }
 
@@ -268,7 +244,6 @@ export default function AdminProducts() {
                   {/* BADGES */}
                   <td className="py-3.5 px-4">
                     <div className="flex gap-1.5 flex-wrap">
-                      {p.featured && <span className="text-[10px] bg-brand-yellow/20 text-brand-gold px-2.5 py-0.5 rounded-full font-extrabold">Featured</span>}
                       {p.bestSeller && <span className="text-[10px] bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full font-extrabold">Best Seller</span>}
                       {p.trending && <span className="text-[10px] bg-purple-50 text-purple-700 px-2.5 py-0.5 rounded-full font-extrabold">Trending</span>}
                     </div>

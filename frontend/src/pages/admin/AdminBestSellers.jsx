@@ -2,16 +2,12 @@ import { useEffect, useState } from 'react'
 import { GripVertical, X, Plus, Sparkles, Award, CheckCircle2, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AdminLayout from '../../components/AdminLayout'
-import { products as mockProducts } from '../../data/mockData'
 import api from '../../lib/api'
 import { imgSrc } from '../../lib/imageUrl'
 
 export default function AdminBestSellers() {
-  const [bestSellers, setBestSellers] = useState(
-    mockProducts.filter((p) => p.bestSeller).slice(0, 8)
-  )
-  const [allProducts, setAllProducts] = useState(mockProducts)
-  const [isLive, setIsLive] = useState(false)
+  const [bestSellers, setBestSellers] = useState([])
+  const [allProducts, setAllProducts] = useState([])
   const [dragIndex, setDragIndex] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
 
@@ -19,16 +15,13 @@ export default function AdminBestSellers() {
     api.get('/products')
       .then(({ data }) => {
         const prodData = data.products || data
-        if (Array.isArray(prodData) && prodData.length > 0) {
+        if (Array.isArray(prodData)) {
           setAllProducts(prodData)
           const filteredBs = prodData.filter((p) => p.bestSeller).slice(0, 8)
-          if (filteredBs.length > 0) {
-            setBestSellers(filteredBs)
-          }
+          setBestSellers(filteredBs)
         }
-        setIsLive(true)
       })
-      .catch(() => setIsLive(false))
+      .catch(() => {})
   }, [])
 
   const onDragStart = (i) => () => setDragIndex(i)
@@ -53,41 +46,27 @@ export default function AdminBestSellers() {
       return toast.error('Poster is already in Best Sellers')
     }
 
-    const updatedProduct = { ...product, bestSeller: true }
-    setBestSellers((prev) => [...prev, updatedProduct])
-    setShowAdd(false)
-
-    if (isLive) {
-      try {
-        await api.put(`/products/${product._id}`, { bestSeller: true })
-        toast.success('Marked as Best Seller!')
-      } catch {
-        toast.error('Could not update poster')
-      }
-    } else {
-      toast.success('Added to Best Sellers')
+    try {
+      await api.put(`/products/${product._id}`, { bestSeller: true })
+      setBestSellers((prev) => [...prev, { ...product, bestSeller: true }])
+      setShowAdd(false)
+      toast.success('Marked as Best Seller!')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not update poster')
     }
   }
 
   const removeBestSeller = async (id) => {
-    setBestSellers((prev) => prev.filter((p) => p._id !== id))
-    if (isLive) {
-      try {
-        await api.put(`/products/${id}`, { bestSeller: false })
-        toast.success('Removed from Best Sellers')
-      } catch {
-        toast.error('Could not update poster')
-      }
-    } else {
+    try {
+      await api.put(`/products/${id}`, { bestSeller: false })
+      setBestSellers((prev) => prev.filter((p) => p._id !== id))
       toast.success('Removed from Best Sellers')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not update poster')
     }
   }
 
   const saveBestSellers = async () => {
-    if (bestSellers.length < 5 || bestSellers.length > 8) {
-      return toast.error(`Please select between 5 and 8 Best Sellers (Currently: ${bestSellers.length})`)
-    }
-
     toast.success('Best Sellers list saved!')
   }
 

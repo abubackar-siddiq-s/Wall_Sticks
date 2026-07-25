@@ -2,14 +2,12 @@ import { useEffect, useState } from 'react'
 import { GripVertical, X, Plus, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AdminLayout from '../../components/AdminLayout'
-import { products as mockProducts } from '../../data/mockData'
 import api from '../../lib/api'
 import { imgSrc } from '../../lib/imageUrl'
 
 export default function AdminTrending() {
-  const [items, setItems] = useState(mockProducts.filter((p) => p.trending).slice(0, 8).map((p) => ({ _id: p._id, product: p })))
-  const [allProducts, setAllProducts] = useState(mockProducts)
-  const [isLive, setIsLive] = useState(false)
+  const [items, setItems] = useState([])
+  const [allProducts, setAllProducts] = useState([])
   const [dragIndex, setDragIndex] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
 
@@ -17,13 +15,11 @@ export default function AdminTrending() {
     Promise.all([api.get('/trending'), api.get('/products')])
       .then(([trendingRes, prodRes]) => {
         const trendingData = Array.isArray(trendingRes.data) ? trendingRes.data.slice(0, 8) : []
-        if (trendingData.length) {
-          setItems(trendingData)
-        }
-        setAllProducts(prodRes.data.products || prodRes.data)
-        setIsLive(true)
+        setItems(trendingData)
+        const productsList = prodRes.data.products || prodRes.data
+        setAllProducts(Array.isArray(productsList) ? productsList : [])
       })
-      .catch(() => setIsLive(false))
+      .catch(() => {})
   }, [])
 
   const onDragStart = (i) => () => setDragIndex(i)
@@ -48,52 +44,32 @@ export default function AdminTrending() {
       return toast.error('Poster is already in trending list')
     }
 
-    if (!isLive) {
-      setItems((prev) => [...prev, { _id: `local-${product._id}`, product }])
-      setShowAdd(false)
-      return toast.success('Added to trending')
-    }
-
     try {
       const { data } = await api.post('/trending', { productId: product._id, order: items.length })
       setItems((prev) => [...prev, { ...data, product }])
       setShowAdd(false)
       toast.success('Added to trending')
-    } catch {
-      toast.error('Could not add to trending — check backend connection')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not add to trending')
     }
   }
 
   const removeItem = async (id) => {
-    if (items.length <= 5) {
-      toast.error('Minimum requirement: Keep between 5 and 8 trending posters for the home carousel.')
-    }
-
-    if (!isLive) {
-      setItems((prev) => prev.filter((i) => i._id !== id))
-      return toast.success('Removed from trending')
-    }
-
     try {
       await api.delete(`/trending/${id}`)
       setItems((prev) => prev.filter((i) => i._id !== id))
       toast.success('Removed from trending')
-    } catch {
-      toast.error('Could not remove from trending')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not remove from trending')
     }
   }
 
   const saveOrder = async () => {
-    if (items.length < 5 || items.length > 8) {
-      return toast.error(`Please select between 5 and 8 posters (Currently selected: ${items.length})`)
-    }
-
-    if (!isLive) return toast.success('Trending order saved')
     try {
       await api.put('/trending/reorder', { items: items.map((i, order) => ({ id: i._id, order })) })
       toast.success('Trending order saved to database!')
-    } catch {
-      toast.error('Could not save trending order')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not save trending order')
     }
   }
 

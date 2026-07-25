@@ -4,10 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Star, ShieldCheck, Truck, Sparkles } from 'lucide-react'
 import HeroFallback from '../components/HeroFallback'
 import ProductCard from '../components/ProductCard'
+import ProductSlider from '../components/ProductSlider'
 import Newsletter from '../components/Newsletter'
 import QuickViewModal from '../components/QuickViewModal'
 import ProductGridSkeleton from '../components/ProductGridSkeleton'
-import { reviews } from '../data/mockData'
+import { useApiData } from '../hooks/useApiData'
 import { useProducts, useTrendingProducts } from '../hooks/useProducts'
 import { useDeviceCapability } from '../hooks/useDeviceCapability'
 
@@ -25,9 +26,10 @@ export default function Home() {
   const [quickView, setQuickView] = useState(null)
   const { products, loading: productsLoading } = useProducts()
   const { products: trending, loading: trendingLoading } = useTrendingProducts()
+  const { data: featuredReviews } = useApiData('/reviews/featured', [])
+  const reviews = Array.isArray(featuredReviews) ? featuredReviews : []
   const { lite } = useDeviceCapability()
-  const bestSellers = products.filter((p) => p.bestSeller).slice(0, 4)
-  const featured = products.filter((p) => p.featured).slice(0, 6)
+  const bestSellers = products.filter((p) => p.bestSeller)
 
   return (
     <div>
@@ -88,65 +90,60 @@ export default function Home() {
 
       {/* TRENDING */}
       <section className="max-w-7xl mx-auto px-5 md:px-8 mt-24">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <p className="text-brand-gold font-bold text-xs tracking-widest uppercase mb-2">Admin's picks</p>
-            <h2 className="text-3xl md:text-4xl font-extrabold">Trending right now</h2>
-          </div>
-          <Link to="/shop" className="hidden sm:flex items-center gap-1.5 font-semibold text-sm hover:text-brand-gold transition-colors">
-            View all <ArrowRight size={16} />
-          </Link>
+        <div className="mb-8">
+          <p className="text-brand-gold font-bold text-xs tracking-widest uppercase mb-2">Admin's picks</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold">Trending right now</h2>
         </div>
         {trendingLoading ? (
-          <ProductGridSkeleton count={8} />
+          <ProductGridSkeleton count={4} />
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-            {trending.map((p) => <ProductCard key={p._id} product={p} onQuickView={setQuickView} />)}
-          </div>
+          <ProductSlider products={trending} onQuickView={setQuickView} />
         )}
       </section>
 
-      {/* FEATURED COLLECTION BANNER */}
+      {/* EXPLORE ALL POSTERS BANNER */}
       <section className="max-w-7xl mx-auto px-5 md:px-8 mt-24">
-        <div className="relative rounded-xl3 overflow-hidden bg-brand-smoke grid md:grid-cols-2 items-center">
-          <div className="p-10 md:p-16">
-            <p className="text-brand-gold font-bold text-xs tracking-widest uppercase mb-3">Featured collection</p>
-            <h3 className="text-3xl md:text-4xl font-extrabold mb-4 leading-tight">The Minimalist Edit</h3>
-            <p className="text-black/55 mb-7 max-w-sm">Clean lines, quiet color palettes, and typography built for calm spaces.</p>
-            <Link to="/shop" className="inline-flex items-center gap-2 bg-brand-black text-brand-yellow font-bold px-6 py-3.5 rounded-full">
-              Explore collection <ArrowRight size={16} />
-            </Link>
+        <div className="relative rounded-xl3 overflow-hidden bg-brand-black text-white p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8 shadow-card">
+          <div className="max-w-xl">
+            <p className="text-brand-yellow font-bold text-xs tracking-widest uppercase mb-3">Complete Collection</p>
+            <h3 className="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">Explore All Posters</h3>
+            <p className="text-white/70 text-base max-w-lg leading-relaxed">
+              Discover our full gallery of high-resolution poster prints spanning anime, minimal, gaming, motivational, nature, and custom artwork.
+            </p>
           </div>
-          <div className="grid grid-cols-2 gap-3 p-6 md:p-10">
-            {featured.slice(0, 4).map((p) => (
-              <img key={p._id} src={p.images[0]} alt={p.name} className="rounded-xl2 aspect-[3/4] object-cover shadow-card" loading="lazy" />
-            ))}
-          </div>
+          <Link
+            to="/shop"
+            className="group shrink-0 bg-brand-yellow text-brand-black font-extrabold px-8 py-4 rounded-full flex items-center gap-3 hover:shadow-glow transition-all"
+          >
+            View All Posters
+            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+          </Link>
         </div>
       </section>
 
       {/* BEST SELLERS */}
       <section className="max-w-7xl mx-auto px-5 md:px-8 mt-24">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <p className="text-brand-gold font-bold text-xs tracking-widest uppercase mb-2">Customer favorites</p>
-            <h2 className="text-3xl md:text-4xl font-extrabold">Best sellers</h2>
-          </div>
+        <div className="mb-8">
+          <p className="text-brand-gold font-bold text-xs tracking-widest uppercase mb-2">Customer favorites</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold">Best sellers</h2>
         </div>
         {productsLoading ? (
           <ProductGridSkeleton count={4} />
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-            {bestSellers.map((p) => <ProductCard key={p._id} product={p} onQuickView={setQuickView} />)}
-          </div>
+          <ProductSlider products={bestSellers} onQuickView={setQuickView} />
         )}
       </section>
 
       {/* REVIEWS */}
       <section className="max-w-7xl mx-auto px-5 md:px-8 mt-24">
-        <div className="mb-8">
-          <p className="text-brand-gold font-bold text-xs tracking-widest uppercase mb-2">Word on the wall</p>
-          <h2 className="text-3xl md:text-4xl font-extrabold">Customer reviews</h2>
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <p className="text-brand-gold font-bold text-xs tracking-widest uppercase mb-2">Word on the wall</p>
+            <h2 className="text-3xl md:text-4xl font-extrabold">Customer reviews</h2>
+          </div>
+          <Link to="/reviews" className="flex items-center gap-1.5 font-semibold text-sm hover:text-brand-gold transition-colors">
+            View all <ArrowRight size={16} />
+          </Link>
         </div>
         <div className="grid md:grid-cols-3 gap-5">
           {reviews.map((r) => (

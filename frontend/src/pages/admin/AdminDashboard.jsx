@@ -15,21 +15,7 @@ import {
 } from 'lucide-react'
 import { imgSrc } from '../../lib/imageUrl'
 import AdminLayout from '../../components/AdminLayout'
-import { products as mockProducts } from '../../data/mockData'
 import api from '../../lib/api'
-
-const demoStats = {
-  revenue30d: 184320,
-  totalOrders: 328,
-  pendingVerification: 14,
-  completedOrders: 289,
-  topProducts: mockProducts.slice(0, 5),
-  recentOrders: [
-    { _id: 'o1', orderNumber: 'PW84921', shipping: { name: 'Ananya R.', phone: '8870558436' }, pricing: { total: 898 }, status: 'payment_pending', createdAt: new Date() },
-    { _id: 'o2', orderNumber: 'PW84920', shipping: { name: 'Karthik M.', phone: '9876543210' }, pricing: { total: 1249 }, status: 'verified', createdAt: new Date() },
-    { _id: 'o3', orderNumber: 'PW84919', shipping: { name: 'Priya S.', phone: '9443212345' }, pricing: { total: 499 }, status: 'shipped', createdAt: new Date() },
-  ]
-}
 
 // Interactive Revenue Bar Chart
 function RevenueChart() {
@@ -105,56 +91,64 @@ function RevenueChart() {
   )
 }
 
+const defaultStats = {
+  revenue30d: 0,
+  totalOrders: 0,
+  pendingVerification: 0,
+  completedOrders: 0,
+  topProducts: [],
+  recentOrders: []
+}
+
 export default function AdminDashboard() {
-  const [stats, setStats] = useState(demoStats)
-  const [isLive, setIsLive] = useState(false)
+  const [stats, setStats] = useState(defaultStats)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     api.get('/admin/stats')
       .then(({ data }) => {
-        setStats({ ...demoStats, ...data })
-        setIsLive(true)
+        setStats(data || defaultStats)
       })
       .catch(() => {
-        setStats(demoStats)
-        setIsLive(false)
+        setStats(defaultStats)
       })
+      .finally(() => setLoading(false))
   }, [])
 
   const statCards = [
     {
       label: 'Revenue (30 Days)',
-      value: `₹${Number(stats.revenue30d || 184320).toLocaleString('en-IN')}`,
-      change: '+14.2% vs last month',
+      value: `₹${Number(stats.revenue30d || 0).toLocaleString('en-IN')}`,
+      change: '30-day total',
       icon: TrendingUp,
       bg: 'bg-amber-500/10 text-amber-600',
     },
     {
       label: 'Total Orders',
-      value: stats.totalOrders || 328,
-      change: '+24 orders this week',
+      value: stats.totalOrders || 0,
+      change: 'All-time store orders',
       icon: ShoppingBag,
       bg: 'bg-blue-500/10 text-blue-600',
     },
     {
       label: 'Pending Verification',
-      value: stats.pendingVerification || 14,
+      value: stats.pendingVerification || 0,
       change: 'Needs approval',
       icon: Clock3,
       bg: 'bg-orange-500/10 text-orange-600',
-      urgent: stats.pendingVerification > 0,
+      urgent: (stats.pendingVerification || 0) > 0,
     },
     {
       label: 'Completed Orders',
-      value: stats.completedOrders || 289,
-      change: '94.2% fulfillment rate',
+      value: stats.completedOrders || 0,
+      change: 'Fulfillment completed',
       icon: CheckCircle2,
       bg: 'bg-emerald-500/10 text-emerald-600',
     },
   ]
 
-  const trending = stats.topProducts?.length ? stats.topProducts : demoStats.topProducts
-  const recent = stats.recentOrders?.length ? stats.recentOrders : demoStats.recentOrders
+  const trending = stats.topProducts || []
+  const recent = stats.recentOrders || []
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -182,9 +176,9 @@ export default function AdminDashboard() {
           <div>
             <h2 className="font-extrabold text-lg text-brand-black">Store Operations Center</h2>
             <div className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-xs text-black/50 font-medium">
-                {isLive ? 'Live MongoDB Atlas Sync Active' : 'Connecting to Live Database...'}
+                Live MongoDB Operations Active
               </span>
             </div>
           </div>
