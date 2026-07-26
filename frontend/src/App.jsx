@@ -66,7 +66,6 @@ export default function App() {
                     <Route path="/create-your-own" element={<CreatePoster />} />
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/wishlist" element={<Wishlist />} />
-                    <Route path="/watchlist" element={<Wishlist />} />
                     <Route path="/checkout" element={<CustomerProtectedRoute><Checkout /></CustomerProtectedRoute>} />
                     <Route path="/payment" element={<CustomerProtectedRoute><Payment /></CustomerProtectedRoute>} />
                     <Route path="/order-success/:orderId" element={<OrderSuccess />} />

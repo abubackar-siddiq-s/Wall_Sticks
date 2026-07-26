@@ -19,6 +19,4 @@ const cartSchema = new mongoose.Schema({
   items: [cartItemSchema],
 }, { timestamps: true })
 
-cartSchema.index({ sessionId: 1 })
-
 export default mongoose.model('Cart', cartSchema)

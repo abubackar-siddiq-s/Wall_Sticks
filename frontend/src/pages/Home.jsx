@@ -96,6 +96,8 @@ export default function Home() {
         </div>
         {trendingLoading ? (
           <ProductGridSkeleton count={4} />
+        ) : trending.length === 0 ? (
+          <p className="text-black/40 text-sm font-medium italic bg-brand-smoke p-8 rounded-xl2 text-center">New trending posters coming soon.</p>
         ) : (
           <ProductSlider products={trending} onQuickView={setQuickView} />
         )}
@@ -129,6 +131,8 @@ export default function Home() {
         </div>
         {productsLoading ? (
           <ProductGridSkeleton count={4} />
+        ) : bestSellers.length === 0 ? (
+          <p className="text-black/40 text-sm font-medium italic bg-brand-smoke p-8 rounded-xl2 text-center">Our best-selling collection will appear here soon.</p>
         ) : (
           <ProductSlider products={bestSellers} onQuickView={setQuickView} />
         )}

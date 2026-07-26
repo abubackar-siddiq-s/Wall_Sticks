@@ -24,6 +24,5 @@ export const toggleWishlist = asyncHandler(async (req, res) => {
     : [...wishlist.products, productId]
 
   await wishlist.save()
-  const populated = await Wishlist.findById(wishlist._id).populate('products')
-  res.json(populated)
+  res.json(wishlist)
 })
