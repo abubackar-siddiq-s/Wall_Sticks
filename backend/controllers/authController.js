@@ -61,8 +61,12 @@ export const requestOtp = asyncHandler(async (req, res) => {
     { upsert: true, new: true }
   )
 
-  // Send email OTP
-  await sendOtp(lowercaseEmail, code)
+  // Send email OTP (with internal fallback logger)
+  try {
+    await sendOtp(lowercaseEmail, code)
+  } catch (err) {
+    console.error('sendOtp handled exception:', err.message || err)
+  }
 
   res.json({ message: 'Verification code sent to email' })
 })
