@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Smartphone, ArrowRight, CheckCircle2, Lock } from 'lucide-react'
+import { X, Smartphone, ArrowRight, Lock, RotateCcw } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useCustomerAuth } from '../context/CustomerAuthContext'
 
@@ -11,6 +11,17 @@ export default function MobileLoginModal() {
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resendCountdown, setResendCountdown] = useState(0)
+
+  useEffect(() => {
+    let timer
+    if (resendCountdown > 0) {
+      timer = setInterval(() => {
+        setResendCountdown((prev) => prev - 1)
+      }, 1000)
+    }
+    return () => clearInterval(timer)
+  }, [resendCountdown])
 
   if (!isLoginModalOpen) return null
 
@@ -25,17 +36,29 @@ export default function MobileLoginModal() {
     }
     setLoading(true)
     try {
-      const resData = await requestCustomerOtp(email.trim(), cleaned)
-      if (resData?.code) {
-        toast.success(`Verification code: ${resData.code}`, { duration: 6000 })
-        setOtp(resData.code)
-      } else {
-        toast.success('Verification code sent to your email')
-        setOtp('')
-      }
+      await requestCustomerOtp(email.trim(), cleaned)
+      toast.success('Verification code sent to your email')
       setStep(2)
+      setResendCountdown(30)
+      setOtp('')
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to send OTP code. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResendOtp = async () => {
+    if (resendCountdown > 0 || loading) return
+    const cleaned = phone.replace(/\D/g, '')
+    setLoading(true)
+    try {
+      await requestCustomerOtp(email.trim(), cleaned)
+      toast.success('Verification code resent to your email!')
+      setResendCountdown(30)
+      setOtp('')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to resend code. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -185,6 +208,19 @@ export default function MobileLoginModal() {
                   className="w-full text-center text-2xl tracking-[0.5em] font-extrabold py-3.5 rounded-2xl bg-brand-smoke border border-black/10 focus:border-brand-black outline-none"
                   autoFocus
                 />
+              </div>
+
+              <div className="flex items-center justify-between text-xs text-black/60 px-1">
+                <span>Didn't receive the code?</span>
+                <button
+                  type="button"
+                  disabled={resendCountdown > 0 || loading}
+                  onClick={handleResendOtp}
+                  className="font-bold text-brand-black hover:underline disabled:opacity-50 disabled:no-underline flex items-center gap-1"
+                >
+                  <RotateCcw size={12} className={resendCountdown > 0 ? 'animate-spin' : ''} />
+                  {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : 'Resend Code'}
+                </button>
               </div>
 
               <button
