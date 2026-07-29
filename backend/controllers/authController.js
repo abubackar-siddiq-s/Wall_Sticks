@@ -109,3 +109,28 @@ export const verifyOtp = asyncHandler(async (req, res) => {
     user: { id: user._id, email: user.email, phone: user.phone, name: user.name }
   })
 })
+
+export const testEmail = asyncHandler(async (req, res) => {
+  const targetEmail = req.query.email || process.env.GMAIL_USER || 'wallsticks0319@gmail.com'
+  const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER
+  const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_PASS
+
+  try {
+    const sent = await sendOtp(targetEmail, '9999')
+    res.json({
+      success: !!sent,
+      recipient: targetEmail,
+      smtpUserConfigured: !!smtpUser,
+      smtpPassConfigured: !!smtpPass,
+      message: sent ? `Test OTP email successfully sent to ${targetEmail}` : 'Email dispatch completed'
+    })
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      recipient: targetEmail,
+      smtpUserConfigured: !!smtpUser,
+      smtpPassConfigured: !!smtpPass,
+      error: err.message || 'Email test failed'
+    })
+  }
+})
