@@ -22,7 +22,40 @@ export async function sendOtp(email, code) {
     </div>
   `
 
-  // 1. Try Resend / Brevo HTTPS APIs first if configured (runs over HTTPS Port 443, instant delivery on Render)
+  const clientId = process.env.GMAIL_CLIENT_ID
+  const clientSecret = process.env.GMAIL_CLIENT_SECRET
+  const refreshToken = process.env.GMAIL_REFRESH_TOKEN
+
+  // 1. Try Gmail OAuth2 via HTTPS Port 443 (100% Free, runs over HTTPS, never blocked by Render)
+  if (smtpUser && clientId && clientSecret && refreshToken) {
+    try {
+      const nodemailer = (await import('nodemailer')).default
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          type: 'OAuth2',
+          user: smtpUser,
+          clientId,
+          clientSecret,
+          refreshToken,
+        },
+      })
+
+      await transporter.sendMail({
+        from: `"WallSticks" <${smtpUser}>`,
+        to: email,
+        subject,
+        html: htmlContent,
+      })
+
+      console.log(`✉️ Email OTP sent via Gmail OAuth2 to ${email}`)
+      return true
+    } catch (err) {
+      console.warn(`⚠️ Gmail OAuth2 transport failed:`, err.message || err)
+    }
+  }
+
+  // 2. Try Resend / Brevo HTTPS APIs first if configured (runs over HTTPS Port 443, instant delivery on Render)
   if (resendKey) {
     try {
       const sent = await new Promise((resolve) => {
@@ -248,6 +281,38 @@ export async function sendShippingNotificationEmail(order, recipientEmail) {
       <p style="font-size: 14px; color: #555;">Thank you for shopping with <strong>WallSticks</strong>! Follow us on Instagram for new drops and customer features: <a href="https://www.instagram.com/wall_sticks_official" style="color: #E1306C; font-weight: bold; text-decoration: none;">@wall_sticks_official</a></p>
     </div>
   `
+
+  const clientId = process.env.GMAIL_CLIENT_ID
+  const clientSecret = process.env.GMAIL_CLIENT_SECRET
+  const refreshToken = process.env.GMAIL_REFRESH_TOKEN
+
+  if (smtpUser && clientId && clientSecret && refreshToken) {
+    try {
+      const nodemailer = (await import('nodemailer')).default
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          type: 'OAuth2',
+          user: smtpUser,
+          clientId,
+          clientSecret,
+          refreshToken,
+        },
+      })
+
+      await transporter.sendMail({
+        from: `"WallSticks" <${smtpUser}>`,
+        to: recipientEmail,
+        subject,
+        html: htmlContent,
+      })
+
+      console.log(`✉️ Shipping notification email sent via Gmail OAuth2 to ${recipientEmail}`)
+      return true
+    } catch (err) {
+      console.warn(`⚠️ Gmail OAuth2 shipping notification failed:`, err.message || err)
+    }
+  }
 
   if (smtpUser && smtpPass) {
     const cleanPass = smtpPass.replace(/\s+/g, '')
