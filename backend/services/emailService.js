@@ -22,7 +22,56 @@ export async function sendOtp(email, code) {
     </div>
   `
 
-  // 1. Try Gmail SMTP via Nodemailer
+  // 1. Try Resend / Brevo HTTPS APIs first if configured (runs over HTTPS Port 443, instant delivery on Render)
+  if (resendKey) {
+    try {
+      const sent = await new Promise((resolve) => {
+        const data = JSON.stringify({
+          from: 'WallSticks <onboarding@resend.dev>',
+          to: [email],
+          subject,
+          html: htmlContent,
+        })
+        const req = https.request({
+          hostname: 'api.resend.com', path: '/emails', method: 'POST',
+          headers: { 'Authorization': `Bearer ${resendKey}`, 'content-type': 'application/json', 'content-length': data.length }
+        }, (res) => resolve(res.statusCode >= 200 && res.statusCode < 300))
+        req.on('error', () => resolve(false))
+        req.write(data)
+        req.end()
+      })
+      if (sent) {
+        console.log(`✉️ Email OTP sent via Resend API to ${email}`)
+        return true
+      }
+    } catch {}
+  }
+
+  if (brevoKey) {
+    try {
+      const sent = await new Promise((resolve) => {
+        const data = JSON.stringify({
+          sender: { name: 'WallSticks', email: 'otp@wallsticks.in' },
+          to: [{ email }],
+          subject,
+          htmlContent,
+        })
+        const req = https.request({
+          hostname: 'api.brevo.com', path: '/v3/smtp/email', method: 'POST',
+          headers: { 'accept': 'application/json', 'api-key': brevoKey, 'content-type': 'application/json', 'content-length': data.length }
+        }, (res) => resolve(res.statusCode >= 200 && res.statusCode < 300))
+        req.on('error', () => resolve(false))
+        req.write(data)
+        req.end()
+      })
+      if (sent) {
+        console.log(`✉️ Email OTP sent via Brevo API to ${email}`)
+        return true
+      }
+    } catch {}
+  }
+
+  // 2. Try Gmail SMTP via Nodemailer (with 3s fast timeout to prevent cloud hanging)
   if (smtpUser && smtpPass) {
     const cleanPass = smtpPass.replace(/\s+/g, '')
     const portsToTry = [
@@ -41,9 +90,9 @@ export async function sendOtp(email, code) {
             user: smtpUser,
             pass: cleanPass,
           },
-          connectionTimeout: 8000,
-          greetingTimeout: 8000,
-          socketTimeout: 8000,
+          connectionTimeout: 3000,
+          greetingTimeout: 3000,
+          socketTimeout: 3000,
         })
 
         await transporter.sendMail({
