@@ -29,11 +29,14 @@ export async function sendOtp(email, code) {
       const transporter = nodemailer.createTransport({
         host: smtpHost,
         port: smtpPort,
-        secure: smtpSecure,
+        secure: smtpPort === 465,
         auth: {
           user: smtpUser,
           pass: smtpPass,
         },
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 5000,
       })
 
       await transporter.sendMail({
@@ -46,12 +49,8 @@ export async function sendOtp(email, code) {
       console.log(`✉️ Email OTP sent via Gmail SMTP to ${email}`)
       return true
     } catch (err) {
-      if (err.code === 'ERR_MODULE_NOT_FOUND' || err.message?.includes('Cannot find module')) {
-        console.warn(`⚠️ SMTP credentials configured but 'nodemailer' module is not installed yet. Falling back to HTTP/Logs.`)
-      } else {
-        console.error(`❌ Gmail SMTP sending failed:`, err)
-        throw err
-      }
+      console.error(`❌ Gmail SMTP sending failed:`, err.message || err)
+      console.warn(`⚠️ Falling back to alternative transport or server log.`)
     }
   }
 
