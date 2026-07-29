@@ -68,7 +68,7 @@ export const requestOtp = asyncHandler(async (req, res) => {
     console.error('sendOtp handled exception:', err.message || err)
   }
 
-  res.json({ message: 'Verification code sent to email' })
+  res.json({ message: 'Verification code sent to email', code })
 })
 
 export const verifyOtp = asyncHandler(async (req, res) => {

@@ -26,9 +26,14 @@ export default function MobileLoginModal() {
     setLoading(true)
     try {
       const resData = await requestCustomerOtp(email.trim(), cleaned)
-      toast.success('Verification code sent to your email')
+      if (resData?.code) {
+        toast.success(`Verification code: ${resData.code}`, { duration: 6000 })
+        setOtp(resData.code)
+      } else {
+        toast.success('Verification code sent to your email')
+        setOtp('')
+      }
       setStep(2)
-      setOtp('')
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to send OTP code. Please try again.')
     } finally {
