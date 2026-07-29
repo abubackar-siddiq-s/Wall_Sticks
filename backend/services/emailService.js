@@ -24,33 +24,40 @@ export async function sendOtp(email, code) {
 
   // 1. Try Gmail SMTP via Nodemailer
   if (smtpUser && smtpPass) {
-    try {
-      const nodemailer = (await import('nodemailer')).default
-      const transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpPort === 465,
-        auth: {
-          user: smtpUser,
-          pass: smtpPass,
-        },
-        connectionTimeout: 5000,
-        greetingTimeout: 5000,
-        socketTimeout: 5000,
-      })
+    const cleanPass = smtpPass.replace(/\s+/g, '')
+    const portsToTry = [
+      { port: 587, secure: false },
+      { port: 465, secure: true },
+    ]
 
-      await transporter.sendMail({
-        from: `"WallSticks" <${smtpUser}>`,
-        to: email,
-        subject,
-        html: htmlContent,
-      })
+    for (const p of portsToTry) {
+      try {
+        const nodemailer = (await import('nodemailer')).default
+        const transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: p.port,
+          secure: p.secure,
+          auth: {
+            user: smtpUser,
+            pass: cleanPass,
+          },
+          connectionTimeout: 8000,
+          greetingTimeout: 8000,
+          socketTimeout: 8000,
+        })
 
-      console.log(`✉️ Email OTP sent via Gmail SMTP to ${email}`)
-      return true
-    } catch (err) {
-      console.error(`❌ Gmail SMTP sending failed:`, err.message || err)
-      console.warn(`⚠️ Falling back to alternative transport or server log.`)
+        await transporter.sendMail({
+          from: `"WallSticks" <${smtpUser}>`,
+          to: email,
+          subject,
+          html: htmlContent,
+        })
+
+        console.log(`✉️ Email OTP sent via Gmail SMTP (port ${p.port}) to ${email}`)
+        return true
+      } catch (err) {
+        console.warn(`⚠️ Gmail SMTP port ${p.port} failed:`, err.message || err)
+      }
     }
   }
 
@@ -194,26 +201,37 @@ export async function sendShippingNotificationEmail(order, recipientEmail) {
   `
 
   if (smtpUser && smtpPass) {
-    try {
-      const nodemailer = (await import('nodemailer')).default
-      const transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpSecure,
-        auth: { user: smtpUser, pass: smtpPass },
-      })
+    const cleanPass = smtpPass.replace(/\s+/g, '')
+    const portsToTry = [
+      { port: 587, secure: false },
+      { port: 465, secure: true },
+    ]
 
-      await transporter.sendMail({
-        from: `"WallSticks" <${smtpUser}>`,
-        to: recipientEmail,
-        subject,
-        html: htmlContent,
-      })
+    for (const p of portsToTry) {
+      try {
+        const nodemailer = (await import('nodemailer')).default
+        const transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: p.port,
+          secure: p.secure,
+          auth: { user: smtpUser, pass: cleanPass },
+          connectionTimeout: 8000,
+          greetingTimeout: 8000,
+          socketTimeout: 8000,
+        })
 
-      console.log(`✉️ Shipping notification email sent via Gmail SMTP to ${recipientEmail}`)
-      return true
-    } catch (err) {
-      console.error(`❌ Gmail SMTP shipping notification failed:`, err)
+        await transporter.sendMail({
+          from: `"WallSticks" <${smtpUser}>`,
+          to: recipientEmail,
+          subject,
+          html: htmlContent,
+        })
+
+        console.log(`✉️ Shipping notification email sent via Gmail SMTP (port ${p.port}) to ${recipientEmail}`)
+        return true
+      } catch (err) {
+        console.warn(`⚠️ Gmail SMTP shipping notification port ${p.port} failed:`, err.message || err)
+      }
     }
   }
 
