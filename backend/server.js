@@ -69,6 +69,7 @@ app.post('/api/payments', publicWriteLimiter)
 app.post('/api/orders', publicWriteLimiter)
 app.post('/api/contact', rateLimit({ windowMs: 15 * 60 * 1000, max: 10 })) // contact form gets a stricter cap — legitimate users don't submit it 10x in 15 min
 
+app.get('/', (req, res) => res.json({ message: 'WallSticks API is live and operational', health: '/api/health' }))
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }))
 
 app.use('/api/auth', authRoutes)
