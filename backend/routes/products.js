@@ -22,7 +22,7 @@ router.get('/:id/recommended', productController.getRecommendedProducts)
 const productValidators = [
   body('name').isString().trim().isLength({ min: 2, max: 150 }).withMessage('Name must be 2–150 characters'),
   body('price').isFloat({ min: 0 }).withMessage('Price must be a positive number'),
-  body('category').isString().notEmpty().withMessage('Category is required'),
+  body('category').optional().isString().notEmpty().withMessage('Category is required'),
 ]
 
 router.post('/', protectAdmin, uploadPosterImages.array('images', 6), productValidators, validate, productController.createProduct)

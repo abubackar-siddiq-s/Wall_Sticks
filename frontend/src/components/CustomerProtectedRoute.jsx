@@ -8,7 +8,7 @@ export default function CustomerProtectedRoute({ children }) {
 
   useEffect(() => {
     if (!isCustomerLoggedIn) {
-      toast('Please login with your mobile number first', { icon: '📱' })
+      toast('Please login to access this page', { icon: '🔒' })
       openLoginModal()
     }
   }, [isCustomerLoggedIn, openLoginModal])

@@ -24,14 +24,20 @@ export function CustomerAuthProvider({ children }) {
     }
   }, [customer])
 
-  const loginCustomer = async (phone, name = 'Customer') => {
+  const requestCustomerOtp = async (email, phone) => {
     const cleanedPhone = phone.replace(/\D/g, '')
-    const { data } = await api.post('/auth/customer/login', { phone: cleanedPhone, name })
+    const { data } = await api.post('/auth/customer/request-otp', { email, phone: cleanedPhone })
+    return data
+  }
+
+  const verifyCustomerOtp = async (email, phone, code) => {
+    const cleanedPhone = phone.replace(/\D/g, '')
+    const { data } = await api.post('/auth/customer/verify-otp', { email, phone: cleanedPhone, code })
     
     if (data.token) {
       localStorage.setItem('wallsticks_customer_token', data.token)
     }
-    const userData = { id: data.user.id, phone: data.user.phone, name: data.user.name }
+    const userData = { id: data.user.id, email: data.user.email, phone: data.user.phone, name: data.user.name }
     setCustomer(userData)
     setIsLoginModalOpen(false)
     return userData
@@ -51,7 +57,8 @@ export function CustomerAuthProvider({ children }) {
       value={{
         customer,
         isCustomerLoggedIn: !!customer,
-        loginCustomer,
+        requestCustomerOtp,
+        verifyCustomerOtp,
         logoutCustomer,
         isLoginModalOpen,
         openLoginModal,

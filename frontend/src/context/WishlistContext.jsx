@@ -41,7 +41,7 @@ export function WishlistProvider({ children }) {
 
   const toggleWishlist = (product) => {
     if (!isCustomerLoggedIn) {
-      toast('Please login with your mobile number to save items to wishlist', { icon: '📱' })
+      toast('Please login to save items to wishlist', { icon: '🔒' })
       openLoginModal()
       return
     }

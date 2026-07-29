@@ -12,6 +12,7 @@ export default function QuickViewModal({ product, onClose }) {
   const { addToCart } = useCart()
   const { toggleWishlist, isWishlisted } = useWishlist()
   const [quantity, setQuantity] = useState(1)
+  const [isLandscape, setIsLandscape] = useState(false)
 
   return (
     <motion.div
@@ -27,8 +28,18 @@ export default function QuickViewModal({ product, onClose }) {
           className="bg-white rounded-xl3 w-full max-w-3xl max-h-[90vh] overflow-y-auto grid sm:grid-cols-2"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="aspect-[4/5] sm:aspect-auto sm:h-full bg-brand-smoke">
-            <img src={imgSrc(product.images?.[0])} alt={product.name} className="w-full h-full object-cover" />
+          <div className={`aspect-[4/5] sm:aspect-auto sm:h-full overflow-hidden ${isLandscape ? 'bg-white' : 'bg-brand-smoke'}`}>
+            <img 
+              src={imgSrc(product.images?.[0])} 
+              alt={product.name} 
+              onLoad={(e) => {
+                const { naturalWidth, naturalHeight } = e.currentTarget
+                if (naturalWidth > naturalHeight) {
+                  setIsLandscape(true)
+                }
+              }}
+              className={`w-full h-full ${isLandscape ? 'object-contain' : 'object-cover'}`} 
+            />
           </div>
 
           <div className="p-6 sm:p-8 relative">

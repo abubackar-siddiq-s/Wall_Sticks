@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Heart, Trash2, ShoppingBag } from 'lucide-react'
 import { useWishlist } from '../context/WishlistContext'
@@ -25,6 +26,8 @@ export default function Wishlist() {
     )
   }
 
+  const [landscapeItems, setLandscapeItems] = useState({})
+
   return (
     <div className="max-w-6xl mx-auto px-5 md:px-8 py-10">
       <h1 className="text-3xl md:text-4xl font-extrabold mb-8">
@@ -33,11 +36,22 @@ export default function Wishlist() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
         {validItems.map((product) => {
           const imageSrc = imgSrc(product.images?.[0])
+          const isLandscape = !!landscapeItems[product._id]
 
           return (
             <div key={product._id} className="bg-white rounded-xl2 overflow-hidden shadow-soft">
-              <Link to={`/product/${product._id}`} className="block aspect-[4/5] bg-brand-smoke">
-                <img src={imageSrc} alt={product.name || 'Poster'} className="w-full h-full object-cover" />
+              <Link to={`/product/${product._id}`} className={`block aspect-[4/5] overflow-hidden ${isLandscape ? 'bg-white' : 'bg-brand-smoke'}`}>
+                <img 
+                  src={imageSrc} 
+                  alt={product.name || 'Poster'} 
+                  onLoad={(e) => {
+                    const { naturalWidth, naturalHeight } = e.currentTarget
+                    if (naturalWidth > naturalHeight) {
+                      setLandscapeItems((prev) => ({ ...prev, [product._id]: true }))
+                    }
+                  }}
+                  className={`w-full h-full ${isLandscape ? 'object-contain' : 'object-cover'}`} 
+                />
               </Link>
               <div className="p-4">
                 <h3 className="font-semibold text-sm mb-1 line-clamp-1">{product.name || 'Poster'}</h3>

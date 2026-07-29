@@ -18,24 +18,19 @@ import AdminLayout from '../../components/AdminLayout'
 import api from '../../lib/api'
 
 // Interactive Revenue Bar Chart
-function RevenueChart() {
+function RevenueChart({ data = [] }) {
   const [hoveredIndex, setHoveredIndex] = useState(null)
-  const data = [
-    { week: 'W1', amount: 12400 },
-    { week: 'W2', amount: 16800 },
-    { week: 'W3', amount: 14200 },
-    { week: 'W4', amount: 21500 },
-    { week: 'W5', amount: 19800 },
-    { week: 'W6', amount: 26400 },
-    { week: 'W7', amount: 23100 },
-    { week: 'W8', amount: 29500 },
-    { week: 'W9', amount: 27800 },
-    { week: 'W10', amount: 32400 },
-    { week: 'W11', amount: 31000 },
-    { week: 'W12', amount: 38500 },
-  ]
+  const max = Math.max(...data.map((d) => d.amount), 0)
 
-  const max = Math.max(...data.map((d) => d.amount))
+  if (!data || data.length === 0 || max === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-48 border border-dashed border-black/10 rounded-xl p-4 text-center">
+        <TrendingUp size={24} className="text-black/25 mb-2" />
+        <p className="text-xs font-semibold text-black/50">No verified sales revenue recorded yet</p>
+        <p className="text-[11px] text-black/35 mt-0.5">Real sales breakdown will display here as customer orders are verified.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -48,9 +43,9 @@ function RevenueChart() {
 
       <div className="flex items-end gap-2.5 h-48 pt-6 pb-2 px-2 relative border-b border-black/10">
         {data.map((item, i) => {
-          const heightPercent = (item.amount / max) * 100
+          const heightPercent = max > 0 ? (item.amount / max) * 100 : 0
           const isHovered = hoveredIndex === i
-          const isPeak = item.amount === max
+          const isPeak = max > 0 && item.amount === max
 
           return (
             <div
@@ -178,7 +173,7 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-xs text-black/50 font-medium">
-                Live MongoDB Operations Active
+                Live System Active
               </span>
             </div>
           </div>
@@ -243,7 +238,7 @@ export default function AdminDashboard() {
               12 Weeks
             </span>
           </div>
-          <RevenueChart />
+          <RevenueChart data={stats.weeklyData || []} />
         </div>
 
         {/* TOP PERFORMING POSTERS */}

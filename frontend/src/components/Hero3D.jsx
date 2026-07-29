@@ -2,7 +2,7 @@ import { Suspense, useRef, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useTexture, Environment, Float } from '@react-three/drei'
 import * as THREE from 'three'
-import { useTrendingProducts } from '../hooks/useProducts'
+import { useTrendingProducts, useProducts } from '../hooks/useProducts'
 import { imgSrc } from '../lib/imageUrl'
 
 // A single framed poster: black frame + textured canvas + subtle rim light
@@ -91,9 +91,26 @@ const posterLayouts = [
 ]
 
 export default function Hero3D() {
-  const { products } = useTrendingProducts()
+  const { products: trendingProducts } = useTrendingProducts()
+  const { products: allCatalogProducts } = useProducts()
 
   const defaultSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800"><rect width="600" height="800" fill="%23111111"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23FFD000" font-family="sans-serif" font-size="42" font-weight="bold">WALLSTICKS</text></svg>'
+
+  const imageList = useMemo(() => {
+    const combined = [...(trendingProducts || []), ...(allCatalogProducts || [])]
+    const list = []
+    combined.forEach((p) => {
+      if (Array.isArray(p.images)) {
+        p.images.forEach((img) => {
+          const url = imgSrc(img)
+          if (url && !list.includes(url)) {
+            list.push(url)
+          }
+        })
+      }
+    })
+    return list
+  }, [trendingProducts, allCatalogProducts])
 
   return (
     <div className="hidden lg:block absolute top-0 bottom-0 right-0 w-[58%] pointer-events-none">
@@ -107,8 +124,7 @@ export default function Hero3D() {
         <directionalLight position={[-5, -2, 3]} intensity={0.4} color="#ffffff" />
         <Suspense fallback={null}>
           {posterLayouts.map((p, i) => {
-            const product = products[i % (products.length || 1)]
-            const textureUrl = product?.images?.[0] ? imgSrc(product.images[0]) : defaultSvg
+            const textureUrl = imageList.length > 0 ? imageList[i % imageList.length] : defaultSvg
             return (
               <FramedPoster
                 key={i}

@@ -1,15 +1,21 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Upload, ImageIcon } from 'lucide-react'
+import { Upload, ImageIcon, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useCart } from '../context/CartContext'
 import { useSettings } from '../hooks/useSettings'
+import api from '../lib/api'
+import ImageCropperModal from '../components/ImageCropperModal'
 
 const defaultSizes = ['A5', 'A4', 'A3', '12x18', '18x24', '24x36']
 
 export default function CreatePoster() {
   const [preview, setPreview] = useState(null)
   const [fileName, setFileName] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [customImageInfo, setCustomImageInfo] = useState(null)
+  const [pendingFile, setPendingFile] = useState(null)
+  const [isLandscape, setIsLandscape] = useState(false)
   const { settings } = useSettings()
   const availableSizes = settings?.sizePrices && typeof settings.sizePrices === 'object' ? Object.keys(settings.sizePrices) : defaultSizes
 
@@ -25,24 +31,52 @@ export default function CreatePoster() {
   const handleFile = (file) => {
     if (!file) return
     if (!file.type.startsWith('image/')) return toast.error('Please upload an image file')
-    setFileName(file.name)
-    const reader = new FileReader()
-    reader.onload = (e) => setPreview(e.target.result)
-    reader.readAsDataURL(file)
+    setPendingFile(file)
+  }
+
+  const uploadFile = async (file) => {
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('customImage', file)
+
+    try {
+      const { data } = await api.post('/orders/upload-custom', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      setCustomImageInfo({ url: data.url, publicId: data.publicId })
+      toast.success('Image uploaded successfully')
+    } catch (err) {
+      toast.error('Failed to upload image. Please try again.')
+      setPreview(null)
+      setFileName('')
+      setCustomImageInfo(null)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleCropped = (croppedFile, croppedPreviewUrl) => {
+    setPendingFile(null)
+    setFileName(croppedFile.name)
+    setPreview(croppedPreviewUrl)
+    uploadFile(croppedFile)
   }
 
   const customPrice = settings?.sizePrices?.[size] || { A5: 259, A4: 319, A3: 399, '12x18': 499, '18x24': 699, '24x36': 997 }[size] || 399
 
-  const customProduct = {
-    _id: `custom-${Date.now()}`,
-    name: `Custom Poster (${fileName || 'your upload'})`,
-    price: customPrice,
-    images: [preview || ''],
-    isCustom: true,
-  }
-
   const handleAdd = (buyNow) => {
-    if (!preview) return toast.error('Upload an image first')
+    if (uploading) return toast.error('Please wait for the image to finish uploading')
+    if (!customImageInfo) return toast.error('Upload an image first')
+
+    const customProduct = {
+      _id: `custom-${Date.now()}`,
+      name: `Custom Poster (${fileName || 'your upload'})`,
+      price: customPrice,
+      images: [customImageInfo.url],
+      isCustom: true,
+      customImage: customImageInfo,
+    }
+
     addToCart(customProduct, { size, quantity, notes })
     if (buyNow) navigate('/checkout')
   }
@@ -59,13 +93,29 @@ export default function CreatePoster() {
         {/* LEFT: UPLOAD / PREVIEW */}
         <div>
           <div
-            onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files[0]) }}
+            onDrop={(e) => { e.preventDefault(); !uploading && handleFile(e.dataTransfer.files[0]) }}
             onDragOver={(e) => e.preventDefault()}
-            onClick={() => fileInput.current.click()}
-            className="aspect-[4/5] rounded-xl3 border-2 border-dashed border-black/15 hover:border-brand-yellow bg-brand-smoke flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-colors"
+            onClick={() => !uploading && fileInput.current.click()}
+            className={`aspect-[4/5] rounded-xl3 border-2 border-dashed border-black/15 hover:border-brand-yellow flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all ${isLandscape ? 'bg-white' : 'bg-brand-smoke'}`}
           >
-            {preview ? (
-              <img src={preview} alt="Uploaded preview" className="w-full h-full object-cover" />
+            {uploading ? (
+              <div className="text-center px-8 animate-pulse">
+                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mx-auto mb-4 shadow-soft">
+                  <Loader2 size={24} className="text-brand-gold animate-spin" />
+                </div>
+                <p className="font-semibold mb-1">Uploading image...</p>
+                <p className="text-xs text-black/40">Storing original quality on cloud</p>
+              </div>
+            ) : preview ? (
+              <img 
+                src={preview} 
+                alt="Uploaded preview" 
+                onLoad={(e) => {
+                  const { naturalWidth, naturalHeight } = e.currentTarget
+                  setIsLandscape(naturalWidth > naturalHeight)
+                }}
+                className={`w-full h-full ${isLandscape ? 'object-contain' : 'object-cover'}`} 
+              />
             ) : (
               <div className="text-center px-8">
                 <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mx-auto mb-4 shadow-soft">
@@ -77,7 +127,7 @@ export default function CreatePoster() {
             )}
             <input ref={fileInput} type="file" accept="image/*" hidden onChange={(e) => handleFile(e.target.files[0])} />
           </div>
-          {preview && (
+          {preview && !uploading && (
             <button onClick={() => fileInput.current.click()} className="mt-4 text-sm font-semibold underline flex items-center gap-1.5">
               <ImageIcon size={14} /> Replace image
             </button>
@@ -106,14 +156,23 @@ export default function CreatePoster() {
             />
           </div>
 
-          <p className="text-2xl font-extrabold mb-6">₹{customProduct.price}</p>
+          <p className="text-2xl font-extrabold mb-6">₹{customPrice}</p>
 
           <div className="flex gap-3">
             <button onClick={() => handleAdd(false)} className="flex-1 border-2 border-brand-black font-bold py-4 rounded-full hover:bg-brand-smoke">Add to Cart</button>
             <button onClick={() => handleAdd(true)} className="flex-1 bg-brand-black text-brand-yellow font-bold py-4 rounded-full hover:shadow-glow">Buy Now</button>
           </div>
-        </div>
       </div>
+    </div>
+
+      {pendingFile && (
+        <ImageCropperModal
+          file={pendingFile}
+          size={size}
+          onClose={() => setPendingFile(null)}
+          onCropped={handleCropped}
+        />
+      )}
     </div>
   )
 }

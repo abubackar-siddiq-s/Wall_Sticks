@@ -31,6 +31,30 @@ export async function getAdminStats() {
     .sort('-createdAt')
     .limit(5)
 
+  // 5. Real Weekly Revenue breakdown (past 12 weeks)
+  const weeklyData = []
+  const now = new Date()
+  for (let i = 11; i >= 0; i--) {
+    const weekStart = new Date(now.getTime() - (i + 1) * 7 * 24 * 60 * 60 * 1000)
+    const weekEnd = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000)
+    const weekLabel = `W${12 - i}`
+
+    const weekAgg = await Order.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: weekStart, $lt: weekEnd },
+          status: { $in: ['verified', 'printing', 'packed', 'shipped', 'delivered'] },
+        },
+      },
+      { $group: { _id: null, total: { $sum: '$pricing.total' } } },
+    ])
+
+    weeklyData.push({
+      week: weekLabel,
+      amount: weekAgg[0]?.total || 0,
+    })
+  }
+
   return {
     revenue30d,
     totalOrders,
@@ -38,5 +62,6 @@ export async function getAdminStats() {
     completedOrders,
     topProducts,
     recentOrders,
+    weeklyData,
   }
 }

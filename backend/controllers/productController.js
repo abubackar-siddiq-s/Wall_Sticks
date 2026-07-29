@@ -8,7 +8,15 @@ const normalizeImages = (req) => {
   if (req.body.images) {
     const imgs = Array.isArray(req.body.images) ? req.body.images : [req.body.images]
     return imgs.map((img) => {
-      if (typeof img === 'string') return { url: img, publicId: '' }
+      if (typeof img === 'string') {
+        if (img.trim().startsWith('{')) {
+          try {
+            const parsed = JSON.parse(img)
+            return { url: parsed.url || '', publicId: parsed.publicId || '' }
+          } catch {}
+        }
+        return { url: img, publicId: '' }
+      }
       if (img && typeof img === 'object') return { url: img.url || '', publicId: img.publicId || '' }
       return null
     }).filter(Boolean)

@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useSettings } from '../hooks/useSettings'
 import { useProduct } from '../hooks/useProducts'
+import { responsiveImgProps } from '../lib/imageUrl'
 
 const defaultSizePrices = {
   A5: 259,
@@ -35,6 +36,11 @@ export default function ProductDetail() {
 
   const [selectedSize, setSelectedSize] = useState('A3')
   const [quantity, setQuantity] = useState(1)
+  const [isLandscape, setIsLandscape] = useState(false)
+
+  useEffect(() => {
+    setIsLandscape(false)
+  }, [id])
 
   // Reviews state for this specific poster
   const [posterReviews, setPosterReviews] = useState([])
@@ -133,11 +139,17 @@ export default function ProductDetail() {
       <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-start">
         {/* MAIN POSTER IMAGE (ONLY SINGLE IMAGE) */}
         <div>
-          <div className="rounded-3xl overflow-hidden bg-brand-smoke aspect-[4/5] shadow-card border border-black/5">
+          <div className={`rounded-3xl overflow-hidden aspect-[4/5] shadow-card border border-black/5 ${isLandscape ? 'bg-white' : 'bg-brand-smoke'}`}>
             <img
-              src={product.images?.[0]}
+              {...responsiveImgProps(product.images?.[0], { sizes: '(max-width: 768px) 100vw, 50vw' })}
               alt={product.name}
-              className="w-full h-full object-cover"
+              onLoad={(e) => {
+                const { naturalWidth, naturalHeight } = e.currentTarget
+                if (naturalWidth > naturalHeight) {
+                  setIsLandscape(true)
+                }
+              }}
+              className={`w-full h-full ${isLandscape ? 'object-contain' : 'object-cover'}`}
             />
           </div>
         </div>

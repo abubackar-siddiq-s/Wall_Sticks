@@ -3,7 +3,13 @@ import Trending from '../models/Trending.js'
 
 export const getTrending = asyncHandler(async (req, res) => {
   const trending = await Trending.find().populate('product').sort('order')
-  res.json(trending)
+  // Automatically clean up deleted products from trending list
+  const validTrending = trending.filter(t => t.product !== null)
+  if (validTrending.length !== trending.length) {
+    const invalidIds = trending.filter(t => t.product === null).map(t => t._id)
+    await Trending.deleteMany({ _id: { $in: invalidIds } })
+  }
+  res.json(validTrending)
 })
 
 export const addTrending = asyncHandler(async (req, res) => {

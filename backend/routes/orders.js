@@ -1,7 +1,7 @@
 import express from 'express'
 import { body } from 'express-validator'
 import * as orderController from '../controllers/orderController.js'
-import { protectAdmin } from '../middleware/auth.js'
+import { protectAdmin, optionalCustomer } from '../middleware/auth.js'
 import { uploadCustomImage } from '../middleware/upload.js'
 import { validate } from '../middleware/validate.js'
 
@@ -17,10 +17,13 @@ const orderValidators = [
   body('pricing.total').isFloat({ min: 0 }).withMessage('Order total is required'),
 ]
 
-router.post('/', uploadCustomImage.single('customImage'), orderController.parseOrderPayload, orderValidators, validate, orderController.createOrder)
+router.post('/upload-custom', uploadCustomImage.single('customImage'), orderController.uploadCustomImage)
+
+router.post('/', optionalCustomer, uploadCustomImage.single('customImage'), orderController.parseOrderPayload, orderValidators, validate, orderController.createOrder)
+
 
 router.get('/track/:orderNumber', orderController.getOrderByNumber)
-router.get('/phone/:phone', orderController.getOrdersByPhone)
+router.get('/phone/:phone', optionalCustomer, orderController.getOrdersByPhone)
 
 router.get('/', protectAdmin, orderController.getOrders)
 router.put('/:id/status', protectAdmin, [

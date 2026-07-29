@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Heart, Eye, ShoppingBag, Star } from 'lucide-react'
@@ -9,6 +10,7 @@ export default function ProductCard({ product, onQuickView }) {
   const { toggleWishlist, isWishlisted } = useWishlist()
   const { addToCart } = useCart()
   const wishlisted = isWishlisted(product._id)
+  const [isLandscape, setIsLandscape] = useState(false)
 
   return (
     <motion.div
@@ -16,12 +18,18 @@ export default function ProductCard({ product, onQuickView }) {
       transition={{ type: 'spring', stiffness: 300, damping: 22 }}
       className="group relative bg-white rounded-xl2 overflow-hidden shadow-soft hover:shadow-card transition-shadow"
     >
-      <Link to={`/product/${product._id}`} className="block relative aspect-[4/5] overflow-hidden bg-brand-smoke">
+      <Link to={`/product/${product._id}`} className={`block relative aspect-[4/5] overflow-hidden ${isLandscape ? 'bg-white' : 'bg-brand-smoke'}`}>
         <img
           {...responsiveImgProps(product.images?.[0], { sizes: '(max-width: 640px) 50vw, 25vw' })}
           alt={product.name}
           loading="lazy"
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          onLoad={(e) => {
+            const { naturalWidth, naturalHeight } = e.currentTarget
+            if (naturalWidth > naturalHeight) {
+              setIsLandscape(true)
+            }
+          }}
+          className={`w-full h-full group-hover:scale-105 transition-transform duration-500 ${isLandscape ? 'object-contain' : 'object-cover'}`}
         />
         {product.bestSeller && (
           <span className="absolute top-3 left-3 bg-brand-yellow text-brand-black text-[11px] font-bold px-2.5 py-1 rounded-full">Best Seller</span>

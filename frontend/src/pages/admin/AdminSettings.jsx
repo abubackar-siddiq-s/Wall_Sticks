@@ -23,7 +23,7 @@ const defaultFormState = {
   phone: '+91 88705 58436',
   whatsapp: '+91 88705 58436',
   email: 'wallsticks0319@gmail.com',
-  instagram: '@wallsticks',
+  instagram: '@wall_sticks_official',
   address: 'Perundurai, Erode, Tamil Nadu',
   upiId: 'wallsticks@okhdfcbank',
   courierCharge: 79,

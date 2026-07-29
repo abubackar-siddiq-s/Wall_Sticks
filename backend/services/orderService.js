@@ -1,4 +1,5 @@
 import Order from '../models/Order.js'
+import Payment from '../models/Payment.js'
 
 const generateOrderNumber = () => 'PW' + Math.floor(100000 + Math.random() * 900000)
 
@@ -15,6 +16,7 @@ export async function createOrder(data, file) {
 
   const order = await Order.create({
     orderNumber,
+    user: data.user,
     items,
     shipping: data.shipping,
     deliveryMethod: data.deliveryMethod || 'courier',
@@ -71,6 +73,24 @@ export async function updateOrderStatus(id, status, note) {
     } else if (order.payment && backendStatus === 'rejected') {
       await Payment.findByIdAndUpdate(order.payment, { status: 'rejected' }).catch(() => {})
     }
+
+    if (backendStatus === 'shipped') {
+      let recipientEmail = order.shipping?.email
+      if (!recipientEmail && order.user) {
+        try {
+          const User = (await import('../models/User.js')).default
+          const userDoc = await User.findById(order.user)
+          if (userDoc?.email) recipientEmail = userDoc.email
+        } catch {}
+      }
+      if (recipientEmail) {
+        const { sendShippingNotificationEmail } = await import('./emailService.js')
+        sendShippingNotificationEmail(order, recipientEmail).catch((err) => {
+          console.error('Failed to send shipping notification email:', err)
+        })
+      }
+    }
+
     return order
   }
 

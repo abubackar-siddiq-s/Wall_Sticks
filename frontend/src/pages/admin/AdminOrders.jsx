@@ -70,13 +70,31 @@ function OrderModal({ order, onClose, onUpdate }) {
             <div className="space-y-2.5">
               {order.items?.map((it, idx) => (
                 <div key={idx} className="bg-brand-smoke/60 rounded-2xl p-3.5 flex gap-3 items-center border border-black/5">
-                  <div className="w-12 h-15 bg-brand-yellow/15 border border-brand-yellow/30 rounded-xl shrink-0 flex items-center justify-center text-[10px] font-extrabold text-brand-gold">
-                    Poster
-                  </div>
+                  {it.isCustom && it.customImage?.url ? (
+                    <a href={it.customImage.url} target="_blank" rel="noopener noreferrer" className="w-12 h-15 bg-brand-yellow/15 border border-brand-yellow/30 rounded-xl shrink-0 overflow-hidden flex items-center justify-center group/item">
+                      <img src={it.customImage.url} alt="Custom upload" className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300" />
+                    </a>
+                  ) : (
+                    <div className="w-12 h-15 bg-brand-yellow/15 border border-brand-yellow/30 rounded-xl shrink-0 flex items-center justify-center text-[10px] font-extrabold text-brand-gold">
+                      Poster
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-extrabold text-brand-black truncate text-sm">{it.name}</p>
+                    <p className="font-extrabold text-brand-black truncate text-sm">
+                      {it.name}
+                      {it.isCustom && (
+                        <span className="ml-1.5 text-[9px] bg-brand-yellow text-brand-black px-1.5 py-0.5 rounded-md font-extrabold uppercase tracking-wide">
+                          Custom
+                        </span>
+                      )}
+                    </p>
                     <p className="text-black/60 font-medium mt-0.5">Size: <span className="font-bold text-brand-black">{it.size}</span></p>
                     <p className="text-black/45 mt-0.5">Qty: {it.qty || 1} · ₹{it.price || order.total} total</p>
+                    {it.isCustom && it.customImage?.url && (
+                      <a href={it.customImage.url} target="_blank" rel="noopener noreferrer" className="text-brand-gold hover:underline font-bold text-[11px] flex items-center gap-1 mt-1.5">
+                        <ExternalLink size={12} /> View Original Image
+                      </a>
+                    )}
                   </div>
                 </div>
               ))}
@@ -182,6 +200,8 @@ export default function AdminOrders() {
               qty: it.quantity,
               size: it.size,
               price: it.price,
+              isCustom: it.isCustom,
+              customImage: it.customImage,
             })) || [],
           }))
           setOrders(normalized)

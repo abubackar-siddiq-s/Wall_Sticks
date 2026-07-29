@@ -1,4 +1,5 @@
-import { useTrendingProducts } from '../hooks/useProducts'
+import { useMemo } from 'react'
+import { useTrendingProducts, useProducts } from '../hooks/useProducts'
 import { imgSrc } from '../lib/imageUrl'
 
 const posterConfig = [
@@ -10,14 +11,32 @@ const posterConfig = [
 ]
 
 export default function HeroFallback() {
-  const { products } = useTrendingProducts()
+  const { products: trendingProducts } = useTrendingProducts()
+  const { products: allCatalogProducts } = useProducts()
+
+  const defaultSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="533" viewBox="0 0 400 533"><rect width="400" height="533" fill="%23111111"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23FFD000" font-family="sans-serif" font-size="28" font-weight="bold">WALLSTICKS</text></svg>'
+
+  const imageList = useMemo(() => {
+    const combined = [...(trendingProducts || []), ...(allCatalogProducts || [])]
+    const list = []
+    combined.forEach((p) => {
+      if (Array.isArray(p.images)) {
+        p.images.forEach((img) => {
+          const url = imgSrc(img)
+          if (url && !list.includes(url)) {
+            list.push(url)
+          }
+        })
+      }
+    })
+    return list
+  }, [trendingProducts, allCatalogProducts])
 
   return (
     <div className="hidden lg:block absolute top-0 bottom-0 right-0 w-[50%] overflow-hidden pointer-events-none" aria-hidden="true">
       <div className="absolute inset-0 bg-gradient-to-br from-brand-yellow/10 via-transparent to-transparent opacity-60" />
       {posterConfig.map((p, i) => {
-        const product = products[i % (products.length || 1)]
-        const imageSrc = product ? imgSrc(product.images?.[0]) : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="533" viewBox="0 0 400 533"><rect width="400" height="533" fill="%23111111"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23FFD000" font-family="sans-serif" font-size="28" font-weight="bold">WALLSTICKS</text></svg>'
+        const imageSrc = imageList.length > 0 ? imageList[i % imageList.length] : defaultSvg
         return (
           <div
             key={i}

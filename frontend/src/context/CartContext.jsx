@@ -8,7 +8,7 @@ const CartContext = createContext(null)
 
 const toServerItem = (i) => ({
   product: i.product?.isCustom ? undefined : i.product?._id,
-  customImage: i.product?.isCustom ? { url: i.product.images?.[0] } : undefined,
+  customImage: i.product?.isCustom ? (i.product.customImage || { url: i.product.images?.[0] }) : undefined,
   isCustom: !!i.product?.isCustom,
   size: i.size, finish: i.finish, border: i.border, orientation: i.orientation,
   quantity: i.quantity, notes: i.notes, priceAtAdd: i.product?.price,
@@ -17,7 +17,7 @@ const toServerItem = (i) => ({
 const fromServerItem = (i) => ({
   key: `${i.product?._id || 'custom'}-${i.size || ''}-${i.finish || ''}-${i.border || ''}`,
   product: i.isCustom
-    ? { _id: `custom-${i.customImage?.url}`, name: 'Custom Poster', isCustom: true, price: i.priceAtAdd, images: [i.customImage?.url] }
+    ? { _id: `custom-${i.customImage?.url}`, name: 'Custom Poster', isCustom: true, price: i.priceAtAdd, images: [i.customImage?.url], customImage: i.customImage }
     : i.product,
   quantity: i.quantity, size: i.size, finish: i.finish, border: i.border, orientation: i.orientation, notes: i.notes,
 })
@@ -70,7 +70,7 @@ export function CartProvider({ children }) {
 
   const addToCart = (product, options = {}) => {
     if (!isCustomerLoggedIn) {
-      toast('Please login with your mobile number to add items to cart', { icon: '📱' })
+      toast('Please login to add items to cart', { icon: '🔒' })
       openLoginModal()
       return
     }

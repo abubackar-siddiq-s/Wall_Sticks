@@ -7,8 +7,17 @@ const api = axios.create({
 })
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('pw_admin_token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  const adminToken = localStorage.getItem('pw_admin_token')
+  const customerToken = localStorage.getItem('wallsticks_customer_token')
+  const isAdminContext = (typeof window !== 'undefined' && window.location.pathname.includes('/admin')) || config.url?.includes('/admin')
+
+  if (isAdminContext && adminToken) {
+    config.headers.Authorization = `Bearer ${adminToken}`
+  } else if (customerToken) {
+    config.headers.Authorization = `Bearer ${customerToken}`
+  } else if (adminToken) {
+    config.headers.Authorization = `Bearer ${adminToken}`
+  }
   return config
 })
 

@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom'
-import { Clock3, MessageCircle, Receipt, ArrowLeft } from 'lucide-react'
+import { Clock3, Instagram, Receipt, ArrowLeft } from 'lucide-react'
 import { useSettings } from '../hooks/useSettings'
 
 export default function OrderSuccess() {
@@ -12,7 +12,7 @@ export default function OrderSuccess() {
     year: 'numeric'
   })
 
-  const whatsappUrl = settings?.whatsappChannelUrl || `https://wa.me/${(settings?.phone || '8870558436').replace(/\D/g, '')}`
+  const instagramUrl = settings?.instagramUrl || 'https://www.instagram.com/wall_sticks_official'
 
   return (
     <div className="max-w-lg mx-auto px-5 py-24 text-center">
@@ -43,16 +43,14 @@ export default function OrderSuccess() {
       </div>
 
       <div className="flex flex-col gap-3">
-        {whatsappUrl && (
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-full text-sm transition-colors shadow-md"
-          >
-            <MessageCircle size={18} /> Join WhatsApp Channel / Contact Support
-          </a>
-        )}
+        <a
+          href={instagramUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 hover:opacity-95 text-white font-bold py-3.5 rounded-full text-sm transition-all shadow-md"
+        >
+          <Instagram size={18} /> Follow Us on Instagram @wall_sticks_official
+        </a>
 
         {orderId && (
           <Link

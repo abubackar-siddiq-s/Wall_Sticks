@@ -5,43 +5,52 @@ import toast from 'react-hot-toast'
 import { useCustomerAuth } from '../context/CustomerAuthContext'
 
 export default function MobileLoginModal() {
-  const { isLoginModalOpen, closeLoginModal, loginCustomer } = useCustomerAuth()
-  const [step, setStep] = useState(1) // 1: Phone, 2: OTP
+  const { isLoginModalOpen, closeLoginModal, requestCustomerOtp, verifyCustomerOtp } = useCustomerAuth()
+  const [step, setStep] = useState(1) // 1: Email & Phone, 2: OTP
+  const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
   const [loading, setLoading] = useState(false)
 
   if (!isLoginModalOpen) return null
 
-  const handleSendOtp = (e) => {
+  const handleSendOtp = async (e) => {
     e.preventDefault()
     const cleaned = phone.replace(/\D/g, '')
+    if (!email.trim() || !email.includes('@')) {
+      return toast.error('Please enter a valid email address')
+    }
     if (cleaned.length < 10) {
       return toast.error('Please enter a valid 10-digit mobile number')
     }
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      const resData = await requestCustomerOtp(email.trim(), cleaned)
+      toast.success('Verification code sent to your email')
       setStep(2)
-      setOtp('1234')
-      toast.success('Verification code sent')
-    }, 400)
+      setOtp('')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to send OTP code. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault()
-    if (!otp.trim()) {
+    if (!otp.trim() || otp.length !== 4) {
       return toast.error('Please enter the 4-digit OTP')
     }
     setLoading(true)
     try {
-      await loginCustomer(phone)
-      toast.success(`Logged in as +91 ${phone.replace(/\D/g, '')}`)
+      const user = await verifyCustomerOtp(email.trim(), phone, otp.trim())
+      toast.success(`Logged in as ${user.name || 'Customer'}`)
       setStep(1)
       setPhone('')
+      setEmail('')
       setOtp('')
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Login failed. Please try again.')
+      toast.error(err?.response?.data?.message || 'Login failed. Please check the code and try again.')
     } finally {
       setLoading(false)
     }
@@ -91,9 +100,26 @@ export default function MobileLoginModal() {
 
           {step === 1 ? (
             <form onSubmit={handleSendOtp} className="space-y-4">
+              {/* EMAIL */}
               <div>
                 <label className="block text-xs font-semibold text-black/70 mb-1.5 uppercase tracking-wider">
-                  Mobile Number
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="w-full px-4 py-3.5 rounded-2xl bg-brand-smoke border border-black/10 focus:border-brand-black text-sm font-semibold outline-none placeholder:font-normal placeholder:text-black/35"
+                  autoFocus
+                />
+              </div>
+
+              {/* MOBILE */}
+              <div>
+                <label className="block text-xs font-semibold text-black/70 mb-1.5 uppercase tracking-wider">
+                  Mobile Number *
                 </label>
                 <div className="flex rounded-2xl bg-brand-smoke border border-black/10 focus-within:border-brand-black overflow-hidden transition-all">
                   <span className="px-4 py-3.5 bg-black/5 text-sm font-bold text-black/70 flex items-center border-r border-black/10">
@@ -107,22 +133,21 @@ export default function MobileLoginModal() {
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                     placeholder="Enter 10-digit number"
                     className="w-full px-4 py-3.5 bg-transparent text-sm font-semibold outline-none placeholder:font-normal placeholder:text-black/35"
-                    autoFocus
                   />
                 </div>
               </div>
 
               <div className="bg-brand-yellow/15 border border-brand-yellow/40 rounded-2xl p-3.5 text-xs text-brand-black flex items-start gap-2.5">
                 <Lock size={15} className="mt-0.5 shrink-0 text-brand-black" />
-                <span>Your wishlist, cart, and order history are securely linked to your mobile number.</span>
+                <span>Wishlist, cart, and orders require unique email & phone authentication. OTP is sent to your email.</span>
               </div>
 
               <button
                 type="submit"
-                disabled={loading || phone.length < 10}
+                disabled={loading || phone.length < 10 || !email.trim()}
                 className="w-full bg-brand-black text-brand-yellow font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:shadow-glow transition-all disabled:opacity-50 text-sm"
               >
-                {loading ? 'Sending Code...' : 'Continue with Mobile'}
+                {loading ? 'Sending Code...' : 'Get Verification Code'}
                 <ArrowRight size={16} />
               </button>
             </form>
@@ -138,11 +163,11 @@ export default function MobileLoginModal() {
                     onClick={() => setStep(1)}
                     className="text-xs font-semibold text-black/50 underline hover:text-black"
                   >
-                    Change Number
+                    Change Details
                   </button>
                 </div>
                 <p className="text-xs text-black/50 mb-3">
-                  Sent to <span className="font-bold text-black">+91 {phone}</span>
+                  Sent to <span className="font-bold text-black">{email}</span>
                 </p>
 
                 <input

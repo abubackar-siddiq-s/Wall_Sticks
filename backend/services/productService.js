@@ -1,6 +1,7 @@
 import Product from '../models/Product.js'
 import Category from '../models/Category.js'
 import Trending from '../models/Trending.js'
+import cloudinary from '../config/cloudinary.js'
 
 export async function getProducts(queryParams) {
   const { search, category, maxPrice, sort = 'newest', page = 1, limit = 24 } = queryParams
@@ -36,13 +37,7 @@ export async function getProducts(queryParams) {
 
 export async function getTrendingProducts() {
   const trendingDocs = await Trending.find().populate('product').sort('order')
-  const products = trendingDocs.map((t) => t.product).filter((p) => p && p.active)
-  if (products.length > 0) return products
-
-  const flagged = await Product.find({ trending: true, active: true }).sort('trendingOrder').limit(12)
-  if (flagged.length > 0) return flagged
-
-  return await Product.find({ active: true }).sort('-createdAt').limit(12)
+  return trendingDocs.map((t) => t.product).filter((p) => p && p.active)
 }
 
 export async function getBestSellerProducts() {
@@ -71,8 +66,34 @@ export async function getRecommendedProducts(id) {
   return await Product.find({ category: product.category, _id: { $ne: product._id }, active: true }).limit(4)
 }
 
+async function uploadImagesIfNeeded(images) {
+  if (!images || !images.length) return images
+  const isTest = process.env.NODE_ENV === 'test'
+  
+  return await Promise.all(images.map(async (img) => {
+    if (img && typeof img.url === 'string' && img.url.startsWith('data:image/')) {
+      if (isTest) {
+        return { url: 'https://example.com/mock-image.png', publicId: 'mock-id' }
+      }
+      try {
+        const uploadRes = await cloudinary.uploader.upload(img.url, {
+          folder: 'posterwall/products',
+        })
+        return { url: uploadRes.secure_url, publicId: uploadRes.public_id }
+      } catch (err) {
+        console.error('Cloudinary base64 upload failed:', err)
+        return img
+      }
+    }
+    return img
+  }))
+}
+
 export async function resolveCategoryInput(categoryInput) {
-  if (!categoryInput) return undefined
+  if (!categoryInput) {
+    const defaultCat = await Category.findOne().sort('order')
+    return defaultCat ? defaultCat._id : undefined
+  }
   if (typeof categoryInput === 'string' && categoryInput.length !== 24) {
     const categoryDoc = await Category.findOne({ slug: categoryInput })
     if (categoryDoc) return categoryDoc._id
@@ -82,7 +103,8 @@ export async function resolveCategoryInput(categoryInput) {
 
 export async function createProduct(data, images) {
   const categoryId = await resolveCategoryInput(data.category)
-  return await Product.create({ ...data, category: categoryId, images })
+  const processedImages = await uploadImagesIfNeeded(images)
+  return await Product.create({ ...data, category: categoryId, images: processedImages })
 }
 
 export async function updateProduct(id, data, images) {
@@ -91,7 +113,7 @@ export async function updateProduct(id, data, images) {
     update.category = await resolveCategoryInput(update.category)
   }
   if (images !== undefined) {
-    update.images = images
+    update.images = await uploadImagesIfNeeded(images)
   }
   const product = await Product.findByIdAndUpdate(id, update, { new: true })
   if (!product) {

@@ -2,11 +2,19 @@ import asyncHandler from 'express-async-handler'
 import Wishlist from '../models/Wishlist.js'
 
 export const getWishlist = asyncHandler(async (req, res) => {
+  if (req.user && req.user.phone !== req.params.sessionId && req.user._id.toString() !== req.params.sessionId) {
+    res.status(403)
+    throw new Error('Access denied to requested wishlist')
+  }
   const wishlist = await Wishlist.findOne({ sessionId: req.params.sessionId }).populate('products')
   res.json(wishlist || { sessionId: req.params.sessionId, products: [] })
 })
 
 export const toggleWishlist = asyncHandler(async (req, res) => {
+  if (req.user && req.user.phone !== req.params.sessionId && req.user._id.toString() !== req.params.sessionId) {
+    res.status(403)
+    throw new Error('Access denied to requested wishlist')
+  }
   const { productId } = req.body
   if (!productId || String(productId).length !== 24) {
     res.status(400)

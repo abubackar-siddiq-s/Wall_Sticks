@@ -9,23 +9,12 @@ import { imgSrc } from '../lib/imageUrl'
 export default function Cart() {
   const { items = [], removeFromCart, updateQuantity, subtotal = 0 } = useCart() || {}
   const { settings = { courierCharge: 79 } } = useSettings() || {}
-  const [coupon, setCoupon] = useState('')
-  const [discount, setDiscount] = useState(0)
   const navigate = useNavigate()
-
-  const applyCoupon = () => {
-    if (coupon.trim().toUpperCase() === 'WELCOME10') {
-      setDiscount(Math.round(subtotal * 0.1))
-      toast.success('Coupon applied — 10% off')
-    } else {
-      toast.error('Invalid coupon code')
-    }
-  }
-
+  const [landscapeItems, setLandscapeItems] = useState({})
   const courierCharge = settings?.courierCharge ?? 79
-  const total = Math.max(0, subtotal - discount + (items.length ? courierCharge : 0))
+  const total = subtotal + courierCharge
 
-  const validItems = items.filter((item) => item && item.product)
+  const validItems = items.filter((item) => item.product && item.product._id)
 
   if (validItems.length === 0) {
     return (
@@ -50,14 +39,23 @@ export default function Cart() {
           {validItems.map((item) => {
             const product = item.product || {}
             const imageSrc = imgSrc(product.images?.[0])
+            const isLandscape = !!landscapeItems[item.key]
 
             return (
               <div key={item.key} className="flex gap-4 bg-white rounded-xl2 p-4 shadow-soft">
-                <img
-                  src={imageSrc}
-                  alt={product.name || 'Poster'}
-                  className="w-24 h-28 object-cover rounded-xl shrink-0"
-                />
+                <div className={`w-24 h-28 overflow-hidden rounded-xl shrink-0 border border-black/5 flex items-center justify-center ${isLandscape ? 'bg-white' : 'bg-brand-smoke'}`}>
+                  <img
+                    src={imageSrc}
+                    alt={product.name || 'Poster'}
+                    onLoad={(e) => {
+                      const { naturalWidth, naturalHeight } = e.currentTarget
+                      if (naturalWidth > naturalHeight) {
+                        setLandscapeItems((prev) => ({ ...prev, [item.key]: true }))
+                      }
+                    }}
+                    className={`w-full h-full ${isLandscape ? 'object-contain' : 'object-cover'}`}
+                  />
+                </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm mb-1 truncate">{product.name || 'Custom Poster'}</h3>
                   <p className="text-xs text-black/45 mb-2">
@@ -98,28 +96,11 @@ export default function Cart() {
 
         <div className="bg-brand-smoke rounded-xl2 p-6 h-fit sticky top-24">
           <h3 className="font-bold mb-5">Order Summary</h3>
-          <div className="flex gap-2 mb-5">
-            <input
-              value={coupon}
-              onChange={(e) => setCoupon(e.target.value)}
-              placeholder="Coupon code"
-              className="flex-1 px-4 py-2.5 rounded-full bg-white border border-transparent focus:border-brand-yellow outline-none text-sm"
-            />
-            <button onClick={applyCoupon} className="px-5 py-2.5 rounded-full bg-brand-black text-brand-yellow text-sm font-semibold">
-              Apply
-            </button>
-          </div>
           <div className="space-y-2.5 text-sm mb-5">
             <div className="flex justify-between text-black/60">
               <span>Subtotal</span>
               <span>₹{subtotal}</span>
             </div>
-            {discount > 0 && (
-              <div className="flex justify-between text-green-700">
-                <span>Discount</span>
-                <span>-₹{discount}</span>
-              </div>
-            )}
             <div className="flex justify-between text-black/60">
               <span>Courier charge</span>
               <span>₹{courierCharge}</span>

@@ -14,7 +14,7 @@ export default function Contact() {
     { icon: Phone, label: 'Phone', value: settings.phone || '+91 88705 58436', href: `tel:${(settings.phone || '+91 88705 58436').replace(/\s+/g, '')}` },
     { icon: MessageCircle, label: 'WhatsApp', value: settings.whatsapp || '+91 88705 58436', href: `https://wa.me/${(settings.whatsapp || '+91 88705 58436').replace(/\D/g, '')}` },
     { icon: Mail, label: 'Email', value: settings.email || 'wallsticks0319@gmail.com', href: `mailto:${settings.email || 'wallsticks0319@gmail.com'}` },
-    { icon: Instagram, label: 'Instagram', value: settings.instagram || '@wallsticks', href: `https://instagram.com/${(settings.instagram || 'wallsticks').replace('@', '')}` },
+    { icon: Instagram, label: 'Instagram', value: settings.instagram || '@wall_sticks_official', href: `https://www.instagram.com/${(settings.instagram || 'wall_sticks_official').replace('@', '')}` },
     { icon: MapPin, label: 'Location', value: settings.address || 'Perundurai, Erode, Tamil Nadu', href: 'https://maps.google.com/?q=Perundurai+Erode+Tamil+Nadu' },
   ]
 

@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext'
 import { useSettings } from '../hooks/useSettings'
 import { useCustomerAuth } from '../context/CustomerAuthContext'
 import api from '../lib/api'
+import { imgSrc } from '../lib/imageUrl'
 
 export default function Payment() {
   const { items = [], subtotal = 0, clearCart } = useCart() || {}
@@ -68,7 +69,7 @@ export default function Payment() {
           quantity: i.quantity,
           price: i.product?.price || i.priceAtAdd || 0,
           notes: i.notes,
-          customImage: i.product?.isCustom ? { url: i.product?.images?.[0] } : undefined,
+          customImage: i.product?.isCustom ? (i.product.customImage || { url: imgSrc(i.product?.images?.[0]) }) : undefined,
         })),
       }
 

