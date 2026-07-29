@@ -22,7 +22,45 @@ export async function sendOtp(email, code) {
     </div>
   `
 
-  // 1. Try Resend / Brevo HTTPS APIs first if configured (runs over HTTPS Port 443, instant delivery on Render)
+  // 1. Try Brevo (Sendinblue) HTTPS API (300 free emails/day to ANY recipient email address, runs on Port 443)
+  if (brevoKey) {
+    try {
+      const sent = await new Promise((resolve) => {
+        const data = JSON.stringify({
+          sender: { name: 'WallSticks', email: smtpUser || 'wallsticks0319@gmail.com' },
+          to: [{ email }],
+          subject,
+          htmlContent,
+        })
+        const req = https.request({
+          hostname: 'api.brevo.com', path: '/v3/smtp/email', method: 'POST',
+          headers: { 'accept': 'application/json', 'api-key': brevoKey, 'content-type': 'application/json', 'content-length': Buffer.byteLength(data) }
+        }, (res) => {
+          let body = ''
+          res.on('data', (c) => (body += c))
+          res.on('end', () => {
+            if (res.statusCode >= 200 && res.statusCode < 300) resolve(true)
+            else {
+              console.warn(`⚠️ Brevo API status ${res.statusCode}:`, body)
+              resolve(false)
+            }
+          })
+        })
+        req.on('error', (e) => {
+          console.warn('⚠️ Brevo connection error:', e.message)
+          resolve(false)
+        })
+        req.write(data)
+        req.end()
+      })
+      if (sent) {
+        console.log(`✉️ Email OTP sent via Brevo API to ${email}`)
+        return true
+      }
+    } catch {}
+  }
+
+  // 2. Try Resend HTTPS API
   if (resendKey) {
     try {
       const sent = await new Promise((resolve) => {
@@ -34,7 +72,7 @@ export async function sendOtp(email, code) {
         })
         const req = https.request({
           hostname: 'api.resend.com', path: '/emails', method: 'POST',
-          headers: { 'Authorization': `Bearer ${resendKey}`, 'content-type': 'application/json', 'content-length': data.length }
+          headers: { 'Authorization': `Bearer ${resendKey}`, 'content-type': 'application/json', 'content-length': Buffer.byteLength(data) }
         }, (res) => resolve(res.statusCode >= 200 && res.statusCode < 300))
         req.on('error', () => resolve(false))
         req.write(data)
@@ -42,30 +80,6 @@ export async function sendOtp(email, code) {
       })
       if (sent) {
         console.log(`✉️ Email OTP sent via Resend API to ${email}`)
-        return true
-      }
-    } catch {}
-  }
-
-  if (brevoKey) {
-    try {
-      const sent = await new Promise((resolve) => {
-        const data = JSON.stringify({
-          sender: { name: 'WallSticks', email: 'otp@wallsticks.in' },
-          to: [{ email }],
-          subject,
-          htmlContent,
-        })
-        const req = https.request({
-          hostname: 'api.brevo.com', path: '/v3/smtp/email', method: 'POST',
-          headers: { 'accept': 'application/json', 'api-key': brevoKey, 'content-type': 'application/json', 'content-length': data.length }
-        }, (res) => resolve(res.statusCode >= 200 && res.statusCode < 300))
-        req.on('error', () => resolve(false))
-        req.write(data)
-        req.end()
-      })
-      if (sent) {
-        console.log(`✉️ Email OTP sent via Brevo API to ${email}`)
         return true
       }
     } catch {}
