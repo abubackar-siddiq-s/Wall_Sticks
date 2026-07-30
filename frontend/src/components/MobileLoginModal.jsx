@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Smartphone, ArrowRight, Lock, RotateCcw } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -22,6 +23,20 @@ export default function MobileLoginModal() {
     }
     return () => clearInterval(timer)
   }, [resendCountdown])
+
+  useEffect(() => {
+    if (isLoginModalOpen) {
+      document.body.style.overflow = 'hidden'
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') handleClose()
+      }
+      window.addEventListener('keydown', handleKeyDown)
+      return () => {
+        document.body.style.overflow = ''
+        window.removeEventListener('keydown', handleKeyDown)
+      }
+    }
+  }, [isLoginModalOpen])
 
   if (!isLoginModalOpen) return null
 
@@ -89,7 +104,7 @@ export default function MobileLoginModal() {
     setStep(1)
   }
 
-  return (
+  return typeof document !== 'undefined' && createPortal(
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
@@ -97,6 +112,9 @@ export default function MobileLoginModal() {
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
         onClick={handleClose}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Customer Login Modal"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -235,6 +253,8 @@ export default function MobileLoginModal() {
           )}
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
 }
+

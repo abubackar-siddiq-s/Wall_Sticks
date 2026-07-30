@@ -58,10 +58,25 @@ export default function ProductCard({ product, onQuickView }) {
         </div>
       </Link>
 
-      <div className="p-3 flex items-center gap-1">
-          <Star size={13} fill="#FFD000" stroke="#FFD000" />
-          <span className="text-xs font-medium text-black/60">{product.rating} ({product.reviewsCount})</span>
+      <div className="p-3.5 flex flex-col justify-between flex-1">
+        <Link to={`/product/${product._id}`} className="font-bold text-sm text-brand-black truncate hover:underline mb-1">
+          {product.name}
+        </Link>
+        <div className="flex items-center justify-between">
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-extrabold text-sm text-brand-black">₹{product.price}</span>
+            {product.mrp > product.price && (
+              <span className="text-xs text-black/40 line-through">₹{product.mrp}</span>
+            )}
+          </div>
+          <div className="flex items-center gap-1 text-xs text-black/60 font-medium">
+            <Star size={12} fill="#FFD000" stroke="#FFD000" />
+            <span>{product.rating || '4.8'}</span>
+            {product.reviewsCount > 0 && <span className="text-black/35">({product.reviewsCount})</span>}
+          </div>
+        </div>
       </div>
     </motion.div>
   )
 }
+

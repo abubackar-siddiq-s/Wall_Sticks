@@ -22,7 +22,7 @@ export default function Footer() {
           </div>
           <p className="text-white/50 text-sm leading-relaxed">Cinematic Poster Designs</p>
           <div className="flex gap-3 mt-5">
-            <a href={`https://instagram.com/${(settings.instagram || 'wall_sticks_official').replace('@','')}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/10 hover:bg-brand-yellow hover:text-black transition-colors" aria-label="Instagram"><Instagram size={16} /></a>
+            <a href={settings.instagramUrl || `https://www.instagram.com/${(settings.instagram || 'wall_sticks_official').replace('@','')}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-white/10 hover:bg-brand-yellow hover:text-black transition-colors" aria-label="Instagram"><Instagram size={16} /></a>
             <a href={`mailto:${settings.email || ''}`} className="p-2 rounded-full bg-white/10 hover:bg-brand-yellow hover:text-black transition-colors" aria-label="Email"><Mail size={16} /></a>
           </div>
         </div>

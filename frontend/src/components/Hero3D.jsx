@@ -6,8 +6,13 @@ import { useTrendingProducts, useProducts } from '../hooks/useProducts'
 import { imgSrc } from '../lib/imageUrl'
 
 // A single framed poster: black frame + textured canvas + subtle rim light
-function FramedPoster({ position, rotation, textureUrl, scale = 1 }) {
-  const texture = useTexture(textureUrl)
+function FramedPoster({ position, rotation, textureUrl, scale = 1, defaultSvg }) {
+  let texture
+  try {
+    texture = useTexture(textureUrl)
+  } catch (err) {
+    texture = useTexture(defaultSvg)
+  }
   const group = useRef()
 
   useFrame((state) => {
@@ -39,6 +44,7 @@ function FramedPoster({ position, rotation, textureUrl, scale = 1 }) {
     </Float>
   )
 }
+
 
 function Particles() {
   const count = 35
@@ -132,6 +138,7 @@ export default function Hero3D() {
                 rotation={p.rotation}
                 scale={p.scale}
                 textureUrl={textureUrl}
+                defaultSvg={defaultSvg}
               />
             )
           })}

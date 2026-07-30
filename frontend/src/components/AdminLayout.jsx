@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Package, ShoppingCart, Settings, LogOut, Sparkles, Tag, Award, Menu, X, Mail } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -48,6 +49,20 @@ export default function AdminLayout({ children, title }) {
 
     return () => { isMounted = false }
   }, [])
+
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden'
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') setMobileOpen(false)
+      }
+      window.addEventListener('keydown', handleKeyDown)
+      return () => {
+        document.body.style.overflow = ''
+        window.removeEventListener('keydown', handleKeyDown)
+      }
+    }
+  }, [mobileOpen])
 
   return (
     <div className="min-h-screen bg-brand-smoke flex flex-col md:flex-row">
@@ -126,81 +141,87 @@ export default function AdminLayout({ children, title }) {
       </aside>
 
       {/* Mobile Drawer Navigation Overlay */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 md:hidden"
-            onClick={() => setMobileOpen(false)}
-          >
-            <motion.aside
-              initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="absolute left-0 top-0 bottom-0 w-64 bg-brand-black text-white p-6 flex flex-col z-50"
-              onClick={(e) => e.stopPropagation()}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] md:hidden"
+              onClick={() => setMobileOpen(false)}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Admin Navigation Menu"
             >
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-xl bg-brand-yellow flex items-center justify-center">
-                    <span className="text-brand-black font-extrabold text-sm leading-none">W</span>
-                  </span>
-                  <span className="font-extrabold text-md">WallSticks</span>
-                </div>
-                <button onClick={() => setMobileOpen(false)} aria-label="Close navigation menu" className="p-1 rounded-md hover:bg-white/10">
-                  <X size={20} />
-                </button>
-              </div>
-
-              <nav className="flex-1 space-y-1.5">
-                {nav.map((n) => {
-                  const isMessages = n.to === '/admin/messages'
-                  const isOrders = n.to === '/admin/orders'
-                  const badgeCount = isMessages ? unreadMessages : isOrders ? pendingOrders : 0
-
-                  return (
-                    <NavLink
-                      key={n.to}
-                      to={n.to}
-                      end={n.end}
-                      onClick={() => setMobileOpen(false)}
-                      className={({ isActive }) =>
-                        `flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                          isActive ? 'bg-brand-yellow text-brand-black' : 'text-white/60 hover:bg-white/5 hover:text-white'
-                        }`
-                      }
-                    >
-                      {({ isActive }) => (
-                        <>
-                          <div className="flex items-center gap-3">
-                            <n.icon size={17} />
-                            <span>{n.label}</span>
-                          </div>
-                          {badgeCount > 0 && (
-                            <span
-                              className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
-                                isActive ? 'bg-brand-black text-brand-yellow' : 'bg-brand-yellow text-brand-black'
-                              }`}
-                            >
-                              {badgeCount}
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </NavLink>
-                  )
-                })}
-              </nav>
-
-              <button
-                onClick={() => { logout(); navigate('/admin/login'); setMobileOpen(false) }}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white"
+              <motion.aside
+                initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+                className="absolute left-0 top-0 bottom-0 w-64 bg-brand-black text-white p-6 flex flex-col z-[100] shadow-2xl overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
               >
-                <LogOut size={17} /> Log Out
-              </button>
-            </motion.aside>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-xl bg-brand-yellow flex items-center justify-center">
+                      <span className="text-brand-black font-extrabold text-sm leading-none">W</span>
+                    </span>
+                    <span className="font-extrabold text-md">WallSticks</span>
+                  </div>
+                  <button onClick={() => setMobileOpen(false)} aria-label="Close navigation menu" className="p-1 rounded-md hover:bg-white/10">
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <nav className="flex-1 space-y-1.5">
+                  {nav.map((n) => {
+                    const isMessages = n.to === '/admin/messages'
+                    const isOrders = n.to === '/admin/orders'
+                    const badgeCount = isMessages ? unreadMessages : isOrders ? pendingOrders : 0
+
+                    return (
+                      <NavLink
+                        key={n.to}
+                        to={n.to}
+                        end={n.end}
+                        onClick={() => setMobileOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                            isActive ? 'bg-brand-yellow text-brand-black' : 'text-white/60 hover:bg-white/5 hover:text-white'
+                          }`
+                        }
+                      >
+                        {({ isActive }) => (
+                          <>
+                            <div className="flex items-center gap-3">
+                              <n.icon size={17} />
+                              <span>{n.label}</span>
+                            </div>
+                            {badgeCount > 0 && (
+                              <span
+                                className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                                  isActive ? 'bg-brand-black text-brand-yellow' : 'bg-brand-yellow text-brand-black'
+                                }`}
+                              >
+                                {badgeCount}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </NavLink>
+                    )
+                  })}
+                </nav>
+
+                <button
+                  onClick={() => { logout(); navigate('/admin/login'); setMobileOpen(false) }}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white"
+                >
+                  <LogOut size={17} /> Log Out
+                </button>
+              </motion.aside>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       <main className="flex-1 p-6 md:p-10 overflow-x-hidden">
         <h1 className="text-2xl md:text-3xl font-extrabold mb-8">{title}</h1>
@@ -209,3 +230,4 @@ export default function AdminLayout({ children, title }) {
     </div>
   )
 }
+

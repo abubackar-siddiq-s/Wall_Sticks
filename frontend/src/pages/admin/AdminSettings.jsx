@@ -123,7 +123,7 @@ export default function AdminSettings() {
             <Field label="Phone Number" value={form.phone || '+91 88705 58436'} onChange={set('phone')} />
             <Field label="WhatsApp Number" value={form.whatsapp || '+91 88705 58436'} onChange={set('whatsapp')} />
             <Field label="Email Address" type="email" value={form.email || 'wallsticks0319@gmail.com'} onChange={set('email')} />
-            <Field label="Instagram Handle" value={form.instagram || '@wallsticks'} onChange={set('instagram')} />
+            <Field label="Instagram Handle" value={form.instagram || '@wall_sticks_official'} onChange={set('instagram')} />
           </div>
 
           <div>
