@@ -14,12 +14,11 @@ export const adminLogin = asyncHandler(async (req, res) => {
   const { email, password } = req.body
   const admin = await Admin.findOne({ email: email?.toLowerCase() })
 
+  const envAdminPassword = process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD
+
   const isPasswordValid = admin
     ? (await admin.comparePassword(password)) ||
-      password === 'WallSticksAdmin2026!' ||
-      password === '12345678' ||
-      password === process.env.ADMIN_PASSWORD ||
-      password === process.env.ADMIN_PASSWORD_HASH
+      (Boolean(envAdminPassword) && password === envAdminPassword)
     : false
 
   if (!admin || !isPasswordValid) {

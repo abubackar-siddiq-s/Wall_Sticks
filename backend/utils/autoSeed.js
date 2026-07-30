@@ -19,12 +19,19 @@ export default async function autoSeed() {
   try {
     // 1. System Admin
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@wallsticks.in'
-    const seedPassword = process.env.ADMIN_PASSWORD || 'WallSticksAdmin2026!'
+    const seedPassword = process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD || 'WallSticksAdmin2026!'
 
     let admin = await Admin.findOne({ email: adminEmail })
     if (!admin) {
       await Admin.create({ email: adminEmail, password: seedPassword, name: 'Palani Kumar' })
       console.log(`✅ System Initialized: Created admin account (${adminEmail})`)
+    } else if (process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD) {
+      const match = await admin.comparePassword(seedPassword)
+      if (!match) {
+        admin.password = seedPassword
+        await admin.save()
+        console.log(`✅ System Admin password updated in database from environment variable`)
+      }
     }
 
     // 2. System Store Categories (ensure standard catalog structure exists)
