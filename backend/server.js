@@ -51,7 +51,7 @@ connectDB().then(() => autoSeed())
 
 const app = express()
 
-app.use(helmet())
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
 try {
   const compression = (await import('compression')).default
   app.use(compression())

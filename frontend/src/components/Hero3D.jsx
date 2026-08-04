@@ -120,9 +120,10 @@ export default function Hero3D() {
         dpr={[1, 1.75]}
         gl={{ antialias: true, alpha: true }}
       >
-        <ambientLight intensity={0.7} />
-        <directionalLight position={[5, 5, 5]} intensity={1.1} color="#FFD000" />
-        <directionalLight position={[-5, -2, 3]} intensity={0.4} color="#ffffff" />
+        <ambientLight intensity={0.8} />
+        <hemisphereLight intensity={0.5} groundColor="#111111" color="#ffffff" />
+        <directionalLight position={[5, 5, 5]} intensity={1.2} color="#FFD000" />
+        <directionalLight position={[-5, -2, 3]} intensity={0.5} color="#ffffff" />
         <Suspense fallback={null}>
           {posterLayouts.map((p, i) => {
             const textureUrl = imageList.length > 0 ? imageList[i % imageList.length] : defaultSvg
@@ -138,7 +139,6 @@ export default function Hero3D() {
             )
           })}
           <Particles />
-          <Environment preset="city" />
         </Suspense>
         <Rig />
       </Canvas>
