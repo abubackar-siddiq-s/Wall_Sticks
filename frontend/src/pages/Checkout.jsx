@@ -197,7 +197,7 @@ export default function Checkout() {
 
               return (
                 <div key={item.key} className="flex gap-3 text-sm">
-                  <img src={imageSrc} className="w-12 h-14 object-cover rounded-lg shrink-0" alt="" />
+                  <img src={imageSrc} className="w-12 h-14 object-contain bg-white rounded-lg shrink-0 border border-black/5" alt="" />
                   <div className="flex-1 min-w-0">
                     <p className="truncate font-medium">{product.name || 'Poster'}</p>
                     <p className="text-black/45 text-xs">

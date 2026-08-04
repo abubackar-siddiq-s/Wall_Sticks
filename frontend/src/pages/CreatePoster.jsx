@@ -96,7 +96,7 @@ export default function CreatePoster() {
             onDrop={(e) => { e.preventDefault(); !uploading && handleFile(e.dataTransfer.files[0]) }}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => !uploading && fileInput.current.click()}
-            className={`aspect-[4/5] rounded-xl3 border-2 border-dashed border-black/15 hover:border-brand-yellow flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all ${isLandscape ? 'bg-white' : 'bg-brand-smoke'}`}
+            className="aspect-[4/5] rounded-xl3 border-2 border-dashed border-black/15 hover:border-brand-yellow flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all bg-white"
           >
             {uploading ? (
               <div className="text-center px-8 animate-pulse">
@@ -110,11 +110,7 @@ export default function CreatePoster() {
               <img 
                 src={preview} 
                 alt="Uploaded preview" 
-                onLoad={(e) => {
-                  const { naturalWidth, naturalHeight } = e.currentTarget
-                  setIsLandscape(naturalWidth > naturalHeight)
-                }}
-                className={`w-full h-full ${isLandscape ? 'object-contain' : 'object-cover'}`} 
+                className="w-full h-full object-contain" 
               />
             ) : (
               <div className="text-center px-8">

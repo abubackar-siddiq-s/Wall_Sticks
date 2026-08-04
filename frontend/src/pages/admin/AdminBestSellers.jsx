@@ -141,7 +141,7 @@ export default function AdminBestSellers() {
             </span>
             <img
               src={imgSrc(p.images?.[0])}
-              className="w-10 h-13 object-cover rounded-xl border border-black/10 shrink-0"
+              className="w-10 h-13 object-contain bg-white rounded-xl border border-black/10 shrink-0"
               alt=""
             />
             <div className="flex-1 min-w-0">
@@ -188,7 +188,7 @@ export default function AdminBestSellers() {
                   onClick={() => addBestSeller(p)}
                   className="w-full flex items-center gap-3.5 p-3 rounded-2xl hover:bg-brand-yellow/15 border border-black/5 hover:border-brand-yellow transition-all text-left group"
                 >
-                  <img src={imgSrc(p.images?.[0])} className="w-10 h-13 object-cover rounded-xl border border-black/10 shrink-0" alt="" />
+                  <img src={imgSrc(p.images?.[0])} className="w-10 h-13 object-contain bg-white rounded-xl border border-black/10 shrink-0" alt="" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-extrabold text-brand-black truncate group-hover:text-brand-gold">{p.name}</p>
                     <p className="text-[11px] text-black/45">★ {p.rating || 5.0}</p>

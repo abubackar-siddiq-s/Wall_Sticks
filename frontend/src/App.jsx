@@ -32,6 +32,7 @@ const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'))
 const AdminSizePricing = lazy(() => import('./pages/admin/AdminSizePricing'))
 const AdminMessages = lazy(() => import('./pages/admin/AdminMessages'))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'))
+const AdminReviews = lazy(() => import('./pages/admin/AdminReviews'))
 
 export default function App() {
   return (
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="/admin/trending" element={<ProtectedRoute><AdminTrending /></ProtectedRoute>} />
           <Route path="/admin/best-sellers" element={<ProtectedRoute><AdminBestSellers /></ProtectedRoute>} />
           <Route path="/admin/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
+          <Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
           <Route path="/admin/size-pricing" element={<ProtectedRoute><AdminSizePricing /></ProtectedRoute>} />
           <Route path="/admin/messages" element={<ProtectedRoute><AdminMessages /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />

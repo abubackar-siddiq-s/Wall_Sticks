@@ -72,7 +72,7 @@ function OrderModal({ order, onClose, onUpdate }) {
                 <div key={idx} className="bg-brand-smoke/60 rounded-2xl p-3.5 flex gap-3 items-center border border-black/5">
                   {it.isCustom && it.customImage?.url ? (
                     <a href={it.customImage.url} target="_blank" rel="noopener noreferrer" className="w-12 h-15 bg-brand-yellow/15 border border-brand-yellow/30 rounded-xl shrink-0 overflow-hidden flex items-center justify-center group/item">
-                      <img src={it.customImage.url} alt="Custom upload" className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300" />
+                      <img src={it.customImage.url} alt="Custom upload" className="w-full h-full object-contain bg-white group-hover/item:scale-105 transition-transform duration-300" />
                     </a>
                   ) : (
                     <div className="w-12 h-15 bg-brand-yellow/15 border border-brand-yellow/30 rounded-xl shrink-0 flex items-center justify-center text-[10px] font-extrabold text-brand-gold">

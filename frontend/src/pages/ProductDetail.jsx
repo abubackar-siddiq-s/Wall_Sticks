@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Star, Heart, Minus, Plus, MessageSquare, Send } from 'lucide-react'
+import { Star, Heart, Minus, Plus, MessageSquare, Send, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../lib/api'
 import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useSettings } from '../hooks/useSettings'
 import { useProduct } from '../hooks/useProducts'
+import { useCustomerAuth } from '../context/CustomerAuthContext'
+import { useAuth } from '../context/AuthContext'
 import { responsiveImgProps } from '../lib/imageUrl'
 
 const defaultSizePrices = {
@@ -26,13 +28,44 @@ export default function ProductDetail() {
     sizes: ['A5', 'A4', 'A3', '12x18', '18x24', '24x36'],
     images: [],
     price: 399,
-    rating: 5.0,
+    rating: 0,
     reviewsCount: 0,
     ...fetched,
   }
 
   const { addToCart } = useCart()
   const { toggleWishlist, isWishlisted } = useWishlist()
+  const { customer, isCustomerLoggedIn, openLoginModal } = useCustomerAuth()
+  const { isAuthenticated: isAdmin } = useAuth() || {}
+
+  const [deletingId, setDeletingId] = useState(null)
+
+  const handleDeleteReview = async (e, reviewId, reviewerName) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    const targetId = reviewId
+    if (!targetId || deletingId === targetId) return
+
+    if (!window.confirm(`Delete review by ${reviewerName || 'customer'}?`)) return
+
+    setDeletingId(targetId)
+    try {
+      await api.delete(`/reviews/${targetId}`)
+      toast.success('Review deleted successfully')
+      setPosterReviews((prev) => prev.filter((r) => (r.id || r._id) !== targetId))
+    } catch (err) {
+      if (err?.response?.status === 404) {
+        // Silently treat 404 as already deleted
+        setPosterReviews((prev) => prev.filter((r) => (r.id || r._id) !== targetId))
+      } else {
+        toast.error(err?.response?.data?.message || 'Could not delete review')
+      }
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   const [selectedSize, setSelectedSize] = useState('A3')
   const [quantity, setQuantity] = useState(1)
@@ -50,6 +83,18 @@ export default function ProductDetail() {
   const [newReviewText, setNewReviewText] = useState('')
   const [newReviewerName, setNewReviewerName] = useState('')
   const [showReviewForm, setShowReviewForm] = useState(false)
+
+  const handleToggleReviewForm = () => {
+    if (!isCustomerLoggedIn) {
+      toast('Please login to leave a review', { icon: '🔒' })
+      openLoginModal()
+      return
+    }
+    if (!showReviewForm && !newReviewerName) {
+      setNewReviewerName(customer?.name || customer?.email || customer?.phone || '')
+    }
+    setShowReviewForm((v) => !v)
+  }
 
   // Fetch reviews from backend for this poster
   useEffect(() => {
@@ -95,6 +140,12 @@ export default function ProductDetail() {
 
   const handleAddReview = async (e) => {
     e.preventDefault()
+    if (!isCustomerLoggedIn) {
+      toast('Please login to leave a review', { icon: '🔒' })
+      openLoginModal()
+      return
+    }
+
     if (!newReviewerName.trim()) {
       return toast.error('Please enter your name')
     }
@@ -139,17 +190,11 @@ export default function ProductDetail() {
       <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-start">
         {/* MAIN POSTER IMAGE (ONLY SINGLE IMAGE) */}
         <div>
-          <div className={`rounded-3xl overflow-hidden aspect-[4/5] shadow-card border border-black/5 ${isLandscape ? 'bg-white' : 'bg-brand-smoke'}`}>
+          <div className="rounded-3xl overflow-hidden aspect-[4/5] shadow-card border border-black/5 bg-white">
             <img
               {...responsiveImgProps(product.images?.[0], { sizes: '(max-width: 768px) 100vw, 50vw' })}
               alt={product.name}
-              onLoad={(e) => {
-                const { naturalWidth, naturalHeight } = e.currentTarget
-                if (naturalWidth > naturalHeight) {
-                  setIsLandscape(true)
-                }
-              }}
-              className={`w-full h-full ${isLandscape ? 'object-contain' : 'object-cover'}`}
+              className="w-full h-full object-contain"
             />
           </div>
         </div>
@@ -162,21 +207,25 @@ export default function ProductDetail() {
           </h1>
 
           {/* RATING DISPLAY */}
-          <div className="flex items-center gap-2.5 mb-6">
-            <div className="flex gap-1">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star
-                  key={i}
-                  size={16}
-                  fill={i < Math.round(Number(avgRating)) ? '#FFD000' : 'none'}
-                  stroke={i < Math.round(Number(avgRating)) ? '#FFD000' : '#ccc'}
-                />
-              ))}
+          {totalReviewCount > 0 ? (
+            <div className="flex items-center gap-2.5 mb-6">
+              <div className="flex gap-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    size={16}
+                    fill={i < Math.round(Number(avgRating)) ? '#FFD000' : 'none'}
+                    stroke={i < Math.round(Number(avgRating)) ? '#FFD000' : '#ccc'}
+                  />
+                ))}
+              </div>
+              <span className="text-sm font-semibold text-black/70">
+                {avgRating} <span className="text-black/40 font-normal">({totalReviewCount} {totalReviewCount === 1 ? 'review' : 'reviews'})</span>
+              </span>
             </div>
-            <span className="text-sm font-semibold text-black/70">
-              {avgRating} <span className="text-black/40 font-normal">({totalReviewCount} reviews)</span>
-            </span>
-          </div>
+          ) : (
+            <p className="text-xs text-black/40 mb-6 italic">No reviews yet for this poster.</p>
+          )}
 
           {/* DYNAMIC PRICE BASED ONLY ON SIZE */}
           <div className="mb-8">
@@ -274,7 +323,7 @@ export default function ProductDetail() {
                 <MessageSquare size={18} /> Poster Reviews ({totalReviewCount})
               </h3>
               <button
-                onClick={() => setShowReviewForm((v) => !v)}
+                onClick={handleToggleReviewForm}
                 className="text-xs font-bold bg-brand-yellow/20 text-brand-gold px-3.5 py-2 rounded-full hover:bg-brand-yellow/30 transition-colors"
               >
                 {showReviewForm ? 'Cancel' : '+ Add Review'}
@@ -340,29 +389,48 @@ export default function ProductDetail() {
             )}
 
             {/* REVIEWS LIST */}
-            <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-              {posterReviews.map((r) => (
-                <div key={r.id} className="bg-brand-smoke/60 rounded-2xl p-4 border border-black/5">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="font-bold text-xs text-brand-black">{r.name}</span>
-                    <span className="text-[10px] text-black/40">{r.date}</span>
+            {posterReviews.length > 0 ? (
+              <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                {posterReviews.map((r) => (
+                  <div key={r.id} className="bg-brand-smoke/60 rounded-2xl p-4 border border-black/5 flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="font-bold text-xs text-brand-black">{r.name}</span>
+                        <span className="text-[10px] text-black/40">{r.date}</span>
+                      </div>
+                      <div className="flex gap-0.5 mb-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            size={12}
+                            fill={i < r.rating ? '#FFD000' : 'none'}
+                            stroke={i < r.rating ? '#FFD000' : '#ccc'}
+                          />
+                        ))}
+                      </div>
+                      {r.text && (
+                        <p className="text-xs text-black/70 leading-relaxed mt-1">{r.text}</p>
+                      )}
+                    </div>
+                    {isAdmin && (
+                      <button
+                        onClick={(e) => handleDeleteReview(e, r.id || r._id, r.name)}
+                        disabled={deletingId === (r.id || r._id)}
+                        className="p-1.5 rounded-lg text-black/30 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0 disabled:opacity-50"
+                        title="Delete Review (Admin)"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </div>
-                  <div className="flex gap-0.5 mb-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        size={12}
-                        fill={i < r.rating ? '#FFD000' : 'none'}
-                        stroke={i < r.rating ? '#FFD000' : '#ccc'}
-                      />
-                    ))}
-                  </div>
-                  {r.text && (
-                    <p className="text-xs text-black/70 leading-relaxed mt-1">{r.text}</p>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-6 text-center bg-brand-smoke/50 rounded-2xl border border-black/5">
+                <p className="text-xs text-black/50 font-medium mb-1">No reviews yet for this poster.</p>
+                <p className="text-[11px] text-black/40">Be the first to share your thoughts!</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

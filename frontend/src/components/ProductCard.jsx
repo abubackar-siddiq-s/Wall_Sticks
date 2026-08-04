@@ -6,11 +6,10 @@ import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
 import { responsiveImgProps } from '../lib/imageUrl'
 
-export default function ProductCard({ product, onQuickView }) {
+export default function ProductCard({ product, onQuickView, showPrice = false }) {
   const { toggleWishlist, isWishlisted } = useWishlist()
   const { addToCart } = useCart()
   const wishlisted = isWishlisted(product._id)
-  const [isLandscape, setIsLandscape] = useState(false)
 
   return (
     <motion.div
@@ -18,18 +17,12 @@ export default function ProductCard({ product, onQuickView }) {
       transition={{ type: 'spring', stiffness: 300, damping: 22 }}
       className="group relative bg-white rounded-xl2 overflow-hidden shadow-soft hover:shadow-card transition-shadow"
     >
-      <Link to={`/product/${product._id}`} className={`block relative aspect-[4/5] overflow-hidden ${isLandscape ? 'bg-white' : 'bg-brand-smoke'}`}>
+      <Link to={`/product/${product._id}`} className="block relative aspect-[4/5] overflow-hidden bg-white">
         <img
           {...responsiveImgProps(product.images?.[0], { sizes: '(max-width: 640px) 50vw, 25vw' })}
           alt={product.name}
           loading="lazy"
-          onLoad={(e) => {
-            const { naturalWidth, naturalHeight } = e.currentTarget
-            if (naturalWidth > naturalHeight) {
-              setIsLandscape(true)
-            }
-          }}
-          className={`w-full h-full group-hover:scale-105 transition-transform duration-500 ${isLandscape ? 'object-contain' : 'object-cover'}`}
+          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
         />
         {product.bestSeller && (
           <span className="absolute top-3 left-3 bg-brand-yellow text-brand-black text-[11px] font-bold px-2.5 py-1 rounded-full">Best Seller</span>
@@ -63,17 +56,21 @@ export default function ProductCard({ product, onQuickView }) {
           {product.name}
         </Link>
         <div className="flex items-center justify-between">
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-extrabold text-sm text-brand-black">₹{product.price}</span>
-            {product.mrp > product.price && (
-              <span className="text-xs text-black/40 line-through">₹{product.mrp}</span>
-            )}
-          </div>
-          <div className="flex items-center gap-1 text-xs text-black/60 font-medium">
-            <Star size={12} fill="#FFD000" stroke="#FFD000" />
-            <span>{product.rating || '4.8'}</span>
-            {product.reviewsCount > 0 && <span className="text-black/35">({product.reviewsCount})</span>}
-          </div>
+          {showPrice && (
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-extrabold text-sm text-brand-black">₹{product.price}</span>
+              {product.mrp > product.price && (
+                <span className="text-xs text-black/40 line-through">₹{product.mrp}</span>
+              )}
+            </div>
+          )}
+          {product.reviewsCount > 0 && (
+            <div className={`flex items-center gap-1 text-xs text-black/60 font-medium ${!showPrice ? 'ml-auto' : ''}`}>
+              <Star size={12} fill="#FFD000" stroke="#FFD000" />
+              <span>{product.rating}</span>
+              <span className="text-black/35">({product.reviewsCount})</span>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

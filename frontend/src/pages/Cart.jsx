@@ -43,17 +43,11 @@ export default function Cart() {
 
             return (
               <div key={item.key} className="flex gap-4 bg-white rounded-xl2 p-4 shadow-soft">
-                <div className={`w-24 h-28 overflow-hidden rounded-xl shrink-0 border border-black/5 flex items-center justify-center ${isLandscape ? 'bg-white' : 'bg-brand-smoke'}`}>
+                <div className="w-24 h-28 overflow-hidden rounded-xl shrink-0 border border-black/5 flex items-center justify-center bg-white">
                   <img
                     src={imageSrc}
                     alt={product.name || 'Poster'}
-                    onLoad={(e) => {
-                      const { naturalWidth, naturalHeight } = e.currentTarget
-                      if (naturalWidth > naturalHeight) {
-                        setLandscapeItems((prev) => ({ ...prev, [item.key]: true }))
-                      }
-                    }}
-                    className={`w-full h-full ${isLandscape ? 'object-contain' : 'object-cover'}`}
+                    className="w-full h-full object-contain"
                   />
                 </div>
                 <div className="flex-1 min-w-0">

@@ -254,7 +254,7 @@ export default function AdminDashboard() {
               <div key={p._id} className="flex items-center gap-3.5 p-2 rounded-xl hover:bg-brand-smoke/50 transition-colors">
                 <img
                   src={imgSrc(p.images?.[0])}
-                  className="w-11 h-14 object-cover rounded-xl border border-black/10 shrink-0"
+                  className="w-11 h-14 object-contain bg-white rounded-xl border border-black/10 shrink-0"
                   alt=""
                 />
                 <div className="flex-1 min-w-0">

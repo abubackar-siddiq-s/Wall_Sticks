@@ -25,13 +25,13 @@ export default function Shop() {
           </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {products.map((p) => <ProductCard key={p._id} product={p} onQuickView={setQuickView} />)}
+            {products.map((p) => <ProductCard key={p._id} product={p} showPrice={false} onQuickView={setQuickView} />)}
           </div>
         )}
       </div>
 
       <AnimatePresence>
-        {quickView && <QuickViewModal product={quickView} onClose={() => setQuickView(null)} />}
+        {quickView && <QuickViewModal product={quickView} showPrice={false} onClose={() => setQuickView(null)} />}
       </AnimatePresence>
     </div>
   )

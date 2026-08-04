@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Package, ShoppingCart, Settings, LogOut, Sparkles, Tag, Award, Menu, X, Mail } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, Settings, LogOut, Sparkles, Tag, Award, Menu, X, Mail, Star } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import api from '../lib/api'
@@ -12,6 +12,7 @@ const nav = [
   { to: '/admin/trending', label: 'Trending', icon: Sparkles },
   { to: '/admin/best-sellers', label: 'Best Sellers', icon: Award },
   { to: '/admin/orders', label: 'Orders', icon: ShoppingCart },
+  { to: '/admin/reviews', label: 'Reviews', icon: Star },
   { to: '/admin/size-pricing', label: 'Size Pricing', icon: Tag },
   { to: '/admin/messages', label: 'Messages', icon: Mail },
   { to: '/admin/settings', label: 'Settings', icon: Settings },

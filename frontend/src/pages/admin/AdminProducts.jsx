@@ -100,7 +100,7 @@ function ProductModal({ product, onClose, onSave }) {
                 />
                 {imagePreview ? (
                   <div className="flex items-center gap-3">
-                    <img src={imagePreview} alt="Preview" className="w-14 h-18 object-cover rounded-xl border border-black/10 shrink-0" />
+                    <img src={imagePreview} alt="Preview" className="w-14 h-18 object-contain bg-white rounded-xl border border-black/10 shrink-0" />
                     <div className="text-left flex-1 min-w-0">
                       <p className="text-xs font-bold text-brand-black truncate">Image selected</p>
                       <p className="text-[11px] text-brand-gold font-semibold mt-0.5">Click to change file</p>
@@ -251,7 +251,7 @@ export default function AdminProducts() {
                   <td className="py-3.5 px-4 flex items-center gap-3.5">
                     <img
                       src={imgSrc(p.images?.[0])}
-                      className="w-10 h-13 object-cover rounded-xl border border-black/10 shadow-sm shrink-0"
+                      className="w-10 h-13 object-contain bg-white rounded-xl border border-black/10 shadow-sm shrink-0"
                       alt=""
                     />
                     <span className="font-extrabold text-brand-black text-sm">{p.name}</span>

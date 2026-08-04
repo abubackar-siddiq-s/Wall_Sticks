@@ -5,6 +5,9 @@ export function useApiData(endpoint, initialData = null, deps = []) {
   const [data, setData] = useState(initialData)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [tick, setTick] = useState(0)
+
+  const refetch = () => setTick((t) => t + 1)
 
   useEffect(() => {
     let cancelled = false
@@ -26,7 +29,7 @@ export function useApiData(endpoint, initialData = null, deps = []) {
 
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps)
+  }, [...deps, tick])
 
-  return { data, loading, error }
+  return { data, loading, error, mutate: refetch, refetch }
 }

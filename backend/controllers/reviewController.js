@@ -48,14 +48,16 @@ export const getFeaturedReviews = asyncHandler(async (req, res) => {
 
 export const createReview = asyncHandler(async (req, res) => {
   const { product, name, rating, text } = req.body
-  if (!product || !name || !rating) {
+  const reviewerName = (name && name.trim()) || req.user?.name || req.user?.phone || req.user?.email || 'Verified Buyer'
+
+  if (!product || !reviewerName || !rating) {
     res.status(400)
     throw new Error('Product ID, name, and rating are required')
   }
 
   const review = await Review.create({
     product,
-    name: name.trim(),
+    name: reviewerName,
     rating: Number(rating),
     text: (text || '').trim(),
     approved: true,
@@ -79,20 +81,24 @@ export const createReview = asyncHandler(async (req, res) => {
 
 export const deleteReview = asyncHandler(async (req, res) => {
   const review = await Review.findById(req.params.id)
-  if (review) {
-    const productId = review.product
-    await Review.findByIdAndDelete(req.params.id)
-
-    const allReviews = await Review.find({
-      $or: [{ product: productId }, { product: String(productId) }],
-      approved: true
-    })
-    const count = allReviews.length
-    const avg = count ? (allReviews.reduce((sum, r) => sum + r.rating, 0) / count).toFixed(1) : 0
-
-    if (String(productId).length === 24) {
-      await Product.findByIdAndUpdate(productId, { rating: Number(avg), reviewsCount: count }).catch(() => {})
-    }
+  if (!review) {
+    res.status(404)
+    throw new Error('Review not found or already deleted')
   }
-  res.json({ message: 'Review deleted' })
+
+  const productId = review.product
+  await Review.findByIdAndDelete(req.params.id)
+
+  const allReviews = await Review.find({
+    $or: [{ product: productId }, { product: String(productId) }],
+    approved: true
+  })
+  const count = allReviews.length
+  const avg = count ? (allReviews.reduce((sum, r) => sum + r.rating, 0) / count).toFixed(1) : 0
+
+  if (String(productId).length === 24) {
+    await Product.findByIdAndUpdate(productId, { rating: Number(avg), reviewsCount: count }).catch(() => {})
+  }
+
+  res.json({ message: 'Review deleted', id: req.params.id })
 })

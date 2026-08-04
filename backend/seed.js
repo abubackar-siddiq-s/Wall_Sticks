@@ -97,8 +97,8 @@ async function seed() {
         category: categoryDocMap[cat.slug],
         price: 399 + (i % 6) * 100,
         mrp: 599 + (i % 6) * 100,
-        rating: Number((4.0 + (i % 5) * 0.2).toFixed(1)),
-        reviewsCount: 8 + i * 2,
+        rating: 0,
+        reviewsCount: 0,
         images: [{ url: imgUrl(`ws_poster_${i + 1}`) }],
         sizes: ['A5', 'A4', 'A3', '12x18', '18x24', '24x36'],
         featured: i % 5 === 0,
@@ -110,27 +110,6 @@ async function seed() {
 
     const createdProducts = await Product.insertMany(productsToCreate)
     console.log(`✅ Seeded ${createdProducts.length} poster products`)
-
-    // 5. Seed initial reviews for created products
-    const sampleReviews = [
-      { name: 'Ananya R.', rating: 5, text: 'Vibrant colors and unreal print resolution!' },
-      { name: 'Karthik M.', rating: 5, text: 'Fast delivery to Erode, pristine condition.' },
-      { name: 'Priya S.', rating: 4, text: 'Looks amazing on my living room wall!' },
-    ]
-
-    for (let idx = 0; idx < Math.min(6, createdProducts.length); idx++) {
-      const prod = createdProducts[idx]
-      for (const rev of sampleReviews) {
-        await Review.create({
-          product: prod._id,
-          name: rev.name,
-          rating: rev.rating,
-          text: rev.text,
-          approved: true,
-        })
-      }
-    }
-    console.log('✅ Seeded demo product reviews')
   }
 
   console.log('🎉 Database seeding complete successfully!')

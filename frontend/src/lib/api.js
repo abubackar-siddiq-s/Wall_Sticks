@@ -14,8 +14,9 @@ api.interceptors.request.use((config) => {
   const adminToken = localStorage.getItem('pw_admin_token')
   const customerToken = localStorage.getItem('wallsticks_customer_token')
   const isAdminContext = (typeof window !== 'undefined' && window.location.pathname.includes('/admin')) || config.url?.includes('/admin')
+  const isDeleteReview = config.method?.toLowerCase() === 'delete' && config.url?.includes('/reviews')
 
-  if (isAdminContext && adminToken) {
+  if ((isAdminContext || isDeleteReview) && adminToken) {
     config.headers.Authorization = `Bearer ${adminToken}`
   } else if (customerToken) {
     config.headers.Authorization = `Bearer ${customerToken}`

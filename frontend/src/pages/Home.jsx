@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy } from 'react'
+import { Component, useState, Suspense, lazy } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Star, ShieldCheck, Truck, Sparkles } from 'lucide-react'
@@ -16,6 +16,25 @@ import { useDeviceCapability } from '../hooks/useDeviceCapability'
 // device/connection can actually make good use of it (see useDeviceCapability). Everyone
 // else, and everyone during the brief moment this chunk is loading, sees HeroFallback.
 const Hero3D = lazy(() => import('../components/Hero3D'))
+
+class Hero3DErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  componentDidCatch(error) {
+    console.warn('Hero3D rendering issue, using fallback:', error)
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback
+    }
+    return this.props.children
+  }
+}
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -39,9 +58,11 @@ export default function Home() {
         {lite ? (
           <HeroFallback />
         ) : (
-          <Suspense fallback={<HeroFallback />}>
-            <Hero3D />
-          </Suspense>
+          <Hero3DErrorBoundary fallback={<HeroFallback />}>
+            <Suspense fallback={<HeroFallback />}>
+              <Hero3D />
+            </Suspense>
+          </Hero3DErrorBoundary>
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/0 to-white pointer-events-none" />
         <div className="relative z-10 max-w-7xl mx-auto px-5 md:px-8 w-full pointer-events-none">
@@ -139,30 +160,32 @@ export default function Home() {
       </section>
 
       {/* REVIEWS */}
-      <section className="max-w-7xl mx-auto px-5 md:px-8 mt-24">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <p className="text-brand-gold font-bold text-xs tracking-widest uppercase mb-2">Word on the wall</p>
-            <h2 className="text-3xl md:text-4xl font-extrabold">Customer reviews</h2>
-          </div>
-          <Link to="/reviews" className="flex items-center gap-1.5 font-semibold text-sm hover:text-brand-gold transition-colors">
-            View all <ArrowRight size={16} />
-          </Link>
-        </div>
-        <div className="grid md:grid-cols-3 gap-5">
-          {reviews.map((r) => (
-            <div key={r.id} className="bg-white rounded-xl2 p-6 shadow-soft">
-              <div className="flex gap-0.5 mb-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} size={14} fill={i < r.rating ? '#FFD000' : 'none'} stroke={i < r.rating ? '#FFD000' : '#ccc'} />
-                ))}
-              </div>
-              <p className="text-sm text-black/70 mb-4 leading-relaxed">"{r.text}"</p>
-              <p className="text-xs font-semibold">{r.name} <span className="text-black/40 font-normal">· {r.product}</span></p>
+      {reviews.length > 0 && (
+        <section className="max-w-7xl mx-auto px-5 md:px-8 mt-24">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <p className="text-brand-gold font-bold text-xs tracking-widest uppercase mb-2">Word on the wall</p>
+              <h2 className="text-3xl md:text-4xl font-extrabold">Customer reviews</h2>
             </div>
-          ))}
-        </div>
-      </section>
+            <Link to="/reviews" className="flex items-center gap-1.5 font-semibold text-sm hover:text-brand-gold transition-colors">
+              View all <ArrowRight size={16} />
+            </Link>
+          </div>
+          <div className="grid md:grid-cols-3 gap-5">
+            {reviews.map((r) => (
+              <div key={r.id} className="bg-white rounded-xl2 p-6 shadow-soft">
+                <div className="flex gap-0.5 mb-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} size={14} fill={i < r.rating ? '#FFD000' : 'none'} stroke={i < r.rating ? '#FFD000' : '#ccc'} />
+                  ))}
+                </div>
+                <p className="text-sm text-black/70 mb-4 leading-relaxed">"{r.text}"</p>
+                <p className="text-xs font-semibold">{r.name} <span className="text-black/40 font-normal">· {r.product}</span></p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <AnimatePresence>
         {quickView && <QuickViewModal product={quickView} onClose={() => setQuickView(null)} />}

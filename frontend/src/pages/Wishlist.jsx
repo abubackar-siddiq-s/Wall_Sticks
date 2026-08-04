@@ -40,22 +40,15 @@ export default function Wishlist() {
 
           return (
             <div key={product._id} className="bg-white rounded-xl2 overflow-hidden shadow-soft">
-              <Link to={`/product/${product._id}`} className={`block aspect-[4/5] overflow-hidden ${isLandscape ? 'bg-white' : 'bg-brand-smoke'}`}>
+              <Link to={`/product/${product._id}`} className="block aspect-[4/5] overflow-hidden bg-white">
                 <img 
                   src={imageSrc} 
                   alt={product.name || 'Poster'} 
-                  onLoad={(e) => {
-                    const { naturalWidth, naturalHeight } = e.currentTarget
-                    if (naturalWidth > naturalHeight) {
-                      setLandscapeItems((prev) => ({ ...prev, [product._id]: true }))
-                    }
-                  }}
-                  className={`w-full h-full ${isLandscape ? 'object-contain' : 'object-cover'}`} 
+                  className="w-full h-full object-contain" 
                 />
               </Link>
               <div className="p-4">
-                <h3 className="font-semibold text-sm mb-1 line-clamp-1">{product.name || 'Poster'}</h3>
-                <p className="font-bold mb-3">₹{product.price || 0}</p>
+                <h3 className="font-semibold text-sm mb-3 line-clamp-1">{product.name || 'Poster'}</h3>
                 <div className="flex gap-2">
                   <button
                     onClick={() => addToCart?.(product)}

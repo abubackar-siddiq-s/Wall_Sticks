@@ -7,7 +7,7 @@ import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import { imgSrc } from '../lib/imageUrl'
 
-export default function QuickViewModal({ product, onClose }) {
+export default function QuickViewModal({ product, onClose, showPrice = false }) {
   const { addToCart } = useCart()
   const { toggleWishlist, isWishlisted } = useWishlist()
   const [quantity, setQuantity] = useState(1)
@@ -44,17 +44,11 @@ export default function QuickViewModal({ product, onClose }) {
         className="bg-white rounded-xl3 w-full max-w-3xl max-h-[90vh] overflow-y-auto grid sm:grid-cols-2 shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className={`aspect-[4/5] sm:aspect-auto sm:h-full overflow-hidden ${isLandscape ? 'bg-white' : 'bg-brand-smoke'}`}>
+        <div className="aspect-[4/5] sm:aspect-auto sm:h-full overflow-hidden bg-white">
           <img 
             src={imgSrc(product.images?.[0])} 
             alt={product.name} 
-            onLoad={(e) => {
-              const { naturalWidth, naturalHeight } = e.currentTarget
-              if (naturalWidth > naturalHeight) {
-                setIsLandscape(true)
-              }
-            }}
-            className={`w-full h-full ${isLandscape ? 'object-contain' : 'object-cover'}`} 
+            className="w-full h-full object-contain" 
           />
         </div>
 
@@ -64,19 +58,25 @@ export default function QuickViewModal({ product, onClose }) {
           </button>
 
           <h2 className="text-2xl font-extrabold mb-2 pr-8">{product.name}</h2>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex gap-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} size={13} fill={i < Math.round(product.rating || 0) ? '#FFD000' : 'none'} stroke={i < Math.round(product.rating || 0) ? '#FFD000' : '#ccc'} />
-              ))}
+          {product.reviewsCount > 0 ? (
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex gap-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} size={13} fill={i < Math.round(product.rating || 0) ? '#FFD000' : 'none'} stroke={i < Math.round(product.rating || 0) ? '#FFD000' : '#ccc'} />
+                ))}
+              </div>
+              <span className="text-xs text-black/50">{product.rating} · {product.reviewsCount} {product.reviewsCount === 1 ? 'review' : 'reviews'}</span>
             </div>
-            <span className="text-xs text-black/50">{product.rating} · {product.reviewsCount || 0} reviews</span>
-          </div>
+          ) : (
+            <p className="text-xs text-black/40 italic mb-4">No reviews yet</p>
+          )}
 
-          <div className="flex items-baseline gap-2 mb-6">
-            <span className="text-2xl font-extrabold">₹{product.price}</span>
-            {product.mrp > product.price && <span className="text-sm text-black/35 line-through">₹{product.mrp}</span>}
-          </div>
+          {showPrice && (
+            <div className="flex items-baseline gap-2 mb-6">
+              <span className="text-2xl font-extrabold">₹{product.price}</span>
+              {product.mrp > product.price && <span className="text-sm text-black/35 line-through">₹{product.mrp}</span>}
+            </div>
+          )}
 
           {product.description && (
             <p className="text-sm text-black/55 leading-relaxed mb-6 line-clamp-4">{product.description}</p>
