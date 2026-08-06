@@ -4,12 +4,11 @@ export async function sendOtp(email, code) {
   const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER
   const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_PASS
   const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com'
-  const smtpPort = parseInt(process.env.SMTP_PORT || '465')
-  const smtpSecure = process.env.SMTP_SECURE !== 'false'
 
   const brevoKey = process.env.BREVO_API_KEY
   const resendKey = process.env.RESEND_API_KEY
 
+  const senderEmail = smtpUser || process.env.BREVO_SENDER || 'wallsticks0319@gmail.com'
   const subject = 'Your WallSticks Verification OTP'
   const htmlContent = `
     <div style="font-family: sans-serif; padding: 24px; max-width: 600px; color: #111; line-height: 1.5;">
@@ -22,30 +21,40 @@ export async function sendOtp(email, code) {
     </div>
   `
 
-  // 1. Try Brevo (Sendinblue) HTTPS API (300 free emails/day to ANY recipient email address, runs on Port 443)
+  // 1. Try Brevo HTTPS API first (runs on Port 443, reliable on cloud platforms like Render)
   if (brevoKey) {
     try {
       const sent = await new Promise((resolve) => {
         const data = JSON.stringify({
-          sender: { name: 'WallSticks', email: smtpUser || 'wallsticks0319@gmail.com' },
+          sender: { name: 'WallSticks', email: senderEmail },
           to: [{ email }],
           subject,
           htmlContent,
         })
-        const req = https.request({
-          hostname: 'api.brevo.com', path: '/v3/smtp/email', method: 'POST',
-          headers: { 'accept': 'application/json', 'api-key': brevoKey, 'content-type': 'application/json', 'content-length': Buffer.byteLength(data) }
-        }, (res) => {
-          let body = ''
-          res.on('data', (c) => (body += c))
-          res.on('end', () => {
-            if (res.statusCode >= 200 && res.statusCode < 300) resolve(true)
-            else {
-              console.warn(`⚠️ Brevo API status ${res.statusCode}:`, body)
-              resolve(false)
-            }
-          })
-        })
+        const req = https.request(
+          {
+            hostname: 'api.brevo.com',
+            path: '/v3/smtp/email',
+            method: 'POST',
+            headers: {
+              'accept': 'application/json',
+              'api-key': brevoKey,
+              'content-type': 'application/json',
+              'content-length': Buffer.byteLength(data),
+            },
+          },
+          (res) => {
+            let body = ''
+            res.on('data', (c) => (body += c))
+            res.on('end', () => {
+              if (res.statusCode >= 200 && res.statusCode < 300) resolve(true)
+              else {
+                console.warn(`⚠️ Brevo API status ${res.statusCode}:`, body)
+                resolve(false)
+              }
+            })
+          }
+        )
         req.on('error', (e) => {
           console.warn('⚠️ Brevo connection error:', e.message)
           resolve(false)
@@ -60,7 +69,7 @@ export async function sendOtp(email, code) {
     } catch {}
   }
 
-  // 2. Try Resend HTTPS API
+  // 2. Try Resend HTTPS API (Port 443)
   if (resendKey) {
     try {
       const sent = await new Promise((resolve) => {
@@ -70,10 +79,19 @@ export async function sendOtp(email, code) {
           subject,
           html: htmlContent,
         })
-        const req = https.request({
-          hostname: 'api.resend.com', path: '/emails', method: 'POST',
-          headers: { 'Authorization': `Bearer ${resendKey}`, 'content-type': 'application/json', 'content-length': Buffer.byteLength(data) }
-        }, (res) => resolve(res.statusCode >= 200 && res.statusCode < 300))
+        const req = https.request(
+          {
+            hostname: 'api.resend.com',
+            path: '/emails',
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${resendKey}`,
+              'content-type': 'application/json',
+              'content-length': Buffer.byteLength(data),
+            },
+          },
+          (res) => resolve(res.statusCode >= 200 && res.statusCode < 300)
+        )
         req.on('error', () => resolve(false))
         req.write(data)
         req.end()
@@ -85,7 +103,7 @@ export async function sendOtp(email, code) {
     } catch {}
   }
 
-  // 2. Try Gmail SMTP via Nodemailer (with 3s fast timeout to prevent cloud hanging)
+  // 3. Fallback: Gmail SMTP via Nodemailer (with 3s connection timeout)
   if (smtpUser && smtpPass) {
     const cleanPass = smtpPass.replace(/\s+/g, '')
     const portsToTry = [
@@ -124,99 +142,6 @@ export async function sendOtp(email, code) {
     }
   }
 
-  // 2. Try Brevo (Sendinblue) API
-  if (brevoKey) {
-    return new Promise((resolve, reject) => {
-      const data = JSON.stringify({
-        sender: { name: 'WallSticks', email: 'otp@wallsticks.in' },
-        to: [{ email }],
-        subject,
-        htmlContent,
-      })
-
-      const req = https.request(
-        {
-          hostname: 'api.brevo.com',
-          path: '/v3/smtp/email',
-          method: 'POST',
-          headers: {
-            'accept': 'application/json',
-            'api-key': brevoKey,
-            'content-type': 'application/json',
-            'content-length': data.length,
-          },
-        },
-        (res) => {
-          let body = ''
-          res.on('data', (chunk) => (body += chunk))
-          res.on('end', () => {
-            if (res.statusCode >= 200 && res.statusCode < 300) {
-              console.log(`✉️ Email OTP sent via Brevo to ${email}`)
-              resolve(true)
-            } else {
-              console.error(`❌ Brevo API failed with status ${res.statusCode}:`, body)
-              reject(new Error(`Brevo send failed: ${res.statusCode}`))
-            }
-          })
-        }
-      )
-
-      req.on('error', (err) => {
-        console.error('❌ Brevo connection error:', err)
-        reject(err)
-      })
-
-      req.write(data)
-      req.end()
-    })
-  }
-
-  // 3. Try Resend API
-  if (resendKey) {
-    return new Promise((resolve, reject) => {
-      const data = JSON.stringify({
-        from: 'WallSticks <onboarding@resend.dev>',
-        to: [email],
-        subject,
-        html: htmlContent,
-      })
-
-      const req = https.request(
-        {
-          hostname: 'api.resend.com',
-          path: '/emails',
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${resendKey}`,
-            'content-type': 'application/json',
-            'content-length': data.length,
-          },
-        },
-        (res) => {
-          let body = ''
-          res.on('data', (chunk) => (body += chunk))
-          res.on('end', () => {
-            if (res.statusCode >= 200 && res.statusCode < 300) {
-              console.log(`✉️ Email OTP sent via Resend to ${email}`)
-              resolve(true)
-            } else {
-              console.error(`❌ Resend API failed with status ${res.statusCode}:`, body)
-              reject(new Error(`Resend send failed: ${res.statusCode}`))
-            }
-          })
-        }
-      )
-
-      req.on('error', (err) => {
-        console.error('❌ Resend connection error:', err)
-        reject(err)
-      })
-
-      req.write(data)
-      req.end()
-    })
-  }
-
   // 4. Fallback to Local Logging
   console.log('\n--- [EMAIL OTP BYPASS] ---')
   console.log(`To: ${email}`)
@@ -231,12 +156,11 @@ export async function sendShippingNotificationEmail(order, recipientEmail) {
   const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER
   const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_PASS
   const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com'
-  const smtpPort = parseInt(process.env.SMTP_PORT || '465')
-  const smtpSecure = process.env.SMTP_SECURE !== 'false'
 
   const resendKey = process.env.RESEND_API_KEY
   const brevoKey = process.env.BREVO_API_KEY
 
+  const senderEmail = smtpUser || process.env.BREVO_SENDER || 'wallsticks0319@gmail.com'
   const subject = `Your WallSticks Order #${order.orderNumber} Has Been Shipped!`
   const itemsListHtml = (order.items || [])
     .map((item) => `<li style="margin-bottom: 6px;"><strong>${item.name}</strong> (${item.size || 'Standard'}, ${item.quantity}x)</li>`)
@@ -264,7 +188,55 @@ export async function sendShippingNotificationEmail(order, recipientEmail) {
     </div>
   `
 
-  // 1. Try Resend HTTPS API first
+  // 1. Try Brevo HTTPS API first (Port 443, instant & non-blocking)
+  if (brevoKey) {
+    try {
+      const sent = await new Promise((resolve) => {
+        const data = JSON.stringify({
+          sender: { name: 'WallSticks', email: senderEmail },
+          to: [{ email: recipientEmail }],
+          subject,
+          htmlContent,
+        })
+        const req = https.request(
+          {
+            hostname: 'api.brevo.com',
+            path: '/v3/smtp/email',
+            method: 'POST',
+            headers: {
+              'accept': 'application/json',
+              'api-key': brevoKey,
+              'content-type': 'application/json',
+              'content-length': Buffer.byteLength(data),
+            },
+          },
+          (res) => {
+            let body = ''
+            res.on('data', (c) => (body += c))
+            res.on('end', () => {
+              if (res.statusCode >= 200 && res.statusCode < 300) resolve(true)
+              else {
+                console.warn(`⚠️ Brevo API shipping notification status ${res.statusCode}:`, body)
+                resolve(false)
+              }
+            })
+          }
+        )
+        req.on('error', (e) => {
+          console.warn('⚠️ Brevo shipping notification connection error:', e.message)
+          resolve(false)
+        })
+        req.write(data)
+        req.end()
+      })
+      if (sent) {
+        console.log(`✉️ Shipping notification email sent via Brevo API to ${recipientEmail}`)
+        return true
+      }
+    } catch {}
+  }
+
+  // 2. Try Resend HTTPS API (Port 443)
   if (resendKey) {
     try {
       const sent = await new Promise((resolve) => {
@@ -274,10 +246,19 @@ export async function sendShippingNotificationEmail(order, recipientEmail) {
           subject,
           html: htmlContent,
         })
-        const req = https.request({
-          hostname: 'api.resend.com', path: '/emails', method: 'POST',
-          headers: { 'Authorization': `Bearer ${resendKey}`, 'content-type': 'application/json', 'content-length': data.length }
-        }, (res) => resolve(res.statusCode >= 200 && res.statusCode < 300))
+        const req = https.request(
+          {
+            hostname: 'api.resend.com',
+            path: '/emails',
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${resendKey}`,
+              'content-type': 'application/json',
+              'content-length': Buffer.byteLength(data),
+            },
+          },
+          (res) => resolve(res.statusCode >= 200 && res.statusCode < 300)
+        )
         req.on('error', () => resolve(false))
         req.write(data)
         req.end()
@@ -289,6 +270,7 @@ export async function sendShippingNotificationEmail(order, recipientEmail) {
     } catch {}
   }
 
+  // 3. Fallback: Gmail SMTP via Nodemailer
   if (smtpUser && smtpPass) {
     const cleanPass = smtpPass.replace(/\s+/g, '')
     const portsToTry = [
@@ -304,9 +286,9 @@ export async function sendShippingNotificationEmail(order, recipientEmail) {
           port: p.port,
           secure: p.secure,
           auth: { user: smtpUser, pass: cleanPass },
-          connectionTimeout: 8000,
-          greetingTimeout: 8000,
-          socketTimeout: 8000,
+          connectionTimeout: 3000,
+          greetingTimeout: 3000,
+          socketTimeout: 3000,
         })
 
         await transporter.sendMail({
@@ -324,44 +306,7 @@ export async function sendShippingNotificationEmail(order, recipientEmail) {
     }
   }
 
-  if (brevoKey) {
-    try {
-      const data = JSON.stringify({
-        sender: { name: 'WallSticks', email: 'orders@wallsticks.in' },
-        to: [{ email: recipientEmail }],
-        subject,
-        htmlContent,
-      })
-
-      await new Promise((resolve, reject) => {
-        const req = https.request(
-          {
-            hostname: 'api.brevo.com',
-            path: '/v3/smtp/email',
-            method: 'POST',
-            headers: {
-              'accept': 'application/json',
-              'api-key': brevoKey,
-              'content-type': 'application/json',
-              'content-length': data.length,
-            },
-          },
-          (res) => {
-            if (res.statusCode >= 200 && res.statusCode < 300) resolve(true)
-            else reject(new Error(`Brevo status ${res.statusCode}`))
-          }
-        )
-        req.on('error', reject)
-        req.write(data)
-        req.end()
-      })
-      console.log(`✉️ Shipping notification email sent via Brevo to ${recipientEmail}`)
-      return true
-    } catch (err) {
-      console.error(`❌ Brevo shipping notification failed:`, err)
-    }
-  }
-
+  // 4. Fallback log
   console.log('\n--- [SHIPPING EMAIL NOTIFICATION LOG] ---')
   console.log(`To: ${recipientEmail}`)
   console.log(`Order: #${order.orderNumber}`)
