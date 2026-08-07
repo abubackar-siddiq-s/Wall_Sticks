@@ -53,7 +53,7 @@ export default function QuickViewModal({ product, onClose, showPrice = false }) 
           <img 
             src={imgSrc(product.images?.[0])} 
             alt={product.name} 
-            className="w-full h-full object-cover" 
+            className="w-full h-full object-contain" 
           />
         </div>
 

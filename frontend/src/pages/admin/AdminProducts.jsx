@@ -216,7 +216,7 @@ function ProductModal({ product, onClose, onSave }) {
                     </div>
 
                     <div className="w-[42px] h-[56px] rounded overflow-hidden border border-black/10 shrink-0 bg-white relative" style={{ aspectRatio: '3 / 4' }}>
-                      <img src={imgSrc(img)} alt="Thumbnail" className="w-full h-full object-cover" />
+                      <img src={imgSrc(img)} alt="Thumbnail" className="w-full h-full object-contain" />
                     </div>
                     
                     <div className="flex-1 min-w-0">
@@ -278,7 +278,7 @@ function ProductModal({ product, onClose, onSave }) {
                       </div>
 
                       <div className="w-[42px] h-[56px] rounded overflow-hidden border border-black/10 shrink-0 bg-white relative" style={{ aspectRatio: '3 / 4' }}>
-                        <img src={item.previewUrl} alt="Thumbnail" className="w-full h-full object-cover" />
+                        <img src={item.previewUrl} alt="Thumbnail" className="w-full h-full object-contain" />
                       </div>
                       
                       <div className="flex-1 min-w-0">

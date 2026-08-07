@@ -200,7 +200,7 @@ export default function ProductDetail() {
             <img
               {...responsiveImgProps(imagesList[selectedImgIndex] || product.images?.[0], { sizes: '(max-width: 768px) 100vw, 50vw' })}
               alt={product.name}
-              className="w-full h-full object-cover transition-all duration-300"
+              className="w-full h-full object-contain transition-all duration-300"
             />
             {imagesList.length > 1 && (
               <>
@@ -242,7 +242,7 @@ export default function ProductDetail() {
                   <img
                     {...responsiveImgProps(imgObj, { sizes: '64px' })}
                     alt={`${product.name} view ${idx + 1}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                 </button>
               ))}

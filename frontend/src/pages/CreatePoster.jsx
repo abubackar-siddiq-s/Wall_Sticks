@@ -111,7 +111,7 @@ export default function CreatePoster() {
               <img 
                 src={preview} 
                 alt="Uploaded preview" 
-                className="w-full h-full object-cover" 
+                className="w-full h-full object-contain" 
               />
             ) : (
               <div className="text-center px-8">

@@ -48,7 +48,7 @@ export default function Wishlist() {
                 <img 
                   src={imageSrc} 
                   alt={product.name || 'Poster'} 
-                  className="w-full h-full object-cover" 
+                  className="w-full h-full object-contain" 
                 />
               </Link>
               <div className="p-4">

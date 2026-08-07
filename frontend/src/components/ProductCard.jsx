@@ -28,7 +28,7 @@ export default function ProductCard({ product, onQuickView, showPrice = false })
           {...responsiveImgProps(product.images?.[0], { sizes: '(max-width: 640px) 50vw, 25vw' })}
           alt={product.name}
           loading="lazy"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
         />
 
         {product.bestSeller && (
