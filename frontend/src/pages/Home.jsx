@@ -9,7 +9,7 @@ import Newsletter from '../components/Newsletter'
 import QuickViewModal from '../components/QuickViewModal'
 import ProductGridSkeleton from '../components/ProductGridSkeleton'
 import { useApiData } from '../hooks/useApiData'
-import { useProducts, useTrendingProducts } from '../hooks/useProducts'
+import { useProducts, useTrendingProducts, useBestSellerProducts } from '../hooks/useProducts'
 import { useDeviceCapability } from '../hooks/useDeviceCapability'
 
 // The interactive Three.js/R3F hero is its own chunk — only fetched for visitors whose
@@ -45,10 +45,13 @@ export default function Home() {
   const [quickView, setQuickView] = useState(null)
   const { products, loading: productsLoading } = useProducts()
   const { products: trending, loading: trendingLoading } = useTrendingProducts()
+  const { products: bestSellersData, loading: bestSellersLoading } = useBestSellerProducts()
   const { data: featuredReviews } = useApiData('/reviews/featured', [])
   const reviews = Array.isArray(featuredReviews) ? featuredReviews : []
   const { lite } = useDeviceCapability()
-  const bestSellers = products.filter((p) => p.bestSeller)
+  const bestSellers = (bestSellersData && bestSellersData.length > 0)
+    ? bestSellersData
+    : products.filter((p) => p.bestSeller)
 
   return (
     <div>
@@ -88,27 +91,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TRUST STRIP */}
-      {/* <section className="max-w-7xl mx-auto px-5 md:px-8 -mt-4 md:mt-0 relative z-10">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[
-            { icon: ShieldCheck, title: 'Archival-grade printing', sub: 'Fade-resistant for 75+ years' },
-            { icon: Truck, title: 'Pan-India shipping', sub: 'Dispatched in 24–48 hrs' },
-            { icon: Star, title: '4.8/5 from 2,300+ orders', sub: 'Verified customer reviews' },
-          ].map((f, i) => (
-            <div key={i} className="flex items-center gap-3.5 bg-white rounded-xl2 p-5 shadow-soft">
-              <div className="w-11 h-11 rounded-full bg-brand-yellow/15 flex items-center justify-center shrink-0">
-                <f.icon size={20} className="text-brand-gold" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">{f.title}</p>
-                <p className="text-xs text-black/45">{f.sub}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section> */}
-
       {/* TRENDING */}
       <section className="max-w-7xl mx-auto px-5 md:px-8 mt-24">
         <div className="mb-8">
@@ -120,7 +102,7 @@ export default function Home() {
         ) : trending.length === 0 ? (
           <p className="text-black/40 text-sm font-medium italic bg-brand-smoke p-8 rounded-xl2 text-center">New trending posters coming soon.</p>
         ) : (
-          <ProductSlider products={trending} onQuickView={setQuickView} />
+          <ProductSlider products={trending} onQuickView={setQuickView} autoPlay={true} autoPlayInterval={3500} />
         )}
       </section>
 
@@ -150,12 +132,12 @@ export default function Home() {
           <p className="text-brand-gold font-bold text-xs tracking-widest uppercase mb-2">Customer favorites</p>
           <h2 className="text-3xl md:text-4xl font-extrabold">Best sellers</h2>
         </div>
-        {productsLoading ? (
+        {(productsLoading || bestSellersLoading) ? (
           <ProductGridSkeleton count={4} />
         ) : bestSellers.length === 0 ? (
           <p className="text-black/40 text-sm font-medium italic bg-brand-smoke p-8 rounded-xl2 text-center">Our best-selling collection will appear here soon.</p>
         ) : (
-          <ProductSlider products={bestSellers} onQuickView={setQuickView} />
+          <ProductSlider products={bestSellers} onQuickView={setQuickView} autoPlay={true} autoPlayInterval={3500} />
         )}
       </section>
 

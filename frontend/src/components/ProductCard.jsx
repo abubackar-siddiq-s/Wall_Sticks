@@ -10,41 +10,54 @@ export default function ProductCard({ product, onQuickView, showPrice = false })
   const { toggleWishlist, isWishlisted } = useWishlist()
   const { addToCart } = useCart()
   const wishlisted = isWishlisted(product._id)
+  const hasSecondaryImage = product.images && product.images.length > 1
 
   return (
     <motion.div
       whileHover={{ y: -6 }}
       transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-      className="group relative bg-white rounded-xl2 overflow-hidden shadow-soft hover:shadow-card transition-shadow"
+      className="group/card relative bg-white rounded-xl2 overflow-hidden shadow-soft hover:shadow-card transition-all border border-black/5 hover:border-black/15"
     >
-      <Link to={`/product/${product._id}`} className="block relative aspect-[4/5] overflow-hidden bg-white">
+      <Link 
+        to={`/product/${product._id}`} 
+        className="block relative w-full overflow-hidden bg-white aspect-[3/4]"
+        style={{ aspectRatio: '3 / 4' }}
+      >
+        {/* Primary Image */}
         <img
           {...responsiveImgProps(product.images?.[0], { sizes: '(max-width: 640px) 50vw, 25vw' })}
           alt={product.name}
           loading="lazy"
-          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover"
         />
+
         {product.bestSeller && (
-          <span className="absolute top-3 left-3 bg-brand-yellow text-brand-black text-[11px] font-bold px-2.5 py-1 rounded-full">Best Seller</span>
+          <span className="absolute top-3 left-3 bg-brand-yellow text-brand-black text-[11px] font-bold px-2.5 py-1 rounded-full z-10">
+            Best Seller
+          </span>
         )}
+
         <button
           onClick={(e) => { e.preventDefault(); toggleWishlist(product) }}
           aria-label="Toggle wishlist"
-          className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-colors ${wishlisted ? 'bg-brand-yellow text-brand-black' : 'bg-white/90 text-black hover:bg-white'}`}
+          className={`absolute top-3 right-3 z-10 w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+            wishlisted ? 'bg-brand-yellow text-brand-black' : 'bg-white/90 text-black hover:bg-white'
+          }`}
         >
           <Heart size={16} fill={wishlisted ? '#0A0A0A' : 'none'} />
         </button>
 
-        <div className="absolute inset-x-3 bottom-3 flex gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+        {/* Individual Card Quick Action overlay on card hover */}
+        <div className="absolute inset-x-3 bottom-3 flex gap-2 opacity-0 group-hover/card:opacity-100 translate-y-2 group-hover/card:translate-y-0 transition-all duration-300 z-10">
           <button
             onClick={(e) => { e.preventDefault(); onQuickView?.(product) }}
-            className="flex-1 bg-white/95 text-black text-xs font-semibold py-2.5 rounded-full flex items-center justify-center gap-1.5 hover:bg-white"
+            className="flex-1 bg-white/95 text-black text-xs font-semibold py-2.5 rounded-full flex items-center justify-center gap-1.5 hover:bg-white shadow-sm"
           >
             <Eye size={14} /> Quick View
           </button>
           <button
             onClick={(e) => { e.preventDefault(); addToCart(product) }}
-            className="flex-1 bg-brand-black text-brand-yellow text-xs font-semibold py-2.5 rounded-full flex items-center justify-center gap-1.5"
+            className="flex-1 bg-brand-black text-brand-yellow text-xs font-semibold py-2.5 rounded-full flex items-center justify-center gap-1.5 shadow-sm hover:bg-black"
           >
             <ShoppingBag size={14} /> Add
           </button>

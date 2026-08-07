@@ -2,9 +2,33 @@ import asyncHandler from 'express-async-handler'
 import * as productService from '../services/productService.js'
 
 const normalizeImages = (req) => {
-  if (req.files?.length) {
-    return req.files.map((f) => ({ url: f.path, publicId: f.filename }))
+  let existing = []
+  if (req.body.existingImages) {
+    const raw = Array.isArray(req.body.existingImages) ? req.body.existingImages : [req.body.existingImages]
+    existing = raw.map((img) => {
+      if (typeof img === 'string') {
+        if (img.trim().startsWith('{')) {
+          try {
+            const parsed = JSON.parse(img)
+            return { url: parsed.url || '', publicId: parsed.publicId || '' }
+          } catch {}
+        }
+        return { url: img, publicId: '' }
+      }
+      if (img && typeof img === 'object') return { url: img.url || '', publicId: img.publicId || '' }
+      return null
+    }).filter(Boolean)
   }
+
+  let uploaded = []
+  if (req.files?.length) {
+    uploaded = req.files.map((f) => ({ url: f.path, publicId: f.filename }))
+  }
+
+  if (existing.length || uploaded.length) {
+    return [...existing, ...uploaded]
+  }
+
   if (req.body.images) {
     const imgs = Array.isArray(req.body.images) ? req.body.images : [req.body.images]
     return imgs.map((img) => {

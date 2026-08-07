@@ -96,7 +96,8 @@ export default function CreatePoster() {
             onDrop={(e) => { e.preventDefault(); !uploading && handleFile(e.dataTransfer.files[0]) }}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => !uploading && fileInput.current.click()}
-            className="aspect-[4/5] rounded-xl3 border-2 border-dashed border-black/15 hover:border-brand-yellow flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all bg-white"
+            className="w-full aspect-[3/4] rounded-xl3 border-2 border-dashed border-black/15 hover:border-brand-yellow flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all bg-white relative"
+            style={{ aspectRatio: '3 / 4' }}
           >
             {uploading ? (
               <div className="text-center px-8 animate-pulse">
@@ -110,7 +111,7 @@ export default function CreatePoster() {
               <img 
                 src={preview} 
                 alt="Uploaded preview" 
-                className="w-full h-full object-contain" 
+                className="w-full h-full object-cover" 
               />
             ) : (
               <div className="text-center px-8">

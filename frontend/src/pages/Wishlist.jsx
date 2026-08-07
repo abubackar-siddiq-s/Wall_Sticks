@@ -40,11 +40,15 @@ export default function Wishlist() {
 
           return (
             <div key={product._id} className="bg-white rounded-xl2 overflow-hidden shadow-soft">
-              <Link to={`/product/${product._id}`} className="block aspect-[4/5] overflow-hidden bg-white">
+              <Link 
+                to={`/product/${product._id}`} 
+                className="block w-full aspect-[3/4] overflow-hidden bg-white"
+                style={{ aspectRatio: '3 / 4' }}
+              >
                 <img 
                   src={imageSrc} 
                   alt={product.name || 'Poster'} 
-                  className="w-full h-full object-contain" 
+                  className="w-full h-full object-cover" 
                 />
               </Link>
               <div className="p-4">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, Star, X, Sparkles, Check, Upload, Image as ImageIcon } from 'lucide-react'
+import { Plus, Pencil, Trash2, Star, X, Sparkles, Check, Upload, Image as ImageIcon, ChevronUp, ChevronDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AdminLayout from '../../components/AdminLayout'
 import api from '../../lib/api'
@@ -11,10 +11,13 @@ function ProductModal({ product, onClose, onSave }) {
   const featured = false
   const [bestSeller, setBestSeller] = useState(!!product?.bestSeller)
   const [trending, setTrending] = useState(!!product?.trending)
-  const [imagePreview, setImagePreview] = useState(
-    product?.images?.[0] ? imgSrc(product.images[0]) : ''
+  
+  // Existing image objects from DB
+  const [existingImages, setExistingImages] = useState(
+    Array.isArray(product?.images) ? product.images : product?.images?.[0] ? [product.images[0]] : []
   )
-  const [imageFile, setImageFile] = useState(null)
+  // Newly added image files [{ file, previewUrl }]
+  const [newImageFiles, setNewImageFiles] = useState([])
   const [pendingFile, setPendingFile] = useState(null)
   const [saving, setSaving] = useState(false)
 
@@ -28,14 +31,84 @@ function ProductModal({ product, onClose, onSave }) {
 
   const handleCropped = (croppedFile, croppedPreviewUrl) => {
     setPendingFile(null)
-    setImageFile(croppedFile)
-    setImagePreview(croppedPreviewUrl)
+    setNewImageFiles((prev) => [...prev, { file: croppedFile, previewUrl: croppedPreviewUrl }])
+  }
+
+  const removeExisting = (index) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const removeNewFile = (index) => {
+    setNewImageFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const moveExistingUp = (index) => {
+    if (index <= 0) return
+    setExistingImages((prev) => {
+      const arr = [...prev]
+      const temp = arr[index]
+      arr[index] = arr[index - 1]
+      arr[index - 1] = temp
+      return arr
+    })
+  }
+
+  const moveExistingDown = (index) => {
+    setExistingImages((prev) => {
+      if (index >= prev.length - 1) return prev
+      const arr = [...prev]
+      const temp = arr[index]
+      arr[index] = arr[index + 1]
+      arr[index + 1] = temp
+      return arr
+    })
+  }
+
+  const moveNewUp = (index) => {
+    if (index <= 0) return
+    setNewImageFiles((prev) => {
+      const arr = [...prev]
+      const temp = arr[index]
+      arr[index] = arr[index - 1]
+      arr[index - 1] = temp
+      return arr
+    })
+  }
+
+  const moveNewDown = (index) => {
+    setNewImageFiles((prev) => {
+      if (index >= prev.length - 1) return prev
+      const arr = [...prev]
+      const temp = arr[index]
+      arr[index] = arr[index + 1]
+      arr[index + 1] = temp
+      return arr
+    })
+  }
+
+  const setAsPrimaryExisting = (index) => {
+    setExistingImages((prev) => {
+      const target = prev[index]
+      const rest = prev.filter((_, i) => i !== index)
+      return [target, ...rest]
+    })
+  }
+
+  const setAsPrimaryNew = (index) => {
+    setNewImageFiles((prev) => {
+      const target = prev[index]
+      const rest = prev.filter((_, i) => i !== index)
+      return [target, ...rest]
+    })
+    setExistingImages([])
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!name.trim()) return toast.error('Please enter a poster name')
-    if (!imagePreview && !imageFile) return toast.error('Please upload a poster image file')
+    if (existingImages.length === 0 && newImageFiles.length === 0) {
+      return toast.error('Please upload at least one poster image')
+    }
 
     setSaving(true)
     try {
@@ -46,11 +119,15 @@ function ProductModal({ product, onClose, onSave }) {
       formData.append('featured', featured)
       formData.append('price', product?.price || 399)
 
-      if (imageFile) {
-        formData.append('images', imageFile, 'poster.png')
-      } else if (product?.images?.[0]) {
-        formData.append('images', JSON.stringify(product.images[0]))
-      }
+      // Append existing images
+      existingImages.forEach((img) => {
+        formData.append('existingImages', JSON.stringify(img))
+      })
+
+      // Append newly uploaded image files
+      newImageFiles.forEach((item) => {
+        formData.append('images', item.file, 'poster.png')
+      })
 
       await onSave(formData, product?._id)
       onClose()
@@ -64,13 +141,13 @@ function ProductModal({ product, onClose, onSave }) {
   return (
     <>
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-        <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-md shadow-card max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-lg shadow-card max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-center mb-6 pb-4 border-b border-black/10">
             <div>
               <h3 className="font-extrabold text-xl text-brand-black">
                 {product ? 'Edit Poster' : 'Add New Poster'}
               </h3>
-              <p className="text-xs text-black/50 mt-0.5">Upload poster image and set poster name</p>
+              <p className="text-xs text-black/50 mt-0.5">Upload poster images and manage side pictures</p>
             </div>
             <button onClick={onClose} className="p-2 rounded-full hover:bg-brand-smoke transition-colors"><X size={20} /></button>
           </div>
@@ -88,33 +165,153 @@ function ProductModal({ product, onClose, onSave }) {
               />
             </div>
 
-            {/* FILE UPLOAD FOR POSTER IMAGE */}
+            {/* MULTI-IMAGE UPLOADER & THUMBNAIL GALLERY */}
             <div>
-              <label className="block text-xs font-bold text-black/70 mb-1.5 uppercase tracking-wider">Upload Poster Image *</label>
-              <div className="relative border-2 border-dashed border-black/15 hover:border-brand-black rounded-2xl p-4 transition-colors text-center bg-brand-smoke/50 cursor-pointer">
+              <label className="block text-xs font-bold text-black/70 mb-1.5 uppercase tracking-wider">
+                Poster Images ({existingImages.length + newImageFiles.length} Selected)
+              </label>
+
+              {/* Upload trigger button */}
+              <div className="relative border-2 border-dashed border-black/15 hover:border-brand-black rounded-2xl p-4 transition-colors text-center bg-brand-smoke/50 cursor-pointer mb-3">
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleFileChange}
                   className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
                 />
-                {imagePreview ? (
-                  <div className="flex items-center gap-3">
-                    <img src={imagePreview} alt="Preview" className="w-14 h-18 object-contain bg-white rounded-xl border border-black/10 shrink-0" />
-                    <div className="text-left flex-1 min-w-0">
-                      <p className="text-xs font-bold text-brand-black truncate">Image selected</p>
-                      <p className="text-[11px] text-brand-gold font-semibold mt-0.5">Click to change file</p>
-                    </div>
+                <div className="flex flex-col items-center gap-1.5">
+                  <div className="w-8 h-8 rounded-full bg-brand-yellow/20 text-brand-gold flex items-center justify-center">
+                    <Upload size={16} />
                   </div>
-                ) : (
-                  <div className="py-4 flex flex-col items-center gap-2">
-                    <div className="w-10 h-10 rounded-full bg-brand-yellow/20 text-brand-gold flex items-center justify-center">
-                      <Upload size={18} />
+                  <p className="text-xs font-bold text-brand-black">Click to add a picture</p>
+                  <p className="text-[11px] text-black/40">Upload main cover or side pictures (PNG, JPG, WEBP)</p>
+                </div>
+              </div>
+
+              {/* Image Thumbnails List */}
+              <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                {/* Existing Images */}
+                {existingImages.map((img, idx) => (
+                  <div key={idx} className="flex items-center gap-2 p-2 bg-brand-smoke/60 rounded-xl border border-black/5">
+                    {/* Sort buttons */}
+                    <div className="flex flex-col gap-0.5">
+                      <button
+                        type="button"
+                        disabled={idx === 0}
+                        onClick={() => moveExistingUp(idx)}
+                        className="p-1 rounded text-black/40 hover:text-black hover:bg-black/5 disabled:opacity-20 transition-all"
+                        aria-label="Move up"
+                      >
+                        <ChevronUp size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={idx === existingImages.length - 1}
+                        onClick={() => moveExistingDown(idx)}
+                        className="p-1 rounded text-black/40 hover:text-black hover:bg-black/5 disabled:opacity-20 transition-all"
+                        aria-label="Move down"
+                      >
+                        <ChevronDown size={14} />
+                      </button>
                     </div>
-                    <p className="text-xs font-bold text-brand-black">Click to upload poster image file</p>
-                    <p className="text-[11px] text-black/40">PNG, JPG, WEBP formats supported</p>
+
+                    <div className="w-[42px] h-[56px] rounded overflow-hidden border border-black/10 shrink-0 bg-white relative" style={{ aspectRatio: '3 / 4' }}>
+                      <img src={imgSrc(img)} alt="Thumbnail" className="w-full h-full object-cover" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold truncate">Photo #{idx + 1}</span>
+                        {idx === 0 && (
+                          <span className="text-[10px] bg-brand-yellow text-brand-black font-extrabold px-2 py-0.5 rounded-full">
+                            Main Cover
+                          </span>
+                        )}
+                      </div>
+                      {idx !== 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setAsPrimaryExisting(idx)}
+                          className="text-[11px] text-brand-gold font-bold hover:underline mt-0.5"
+                        >
+                          Set Main Cover
+                        </button>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => removeExisting(idx)}
+                      className="p-1.5 text-black/40 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                      aria-label="Remove image"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
-                )}
+                ))}
+
+                {/* Newly Added Image Files */}
+                {newImageFiles.map((item, idx) => {
+                  const globalIdx = existingImages.length + idx
+                  return (
+                    <div key={idx} className="flex items-center gap-2 p-2 bg-brand-smoke/60 rounded-xl border border-black/5">
+                      {/* Sort buttons */}
+                      <div className="flex flex-col gap-0.5">
+                        <button
+                          type="button"
+                          disabled={idx === 0}
+                          onClick={() => moveNewUp(idx)}
+                          className="p-1 rounded text-black/40 hover:text-black hover:bg-black/5 disabled:opacity-20 transition-all"
+                          aria-label="Move up"
+                        >
+                          <ChevronUp size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={idx === newImageFiles.length - 1}
+                          onClick={() => moveNewDown(idx)}
+                          className="p-1 rounded text-black/40 hover:text-black hover:bg-black/5 disabled:opacity-20 transition-all"
+                          aria-label="Move down"
+                        >
+                          <ChevronDown size={14} />
+                        </button>
+                      </div>
+
+                      <div className="w-[42px] h-[56px] rounded overflow-hidden border border-black/10 shrink-0 bg-white relative" style={{ aspectRatio: '3 / 4' }}>
+                        <img src={item.previewUrl} alt="Thumbnail" className="w-full h-full object-cover" />
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold truncate">New Photo #{idx + 1}</span>
+                          {globalIdx === 0 && (
+                            <span className="text-[10px] bg-brand-yellow text-brand-black font-extrabold px-2 py-0.5 rounded-full">
+                              Main Cover
+                            </span>
+                          )}
+                        </div>
+                        {globalIdx !== 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setAsPrimaryNew(idx)}
+                            className="text-[11px] text-brand-gold font-bold hover:underline mt-0.5"
+                          >
+                            Set Main Cover
+                          </button>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => removeNewFile(idx)}
+                        className="p-1.5 text-black/40 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                        aria-label="Remove image"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  )
+                })}
               </div>
             </div>
 

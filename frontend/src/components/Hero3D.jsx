@@ -101,13 +101,12 @@ export default function Hero3D() {
     const combined = [...(trendingProducts || []), ...(allCatalogProducts || [])]
     const list = []
     combined.forEach((p) => {
-      if (Array.isArray(p.images)) {
-        p.images.forEach((img) => {
-          const url = imgSrc(img)
-          if (url && !list.includes(url)) {
-            list.push(url)
-          }
-        })
+      const mainImg = p.images?.[0]
+      if (mainImg) {
+        const url = imgSrc(mainImg)
+        if (url && !list.includes(url)) {
+          list.push(url)
+        }
       }
     })
     return list

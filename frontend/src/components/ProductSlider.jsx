@@ -1,24 +1,62 @@
-import { useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import ProductCard from './ProductCard'
 
-export default function ProductSlider({ products = [], onQuickView }) {
+export default function ProductSlider({ products = [], onQuickView, autoPlay = true, autoPlayInterval = 3500 }) {
   const sliderRef = useRef(null)
   const [isMouseDown, setIsMouseDown] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
   const [startX, setStartX] = useState(0)
   const [scrollLeftPos, setScrollLeftPos] = useState(0)
 
-  const scrollLeft = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: -320, behavior: 'smooth' })
-    }
-  }
+  // Repeat items for infinite circular looping if enough items exist
+  const shouldLoop = products && products.length >= 3
+  const circularProducts = shouldLoop ? [...products, ...products, ...products] : products
 
-  const scrollRight = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: 320, behavior: 'smooth' })
+  // Set initial scroll position to middle set for seamless infinite scroll in both directions
+  useEffect(() => {
+    if (sliderRef.current && shouldLoop) {
+      const container = sliderRef.current
+      const setWidth = container.scrollWidth / 3
+      container.scrollLeft = setWidth
     }
-  }
+  }, [products, shouldLoop])
+
+  // Handle continuous silent loop reset during scrolling
+  const handleScroll = useCallback(() => {
+    if (!sliderRef.current || !shouldLoop) return
+    const container = sliderRef.current
+    const setWidth = container.scrollWidth / 3
+
+    // If scrolled past 2 sets, jump back to middle set silently
+    if (container.scrollLeft >= setWidth * 2) {
+      container.style.scrollBehavior = 'auto'
+      container.scrollLeft -= setWidth
+      container.style.scrollBehavior = 'smooth'
+    }
+    // If scrolled near start of 1st set, jump forward to middle set silently
+    else if (container.scrollLeft <= 10) {
+      container.style.scrollBehavior = 'auto'
+      container.scrollLeft += setWidth
+      container.style.scrollBehavior = 'smooth'
+    }
+  }, [shouldLoop])
+
+  const scrollRight = useCallback(() => {
+    if (sliderRef.current) {
+      sliderRef.current.scrollBy({ left: 300, behavior: 'smooth' })
+    }
+  }, [])
+
+  // Auto carousel effect
+  useEffect(() => {
+    if (!autoPlay || isHovered || isMouseDown || !products || products.length <= 1) return
+
+    const timer = setInterval(() => {
+      scrollRight()
+    }, autoPlayInterval)
+
+    return () => clearInterval(timer)
+  }, [autoPlay, isHovered, isMouseDown, products, autoPlayInterval, scrollRight])
 
   const handleMouseDown = (e) => {
     if (!sliderRef.current) return
@@ -29,6 +67,11 @@ export default function ProductSlider({ products = [], onQuickView }) {
 
   const handleMouseLeave = () => {
     setIsMouseDown(false)
+    setIsHovered(false)
+  }
+
+  const handleMouseEnter = () => {
+    setIsHovered(true)
   }
 
   const handleMouseUp = () => {
@@ -48,19 +91,15 @@ export default function ProductSlider({ products = [], onQuickView }) {
   }
 
   return (
-    <div className="relative group">
-      {/* Left scroll button */}
-      <button
-        onClick={scrollLeft}
-        className="absolute -left-3 md:-left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white shadow-card border border-black/10 flex items-center justify-center text-black hover:bg-brand-yellow hover:border-brand-yellow transition-all opacity-100 hover:scale-105"
-        aria-label="Scroll Left"
-      >
-        <ChevronLeft size={22} />
-      </button>
-
+    <div
+      className="relative group"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       {/* Swipable / scrollable container */}
       <div
         ref={sliderRef}
+        onScroll={handleScroll}
         onMouseDown={handleMouseDown}
         onMouseLeave={handleMouseLeave}
         onMouseUp={handleMouseUp}
@@ -69,21 +108,13 @@ export default function ProductSlider({ products = [], onQuickView }) {
           isMouseDown ? 'cursor-grabbing select-none' : 'cursor-grab'
         }`}
       >
-        {products.map((product) => (
-          <div key={product._id} className="w-[220px] sm:w-[260px] md:w-[280px] shrink-0 snap-start">
+        {circularProducts.map((product, idx) => (
+          <div key={`${product._id}-${idx}`} className="w-[220px] sm:w-[260px] md:w-[280px] shrink-0 snap-start">
             <ProductCard product={product} onQuickView={onQuickView} />
           </div>
         ))}
       </div>
-
-      {/* Right scroll button */}
-      <button
-        onClick={scrollRight}
-        className="absolute -right-3 md:-right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white shadow-card border border-black/10 flex items-center justify-center text-black hover:bg-brand-yellow hover:border-brand-yellow transition-all opacity-100 hover:scale-105"
-        aria-label="Scroll Right"
-      >
-        <ChevronRight size={22} />
-      </button>
     </div>
   )
 }
+

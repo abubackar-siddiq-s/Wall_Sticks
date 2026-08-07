@@ -12,6 +12,12 @@ export function useTrendingProducts() {
   return { products, loading, error }
 }
 
+export function useBestSellerProducts() {
+  const { data, loading, error } = useApiData('/products/bestsellers', [])
+  const products = Array.isArray(data) ? data : []
+  return { products, loading, error }
+}
+
 export function useProduct(id) {
   const { data, loading, error } = useApiData(`/products/${id}`, null, [id])
   return { product: data, loading, error }

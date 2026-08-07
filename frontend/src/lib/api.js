@@ -20,10 +20,26 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${adminToken}`
   } else if (customerToken) {
     config.headers.Authorization = `Bearer ${customerToken}`
-  } else if (adminToken) {
-    config.headers.Authorization = `Bearer ${adminToken}`
   }
   return config
 })
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      const msg = error.response.data?.message?.toLowerCase() || ''
+      const isExpired = msg.includes('jwt expired') || msg.includes('expired') || msg.includes('not authorized')
+      if (isExpired && typeof window !== 'undefined') {
+        if (window.location.pathname.includes('/admin')) {
+          localStorage.removeItem('pw_admin_token')
+        } else {
+          localStorage.removeItem('wallsticks_customer_token')
+        }
+      }
+    }
+    return Promise.reject(error)
+  }
+)
 
 export default api

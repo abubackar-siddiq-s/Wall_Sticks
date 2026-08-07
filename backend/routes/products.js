@@ -25,9 +25,9 @@ const productValidators = [
   body('category').optional().isString().notEmpty().withMessage('Category is required'),
 ]
 
-router.post('/', protectAdmin, uploadPosterImages.array('images', 6), productValidators, validate, productController.createProduct)
+router.post('/', protectAdmin, uploadPosterImages.array('images', 10), productValidators, validate, productController.createProduct)
 
-router.put('/:id', protectAdmin, uploadPosterImages.array('images', 6), [
+router.put('/:id', protectAdmin, uploadPosterImages.array('images', 10), [
   body('name').optional().isString().trim().isLength({ min: 2, max: 150 }).withMessage('Name must be 2–150 characters'),
   body('price').optional().isFloat({ min: 0 }).withMessage('Price must be a positive number'),
 ], validate, productController.updateProduct)

@@ -28,7 +28,9 @@ export const protectAdmin = asyncHandler(async (req, res, next) => {
     next()
   } catch (err) {
     if (!res.statusCode || res.statusCode === 200) res.status(401)
-    throw new Error(err.message || 'Not authorized — session expired due to inactivity. Please log in again.')
+    const isJwtExpired = err.name === 'TokenExpiredError' || err.message?.includes('jwt expired')
+    const message = isJwtExpired ? 'Session expired. Please log in again.' : (err.message || 'Not authorized')
+    throw new Error(message)
   }
 })
 

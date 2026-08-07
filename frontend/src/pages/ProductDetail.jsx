@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Star, Heart, Minus, Plus, MessageSquare, Send, Trash2 } from 'lucide-react'
+import { Star, Heart, Minus, Plus, MessageSquare, Send, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../lib/api'
 import { useCart } from '../context/CartContext'
@@ -32,6 +32,9 @@ export default function ProductDetail() {
     reviewsCount: 0,
     ...fetched,
   }
+
+  const [selectedImgIndex, setSelectedImgIndex] = useState(0)
+  const imagesList = Array.isArray(product.images) && product.images.length > 0 ? product.images : []
 
   const { addToCart } = useCart()
   const { toggleWishlist, isWishlisted } = useWishlist()
@@ -188,15 +191,63 @@ export default function ProductDetail() {
   return (
     <div className="max-w-6xl mx-auto px-5 md:px-8 py-10">
       <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-start">
-        {/* MAIN POSTER IMAGE (ONLY SINGLE IMAGE) */}
-        <div>
-          <div className="rounded-3xl overflow-hidden aspect-[4/5] shadow-card border border-black/5 bg-white">
+        {/* MAIN POSTER IMAGE & THUMBNAILS (AMAZON STYLE GALLERY) */}
+        <div className="flex flex-col gap-4">
+          <div 
+            className="relative rounded-3xl overflow-hidden shadow-card border border-black/5 bg-white group w-full aspect-[3/4]"
+            style={{ aspectRatio: '3 / 4' }}
+          >
             <img
-              {...responsiveImgProps(product.images?.[0], { sizes: '(max-width: 768px) 100vw, 50vw' })}
+              {...responsiveImgProps(imagesList[selectedImgIndex] || product.images?.[0], { sizes: '(max-width: 768px) 100vw, 50vw' })}
               alt={product.name}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-cover transition-all duration-300"
             />
+            {imagesList.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setSelectedImgIndex((prev) => (prev > 0 ? prev - 1 : imagesList.length - 1))}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 shadow-md border border-black/10 flex items-center justify-center text-black hover:bg-white hover:scale-105 transition-all opacity-0 group-hover:opacity-100"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedImgIndex((prev) => (prev < imagesList.length - 1 ? prev + 1 : 0))}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 shadow-md border border-black/10 flex items-center justify-center text-black hover:bg-white hover:scale-105 transition-all opacity-0 group-hover:opacity-100"
+                  aria-label="Next image"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </>
+            )}
           </div>
+
+          {/* THUMBNAIL GALLERY STRIP */}
+          {imagesList.length > 1 && (
+            <div className="flex items-center gap-3 overflow-x-auto pb-2 pt-1 [scrollbar-width:none]">
+              {imagesList.map((imgObj, idx) => (
+                <button
+                  type="button"
+                  key={idx}
+                  onClick={() => setSelectedImgIndex(idx)}
+                  className={`relative w-[60px] h-[80px] rounded-xl overflow-hidden bg-white border-2 transition-all shrink-0 aspect-[3/4] ${
+                    selectedImgIndex === idx
+                      ? 'border-brand-black shadow-md scale-105 ring-2 ring-brand-yellow/50'
+                      : 'border-black/10 opacity-60 hover:opacity-100 hover:border-black/30'
+                  }`}
+                  style={{ aspectRatio: '3 / 4' }}
+                >
+                  <img
+                    {...responsiveImgProps(imgObj, { sizes: '64px' })}
+                    alt={`${product.name} view ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* POSTER DETAILS & SELECTION */}

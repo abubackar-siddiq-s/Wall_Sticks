@@ -11,7 +11,7 @@ export default function QuickViewModal({ product, onClose, showPrice = false }) 
   const { addToCart } = useCart()
   const { toggleWishlist, isWishlisted } = useWishlist()
   const [quantity, setQuantity] = useState(1)
-  const [isLandscape, setIsLandscape] = useState(false)
+  const [selectedImgIndex, setSelectedImgIndex] = useState(0)
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -26,6 +26,8 @@ export default function QuickViewModal({ product, onClose, showPrice = false }) 
   }, [onClose])
 
   if (!product) return null
+
+  const imagesList = Array.isArray(product.images) && product.images.length > 0 ? product.images : []
 
   return typeof document !== 'undefined' && createPortal(
     <motion.div
@@ -44,11 +46,14 @@ export default function QuickViewModal({ product, onClose, showPrice = false }) 
         className="bg-white rounded-xl3 w-full max-w-3xl max-h-[90vh] overflow-y-auto grid sm:grid-cols-2 shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="aspect-[4/5] sm:aspect-auto sm:h-full overflow-hidden bg-white">
+        <div 
+          className="w-full aspect-[3/4] overflow-hidden bg-white relative"
+          style={{ aspectRatio: '3 / 4' }}
+        >
           <img 
             src={imgSrc(product.images?.[0])} 
             alt={product.name} 
-            className="w-full h-full object-contain" 
+            className="w-full h-full object-cover" 
           />
         </div>
 

@@ -6,9 +6,9 @@ import Otp from '../models/Otp.js'
 import { sendOtp } from '../services/emailService.js'
 
 const signAdminToken = (id) =>
-  jwt.sign({ id, role: 'admin' }, process.env.JWT_SECRET || 'wallsticks_jwt_secret', { expiresIn: '1h' })
+  jwt.sign({ id, role: 'admin' }, process.env.JWT_SECRET || 'wallsticks_jwt_secret', { expiresIn: '30d' })
 const signCustomerToken = (id) =>
-  jwt.sign({ id, role: 'customer' }, process.env.JWT_SECRET || 'wallsticks_jwt_secret', { expiresIn: '7d' })
+  jwt.sign({ id, role: 'customer' }, process.env.JWT_SECRET || 'wallsticks_jwt_secret', { expiresIn: '90d' })
 
 export const adminLogin = asyncHandler(async (req, res) => {
   const { email, password } = req.body
