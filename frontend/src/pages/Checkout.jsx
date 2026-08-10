@@ -200,8 +200,11 @@ export default function Checkout() {
                   <img src={imageSrc} className="w-12 h-14 object-contain bg-white rounded-lg shrink-0 border border-black/5" alt="" />
                   <div className="flex-1 min-w-0">
                     <p className="truncate font-medium">{product.name || 'Poster'}</p>
-                    <p className="text-black/45 text-xs">
-                      Qty {item.quantity} · {item.size}
+                    <p className="text-black/50 text-xs flex items-center gap-1 flex-wrap mt-0.5">
+                      <span>Qty {item.quantity} · {item.size}</span>
+                      {item.border && (
+                        <span>· {item.border}</span>
+                      )}
                     </p>
                   </div>
                   <p className="font-semibold">₹{(product.price || 0) * item.quantity}</p>

@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Upload, ImageIcon, Loader2 } from 'lucide-react'
+import { Upload, ImageIcon, Loader2, Palette } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useCart } from '../context/CartContext'
 import { useSettings } from '../hooks/useSettings'
 import api from '../lib/api'
 import ImageCropperModal from '../components/ImageCropperModal'
+import ColorPickerModal from '../components/ColorPickerModal'
 
 const defaultSizes = ['A5', 'A4', 'A3', '12x18', '18x24', '24x36']
 
@@ -21,6 +22,11 @@ export default function CreatePoster() {
 
   const [selectedSize, setSelectedSize] = useState('A3')
   const size = availableSizes.includes(selectedSize) ? selectedSize : availableSizes[0]
+
+  // Border Selection State
+  const [selectedBorder, setSelectedBorder] = useState('No Border')
+  const [customBorderColor, setCustomBorderColor] = useState('#C1272D')
+  const [showColorPicker, setShowColorPicker] = useState(false)
 
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState('')
@@ -77,7 +83,10 @@ export default function CreatePoster() {
       customImage: customImageInfo,
     }
 
-    addToCart(customProduct, { size, quantity, notes })
+    const borderLabel = selectedBorder === 'Custom Border' ? `Custom Border (${customBorderColor})` : selectedBorder
+    const colorHex = selectedBorder === 'Custom Border' ? customBorderColor : selectedBorder === 'White Border' ? '#FFFFFF' : ''
+
+    addToCart(customProduct, { size, quantity, notes, border: borderLabel, borderColor: colorHex })
     if (buyNow) navigate('/checkout')
   }
 
@@ -96,8 +105,12 @@ export default function CreatePoster() {
             onDrop={(e) => { e.preventDefault(); !uploading && handleFile(e.dataTransfer.files[0]) }}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => !uploading && fileInput.current.click()}
-            className="w-full aspect-[3/4] rounded-xl3 border-2 border-dashed border-black/15 hover:border-brand-yellow flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all bg-white relative"
-            style={{ aspectRatio: '3 / 4' }}
+            className="w-full aspect-[3/4] rounded-xl3 border-2 border-dashed border-black/15 hover:border-brand-yellow flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative"
+            style={{
+              aspectRatio: '3 / 4',
+              backgroundColor: selectedBorder === 'White Border' ? '#FFFFFF' : selectedBorder === 'Custom Border' ? customBorderColor : '#FFFFFF',
+              padding: preview && selectedBorder !== 'No Border' ? '16px' : '0px',
+            }}
           >
             {uploading ? (
               <div className="text-center px-8 animate-pulse">
@@ -108,17 +121,19 @@ export default function CreatePoster() {
                 <p className="text-xs text-black/40">Storing original quality on cloud</p>
               </div>
             ) : preview ? (
-              <img 
-                src={preview} 
-                alt="Uploaded preview" 
-                className="w-full h-full object-contain" 
-              />
+              <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
+                <img
+                  src={preview}
+                  alt="Uploaded preview"
+                  className="w-full h-full object-contain"
+                />
+              </div>
             ) : (
               <div className="text-center px-8">
                 <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mx-auto mb-4 shadow-soft">
                   <Upload size={24} className="text-brand-gold" />
                 </div>
-                <p className="font-semibold mb-1">Click or drag an image to upload</p>
+                <p className="font-semibold mb-1 text-brand-black">Click or drag an image to upload</p>
                 <p className="text-xs text-black/40">JPG, PNG — up to 20MB, higher resolution prints sharper</p>
               </div>
             )}
@@ -133,6 +148,7 @@ export default function CreatePoster() {
 
         {/* RIGHT: CONFIG */}
         <div>
+          {/* POSTER SIZE */}
           <div className="mb-6">
             <p className="font-semibold text-sm mb-3">Poster Size</p>
             <div className="flex flex-wrap gap-2">
@@ -140,6 +156,62 @@ export default function CreatePoster() {
                 <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 rounded-full text-sm font-medium border-2 ${size === s ? 'bg-brand-black text-brand-yellow border-brand-black' : 'border-black/10'}`}>{s}</button>
               ))}
             </div>
+          </div>
+
+          {/* BORDER SELECTOR */}
+          <div className="mb-6">
+            <p className="font-semibold text-sm mb-3 uppercase tracking-wider">Select Border Option</p>
+            <div className="grid grid-cols-3 gap-2.5 mb-3">
+              {[
+                { id: 'No Border', label: 'No Border' },
+                { id: 'White Border', label: 'White Border' },
+                { id: 'Custom Border', label: 'Custom Border' },
+              ].map((b) => {
+                const isSelected = selectedBorder === b.id
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => setSelectedBorder(b.id)}
+                    className={`py-3 px-2 rounded-2xl text-xs font-bold border-2 transition-all flex items-center justify-center gap-1.5 ${isSelected
+                        ? 'bg-brand-black text-brand-yellow border-brand-black shadow-md'
+                        : 'bg-white border-black/10 hover:border-black/30 text-black/80'
+                      }`}
+                  >
+                    {b.id === 'Custom Border' && (
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border border-white/50 shrink-0 inline-block shadow-sm"
+                        style={{ backgroundColor: customBorderColor }}
+                      />
+                    )}
+                    <span>{b.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* CUSTOM COLOR PICKER BAR */}
+            {selectedBorder === 'Custom Border' && (
+              <div className="flex items-center justify-between bg-brand-smoke rounded-2xl p-3 border border-black/10">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-7 h-7 rounded-xl border-2 border-black/20 shadow-sm shrink-0"
+                    style={{ backgroundColor: customBorderColor }}
+                  />
+                  <div>
+                    <p className="text-xs font-extrabold text-brand-black">Custom Border Color</p>
+                    <p className="text-[11px] font-mono text-black/50 font-bold uppercase">{customBorderColor}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowColorPicker(true)}
+                  className="bg-white hover:bg-black/5 text-brand-black font-extrabold px-3.5 py-2 rounded-xl text-xs border border-black/15 shadow-sm flex items-center gap-1.5 transition-all"
+                >
+                  <Palette size={14} className="text-brand-gold" /> Color Picker
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="mb-6">
@@ -159,8 +231,8 @@ export default function CreatePoster() {
             <button onClick={() => handleAdd(false)} className="flex-1 border-2 border-brand-black font-bold py-4 rounded-full hover:bg-brand-smoke">Add to Cart</button>
             <button onClick={() => handleAdd(true)} className="flex-1 bg-brand-black text-brand-yellow font-bold py-4 rounded-full hover:shadow-glow">Buy Now</button>
           </div>
+        </div>
       </div>
-    </div>
 
       {pendingFile && (
         <ImageCropperModal
@@ -168,6 +240,16 @@ export default function CreatePoster() {
           size={size}
           onClose={() => setPendingFile(null)}
           onCropped={handleCropped}
+        />
+      )}
+
+      {showColorPicker && (
+        <ColorPickerModal
+          initialColor={customBorderColor}
+          posterImage={preview}
+          posterName={fileName || 'Custom Poster'}
+          onSelectColor={(color) => setCustomBorderColor(color)}
+          onClose={() => setShowColorPicker(false)}
         />
       )}
     </div>

@@ -163,7 +163,11 @@ export async function sendShippingNotificationEmail(order, recipientEmail) {
   const senderEmail = smtpUser || process.env.BREVO_SENDER || 'wallsticks0319@gmail.com'
   const subject = `Your WallSticks Order #${order.orderNumber} Has Been Shipped!`
   const itemsListHtml = (order.items || [])
-    .map((item) => `<li style="margin-bottom: 6px;"><strong>${item.name}</strong> (${item.size || 'Standard'}, ${item.quantity}x)</li>`)
+    .map((item) => {
+      const borderInfo = item.border ? (item.borderColor ? `${item.border} (${item.borderColor})` : item.border) : ''
+      const details = [item.size, borderInfo].filter(Boolean).join(' · ')
+      return `<li style="margin-bottom: 6px;"><strong>${item.name}</strong> (${details ? details + ', ' : ''}${item.quantity}x)</li>`
+    })
     .join('')
 
   const htmlContent = `

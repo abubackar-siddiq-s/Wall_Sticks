@@ -58,19 +58,25 @@ export default function Payment() {
         shipping: checkoutInfo,
         deliveryMethod,
         pricing: { subtotal, courierCharge, gst, total },
-        items: validItems.map((i) => ({
-          product: i.product?.isCustom ? undefined : i.product?._id,
-          name: i.product?.name || 'Poster',
-          isCustom: !!i.product?.isCustom,
-          size: i.size,
-          finish: i.finish,
-          border: i.border,
-          orientation: i.orientation,
-          quantity: i.quantity,
-          price: i.product?.price || i.priceAtAdd || 0,
-          notes: i.notes,
-          customImage: i.product?.isCustom ? (i.product.customImage || { url: imgSrc(i.product?.images?.[0]) }) : undefined,
-        })),
+        items: validItems.map((i) => {
+          const imgPath = i.product?.customImage?.url || i.product?.images?.[0] || i.product?.image || ''
+          const imgUrl = imgSrc(imgPath)
+          return {
+            product: i.product?.isCustom ? undefined : i.product?._id,
+            name: i.product?.name || 'Poster',
+            isCustom: !!i.product?.isCustom,
+            productImage: imgUrl,
+            size: i.size,
+            finish: i.finish,
+            border: i.border,
+            borderColor: i.borderColor,
+            orientation: i.orientation,
+            quantity: i.quantity,
+            price: i.product?.price || i.priceAtAdd || 0,
+            notes: i.notes,
+            customImage: i.product?.isCustom ? (i.product.customImage || { url: imgUrl }) : undefined,
+          }
+        }),
       }
 
       let orderId = null

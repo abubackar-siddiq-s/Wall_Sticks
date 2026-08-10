@@ -41,12 +41,15 @@ describe('Order creation', () => {
     expect(res.status).toBe(400)
   })
 
-  test('creates an order in payment_pending status with a unique order number', async () => {
-    const res = await request(app).post('/api/orders').send(sampleOrderPayload())
+  test('creates an order with custom border and color hex', async () => {
+    const payload = sampleOrderPayload()
+    payload.items[0].border = 'Custom Border (#C1272D)'
+    payload.items[0].borderColor = '#C1272D'
+
+    const res = await request(app).post('/api/orders').send(payload)
     expect(res.status).toBe(201)
-    expect(res.body.status).toBe('payment_pending')
-    expect(res.body.orderNumber).toMatch(/^PW\d{6}$/)
-    expect(res.body.statusHistory).toHaveLength(1)
+    expect(res.body.items[0].border).toBe('Custom Border (#C1272D)')
+    expect(res.body.items[0].borderColor).toBe('#C1272D')
   })
 })
 

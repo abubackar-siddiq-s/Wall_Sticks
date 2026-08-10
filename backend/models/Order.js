@@ -4,10 +4,12 @@ const orderItemSchema = new mongoose.Schema({
   product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
   name: String, // snapshot at time of order, so later product edits don't rewrite history
   customImage: { url: String, publicId: String },
+  productImage: String,
   isCustom: { type: Boolean, default: false },
   size: String,
   finish: String,
   border: String,
+  borderColor: String,
   orientation: String,
   quantity: Number,
   price: Number,
@@ -18,6 +20,7 @@ const orderSchema = new mongoose.Schema({
   orderNumber: { type: String, required: true, unique: true }, // e.g. PW482913
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   items: [orderItemSchema],
+  notes: String, // Order-level special instructions / notes
 
   shipping: {
     name: String,

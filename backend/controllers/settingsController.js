@@ -8,6 +8,11 @@ export const getSettings = asyncHandler(async (req, res) => {
 })
 
 export const updateSettings = asyncHandler(async (req, res) => {
+  let settings = await Settings.findOne()
+  if (!settings) {
+    settings = new Settings({})
+  }
+
   const update = { ...req.body }
 
   if (req.files?.logo) {
@@ -17,10 +22,13 @@ export const updateSettings = asyncHandler(async (req, res) => {
     update.upiQr = { url: req.files.upiQr[0].path, publicId: req.files.upiQr[0].filename }
   }
 
-  let settings = await Settings.findOne()
-  settings = settings
-    ? await Settings.findByIdAndUpdate(settings._id, update, { new: true })
-    : await Settings.create(update)
+  Object.assign(settings, update)
 
+  if (update.sizePrices) {
+    settings.sizePrices = update.sizePrices
+    settings.markModified('sizePrices')
+  }
+
+  await settings.save()
   res.json(settings)
 })

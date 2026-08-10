@@ -10,16 +10,16 @@ const toServerItem = (i) => ({
   product: i.product?.isCustom ? undefined : i.product?._id,
   customImage: i.product?.isCustom ? (i.product.customImage || { url: i.product.images?.[0] }) : undefined,
   isCustom: !!i.product?.isCustom,
-  size: i.size, finish: i.finish, border: i.border, orientation: i.orientation,
+  size: i.size, finish: i.finish, border: i.border, borderColor: i.borderColor, orientation: i.orientation,
   quantity: i.quantity, notes: i.notes, priceAtAdd: i.product?.price,
 })
 
 const fromServerItem = (i) => ({
-  key: `${i.product?._id || 'custom'}-${i.size || ''}-${i.finish || ''}-${i.border || ''}`,
+  key: `${i.product?._id || 'custom'}-${i.size || ''}-${i.finish || ''}-${i.border || ''}-${i.borderColor || ''}`,
   product: i.isCustom
     ? { _id: `custom-${i.customImage?.url}`, name: 'Custom Poster', isCustom: true, price: i.priceAtAdd, images: [i.customImage?.url], customImage: i.customImage }
     : i.product,
-  quantity: i.quantity, size: i.size, finish: i.finish, border: i.border, orientation: i.orientation, notes: i.notes,
+  quantity: i.quantity, size: i.size, finish: i.finish, border: i.border, borderColor: i.borderColor, orientation: i.orientation, notes: i.notes,
 })
 
 export function CartProvider({ children }) {
@@ -77,12 +77,13 @@ export function CartProvider({ children }) {
 
     const size = options.size || product.sizes?.[2] || 'A3'
     const finish = options.finish || product.finishes?.[0] || 'Premium Matte'
-    const border = options.border || 'White'
+    const border = options.border || 'No Border'
+    const borderColor = options.borderColor || ''
     const quantity = options.quantity || 1
-    const finalOptions = { ...options, size, finish, border, quantity }
+    const finalOptions = { ...options, size, finish, border, borderColor, quantity }
 
     setItems((prev) => {
-      const key = `${product._id}-${size}-${finish}-${border}`
+      const key = `${product._id}-${size}-${finish}-${border}-${borderColor}`
       const existing = prev.find((i) => i.key === key)
       if (existing) {
         return prev.map((i) => i.key === key ? { ...i, quantity: i.quantity + quantity } : i)

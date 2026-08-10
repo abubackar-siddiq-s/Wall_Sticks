@@ -52,9 +52,23 @@ export default function Cart() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm mb-1 truncate">{product.name || 'Custom Poster'}</h3>
-                  <p className="text-xs text-black/45 mb-2">
-                    {[item.size, item.finish, item.border].filter(Boolean).join(' · ')}
-                  </p>
+                  <div className="flex items-center gap-1.5 text-xs text-black/50 mb-2 flex-wrap">
+                    <span>Size: <strong className="text-brand-black">{item.size}</strong></span>
+                    {item.border && (
+                      <>
+                        <span>·</span>
+                        <span className="flex items-center gap-1">
+                          {item.borderColor && (
+                            <span 
+                              className="w-3 h-3 rounded-full border border-black/20 shrink-0 inline-block shadow-sm"
+                              style={{ backgroundColor: item.borderColor }}
+                            />
+                          )}
+                          <span className="font-semibold text-brand-black">{item.border}</span>
+                        </span>
+                      </>
+                    )}
+                  </div>
                   <p className="font-bold">₹{product.price || item.priceAtAdd || 0}</p>
                 </div>
                 <div className="flex flex-col items-end justify-between">

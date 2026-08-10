@@ -45,9 +45,19 @@ function OrderCard({ order }) {
           </div>
           <div className="space-y-2 mb-5">
             {order.items.map((it, i) => (
-              <div key={i} className="flex justify-between text-sm text-black/60">
+              <div key={i} className="flex justify-between text-sm text-black/60 items-center">
                 <span>{it.name} × {it.qty}</span>
-                <span>{it.size}</span>
+                <span className="flex items-center gap-1.5 text-xs">
+                  <span>{it.size}</span>
+                  {it.border && (
+                    <span className="flex items-center gap-1 bg-brand-smoke px-2 py-0.5 rounded-md font-semibold text-brand-black">
+                      {it.borderColor && (
+                        <span className="w-2.5 h-2.5 rounded-full border border-black/20 shrink-0" style={{ backgroundColor: it.borderColor }} />
+                      )}
+                      {it.border}
+                    </span>
+                  )}
+                </span>
               </div>
             ))}
           </div>
@@ -86,7 +96,13 @@ export default function MyOrders() {
           date: new Date(o.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
           total: o.pricing?.total,
           stage: statusToStage[o.status] ?? 0,
-          items: o.items.map((it) => ({ name: it.name, qty: it.quantity, size: it.size })),
+          items: o.items.map((it) => ({ 
+            name: it.name, 
+            qty: it.quantity, 
+            size: it.size, 
+            border: it.border, 
+            borderColor: it.borderColor 
+          })),
         }))
         setOrders(normalized)
       })

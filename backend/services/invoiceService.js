@@ -26,7 +26,11 @@ export async function generateInvoiceHtml(orderNumber) {
   const rows = order.items.map((item) => `
     <tr>
       <td>${escapeHtml(item.name)}${item.isCustom ? ' <span class="muted">(custom upload)</span>' : ''}<br/>
-        <span class="muted">${[item.size, item.finish, item.border].filter(Boolean).map(escapeHtml).join(' · ')}</span>
+        <span class="muted">${[
+          item.size, 
+          item.finish, 
+          item.border ? (item.borderColor ? `${item.border} (${item.borderColor})` : item.border) : null
+        ].filter(Boolean).map(escapeHtml).join(' · ')}</span>
       </td>
       <td class="right">${item.quantity}</td>
       <td class="right">₹${item.price}</td>

@@ -18,6 +18,7 @@ export async function createOrder(data, file) {
     orderNumber,
     user: data.user,
     items,
+    notes: data.notes || '',
     shipping: data.shipping,
     deliveryMethod: data.deliveryMethod || 'courier',
     pricing: data.pricing,
@@ -30,7 +31,7 @@ export async function createOrder(data, file) {
 }
 
 export async function getOrderByNumber(orderNumber) {
-  const order = await Order.findOne({ orderNumber }).populate('payment')
+  const order = await Order.findOne({ orderNumber }).populate('payment').populate('items.product')
   if (!order) {
     const error = new Error('Order not found')
     error.statusCode = 404
@@ -44,12 +45,12 @@ export async function getOrdersByPhone(phone) {
   const last10 = rawPhone.slice(-10) || phone
   return await Order.find({
     'shipping.phone': { $regex: last10, $options: 'i' }
-  }).populate('payment').sort('-createdAt')
+  }).populate('payment').populate('items.product').sort('-createdAt')
 }
 
 export async function getOrders(statusFilter) {
   const filter = statusFilter ? { status: statusFilter } : {}
-  return await Order.find(filter).populate('payment').sort('-createdAt')
+  return await Order.find(filter).populate('payment').populate('items.product').sort('-createdAt')
 }
 
 export async function updateOrderStatus(id, status, note) {

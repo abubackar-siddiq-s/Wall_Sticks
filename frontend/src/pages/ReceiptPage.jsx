@@ -135,8 +135,19 @@ export default function ReceiptPage() {
                     <p className="font-semibold text-brand-black">
                       {item.name} {item.isCustom && <span className="text-xs font-normal text-black/40">(Custom Upload)</span>}
                     </p>
-                    <p className="text-xs text-black/45 mt-0.5">
-                      {[item.size, item.finish, item.border].filter(Boolean).join(' · ')}
+                    <p className="text-xs text-black/50 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                      <span>Size: {item.size}</span>
+                      {item.border && (
+                        <>
+                          <span>·</span>
+                          <span className="inline-flex items-center gap-1">
+                            {item.borderColor && (
+                              <span className="w-2.5 h-2.5 rounded-full border border-black/20 shrink-0 inline-block" style={{ backgroundColor: item.borderColor }} />
+                            )}
+                            <span className="font-semibold text-brand-black">{item.border}</span>
+                          </span>
+                        </>
+                      )}
                     </p>
                   </td>
                   <td className="py-3.5 text-center font-medium">{item.quantity}</td>
