@@ -134,9 +134,22 @@ export default function ProductDetail() {
 
   const { settings } = useSettings()
 
+  const defaultDescriptions = {
+    A5: 'Small Compact Desk/Shelf Poster (5.8 x 8.3 in)',
+    A4: 'Standard Frame Document Poster (8.3 x 11.7 in)',
+    A3: 'Medium Wall Accent Poster (11.7 x 16.5 in)',
+    '12x18': 'Large Classic Wall Frame Poster (12 x 18 in)',
+    '18x24': 'Extra Large Gallery Wall Poster (18 x 24 in)',
+    '24x36': 'Masterpiece Giant Wall Art Poster (24 x 36 in)',
+  }
+
   const activeSizePrices = (settings?.sizePrices && typeof settings.sizePrices === 'object')
     ? settings.sizePrices
     : defaultSizePrices
+
+  const activeSizeDescriptions = (settings?.sizeDescriptions && typeof settings.sizeDescriptions === 'object')
+    ? { ...defaultDescriptions, ...settings.sizeDescriptions }
+    : defaultDescriptions
 
   const availableSizes = Array.from(new Set([
     ...Object.keys(activeSizePrices),
@@ -298,6 +311,16 @@ export default function ProductDetail() {
             <p className="text-xs text-black/40 mb-6 italic">No reviews yet for this poster.</p>
           )}
 
+          {/* PRODUCT DESCRIPTION */}
+          {product.description && (
+            <div className="mb-6 p-4 rounded-2xl bg-brand-smoke/80 border border-black/5">
+              <h3 className="font-extrabold text-xs text-brand-black uppercase tracking-wider mb-1">About this Poster</h3>
+              <p className="text-xs text-black/70 leading-relaxed whitespace-pre-line">
+                {product.description}
+              </p>
+            </div>
+          )}
+
           {/* DYNAMIC PRICE BASED ONLY ON SIZE */}
           <div className="mb-8">
             <div className="flex items-baseline gap-2">
@@ -335,6 +358,11 @@ export default function ProductDetail() {
                 )
               })}
             </div>
+            {activeSizeDescriptions[selectedSize] && (
+              <p className="text-xs text-black/60 font-medium mt-3 flex items-center gap-1.5 bg-brand-smoke/60 px-3.5 py-2 rounded-xl border border-black/5">
+                <span>📐</span> <span className="font-bold text-brand-black">{selectedSize}:</span> {activeSizeDescriptions[selectedSize]}
+              </p>
+            )}
           </div>
           {/* BORDER SELECTOR (NO BORDER, WHITE BORDER, CUSTOM BORDER WITH COLOR PICKER) */}
           <div className="mb-8">

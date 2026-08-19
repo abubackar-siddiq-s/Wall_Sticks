@@ -156,6 +156,11 @@ export default function CreatePoster() {
                 <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 rounded-full text-sm font-medium border-2 ${size === s ? 'bg-brand-black text-brand-yellow border-brand-black' : 'border-black/10'}`}>{s}</button>
               ))}
             </div>
+            {settings?.sizeDescriptions?.[size] && (
+              <p className="text-xs text-black/60 font-medium mt-2.5 flex items-center gap-1.5 bg-brand-smoke/60 px-3.5 py-2 rounded-xl border border-black/5">
+                <span>📐</span> <span className="font-bold text-brand-black">{size}:</span> {settings.sizeDescriptions[size]}
+              </p>
+            )}
           </div>
 
           {/* BORDER SELECTOR */}

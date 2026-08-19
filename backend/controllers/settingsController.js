@@ -28,6 +28,10 @@ export const updateSettings = asyncHandler(async (req, res) => {
     settings.sizePrices = update.sizePrices
     settings.markModified('sizePrices')
   }
+  if (update.sizeDescriptions) {
+    settings.sizeDescriptions = update.sizeDescriptions
+    settings.markModified('sizeDescriptions')
+  }
 
   await settings.save()
   res.json(settings)

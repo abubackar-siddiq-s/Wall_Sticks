@@ -39,6 +39,9 @@ export default function AdminSizePricing() {
         if (data?.sizePrices && typeof data.sizePrices === 'object') {
           setSizePrices({ ...defaultPrices, ...data.sizePrices })
         }
+        if (data?.sizeDescriptions && typeof data.sizeDescriptions === 'object') {
+          setDescriptions({ ...defaultDescriptions, ...data.sizeDescriptions })
+        }
       })
       .catch(() => {})
   }, [])
@@ -51,11 +54,23 @@ export default function AdminSizePricing() {
     }))
   }
 
+  const handleDescChange = (size, value) => {
+    setDescriptions((prev) => ({
+      ...prev,
+      [size]: value,
+    }))
+  }
+
   const handleDeleteSize = (sizeKey) => {
     if (Object.keys(sizePrices).length <= 1) {
       return toast.error('At least one size variant must remain configured.')
     }
     setSizePrices((prev) => {
+      const next = { ...prev }
+      delete next[sizeKey]
+      return next
+    })
+    setDescriptions((prev) => {
       const next = { ...prev }
       delete next[sizeKey]
       return next
@@ -78,9 +93,7 @@ export default function AdminSizePricing() {
     }
 
     setSizePrices((prev) => ({ ...prev, [cleanKey]: priceVal }))
-    if (newDesc.trim()) {
-      setDescriptions((prev) => ({ ...prev, [cleanKey]: newDesc.trim() }))
-    }
+    setDescriptions((prev) => ({ ...prev, [cleanKey]: newDesc.trim() || `${cleanKey} Poster Variant` }))
 
     setNewSizeKey('')
     setNewPrice('')
@@ -94,8 +107,8 @@ export default function AdminSizePricing() {
     setSaving(true)
 
     try {
-      await api.put('/settings', { sizePrices })
-      toast.success('Size pricing matrix saved to database!')
+      await api.put('/settings', { sizePrices, sizeDescriptions: descriptions })
+      toast.success('Size pricing matrix & descriptions saved to database!')
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Could not save size prices')
     } finally {
@@ -157,9 +170,18 @@ export default function AdminSizePricing() {
                   </div>
                 </div>
 
-                <p className="text-[11px] text-black/50 font-medium min-h-[32px]">
-                  {descriptions[sizeKey] || `${sizeKey} Poster Variant`}
-                </p>
+                <div>
+                  <label className="block text-[10px] font-extrabold text-black/50 uppercase tracking-wider mb-1">
+                    Description / Dimensions
+                  </label>
+                  <input
+                    type="text"
+                    value={descriptions[sizeKey] || ''}
+                    onChange={(e) => handleDescChange(sizeKey, e.target.value)}
+                    placeholder={`${sizeKey} Poster Variant`}
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-black/10 text-xs font-medium text-black/70 outline-none focus:border-brand-black transition-colors"
+                  />
+                </div>
 
                 <div>
                   <label className="block text-[10px] font-extrabold text-black/50 uppercase tracking-wider mb-1">
