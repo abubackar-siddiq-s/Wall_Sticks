@@ -90,11 +90,26 @@ export async function updateOrderStatus(id, status, note) {
           if (userDoc?.email) recipientEmail = userDoc.email
         } catch {}
       }
+      if (!recipientEmail && order.shipping?.phone) {
+        try {
+          const User = (await import('../models/User.js')).default
+          const rawPhone = order.shipping.phone.replace(/\D/g, '')
+          const last10 = rawPhone.slice(-10)
+          if (last10) {
+            const userDoc = await User.findOne({ phone: { $regex: last10 } })
+            if (userDoc?.email) recipientEmail = userDoc.email
+          }
+        } catch {}
+      }
+
       if (recipientEmail) {
+        console.log(`🚀 Dispatching shipping notification email for Order #${order.orderNumber} to ${recipientEmail}`)
         const { sendShippingNotificationEmail } = await import('./emailService.js')
         sendShippingNotificationEmail(order, recipientEmail).catch((err) => {
-          console.error('Failed to send shipping notification email:', err)
+          console.error('❌ Failed to send shipping notification email:', err)
         })
+      } else {
+        console.warn(`⚠️ Could not send shipping notification for Order #${order.orderNumber}: No email provided in shipping or user account.`)
       }
     }
 

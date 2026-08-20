@@ -22,12 +22,14 @@ export default function Checkout() {
         return {
           ...parsed,
           phone: parsed.phone || customer?.phone || '',
+          email: parsed.email || customer?.email || '',
         }
       }
     } catch {}
     return {
       name: customer?.name && customer.name !== 'Customer' ? customer.name : '',
       phone: customer?.phone || '',
+      email: customer?.email || '',
       address: '',
       city: '',
       state: '',
@@ -37,7 +39,7 @@ export default function Checkout() {
 
   useEffect(() => {
     if (customer?.phone && !form.phone) {
-      setForm((f) => ({ ...f, phone: customer.phone }))
+      setForm((f) => ({ ...f, phone: customer.phone, email: f.email || customer?.email || '' }))
     }
   }, [customer?.phone])
 
@@ -96,6 +98,13 @@ export default function Checkout() {
                 value={form.phone}
                 onChange={update('phone')}
                 placeholder="Phone number"
+                className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm sm:col-span-2"
+              />
+              <input
+                type="email"
+                value={form.email || ''}
+                onChange={update('email')}
+                placeholder="Email address (for shipping tracking & receipts)"
                 className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm sm:col-span-2"
               />
               {deliveryMethod === 'courier' && (
