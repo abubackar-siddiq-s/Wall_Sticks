@@ -4,30 +4,36 @@ import Payment from '../models/Payment.js'
 const generateOrderNumber = () => 'PW' + Math.floor(100000 + Math.random() * 900000)
 
 export async function createOrder(data, file) {
-  let orderNumber = generateOrderNumber()
-  while (await Order.findOne({ orderNumber })) {
-    orderNumber = generateOrderNumber()
-  }
-
   const items = data.items.map((item) => ({
     ...item,
     customImage: (item.isCustom && file) ? { url: file.path, publicId: file.filename } : item.customImage,
   }))
 
-  const order = await Order.create({
-    orderNumber,
-    user: data.user,
-    items,
-    notes: data.notes || '',
-    shipping: data.shipping,
-    deliveryMethod: data.deliveryMethod || 'courier',
-    pricing: data.pricing,
-    couponCode: data.couponCode,
-    status: 'payment_pending',
-    statusHistory: [{ status: 'payment_pending', note: 'Order placed, awaiting payment verification' }],
-  })
-
-  return order
+  let attempts = 0
+  while (attempts < 5) {
+    attempts++
+    let orderNumber = generateOrderNumber()
+    try {
+      const order = await Order.create({
+        orderNumber,
+        user: data.user,
+        items,
+        notes: data.notes || '',
+        shipping: data.shipping,
+        deliveryMethod: data.deliveryMethod || 'courier',
+        pricing: data.pricing,
+        couponCode: data.couponCode,
+        status: 'payment_pending',
+        statusHistory: [{ status: 'payment_pending', note: 'Order placed, awaiting payment verification' }],
+      })
+      return order
+    } catch (err) {
+      if (err.code === 11000 && attempts < 5) {
+        continue // Retry with fresh orderNumber if collision occurs
+      }
+      throw err
+    }
+  }
 }
 
 export async function getOrderByNumber(orderNumber) {

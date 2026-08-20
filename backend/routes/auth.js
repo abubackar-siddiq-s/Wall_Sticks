@@ -1,11 +1,12 @@
 import express from 'express'
 import { body } from 'express-validator'
 import { adminLogin, requestOtp, verifyOtp, testEmail } from '../controllers/authController.js'
+import { protectAdmin } from '../middleware/auth.js'
 import { validate } from '../middleware/validate.js'
 
 const router = express.Router()
 
-router.get('/test-email', testEmail)
+router.get('/test-email', protectAdmin, testEmail)
 
 router.post('/admin/login', [
   body('email').isEmail().withMessage('A valid email is required').normalizeEmail(),

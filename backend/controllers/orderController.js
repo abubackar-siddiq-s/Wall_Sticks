@@ -26,12 +26,24 @@ export const getOrderByNumber = asyncHandler(async (req, res) => {
 })
 
 export const getOrdersByPhone = asyncHandler(async (req, res) => {
-  if (req.user && req.user.phone !== req.params.phone && !req.admin) {
-    res.status(403)
-    throw new Error('Access denied to requested order history')
+  if (req.admin) {
+    const orders = await orderService.getOrdersByPhone(req.params.phone)
+    return res.json(orders)
   }
-  const orders = await orderService.getOrdersByPhone(req.params.phone)
-  res.json(orders)
+
+  if (req.user) {
+    const rawTarget = (req.params.phone || '').replace(/\D/g, '')
+    const rawUserPhone = (req.user.phone || '').replace(/\D/g, '')
+    if (rawTarget !== rawUserPhone && !rawTarget.endsWith(rawUserPhone) && !rawUserPhone.endsWith(rawTarget)) {
+      res.status(403)
+      throw new Error('Access denied to requested order history')
+    }
+    const orders = await orderService.getOrdersByPhone(req.params.phone)
+    return res.json(orders)
+  }
+
+  res.status(401)
+  throw new Error('Authentication required to view order history')
 })
 
 export const getOrders = asyncHandler(async (req, res) => {

@@ -1,8 +1,26 @@
 import asyncHandler from 'express-async-handler'
 import Wishlist from '../models/Wishlist.js'
 
+const validateSession = (req, sessionId) => {
+  if (req.admin) return true
+  const targetPhone = (sessionId || '').replace(/\D/g, '')
+  const isUserTarget = String(sessionId).length === 24 || (targetPhone.length >= 10 && targetPhone.length <= 13)
+
+  if (!isUserTarget) return true
+
+  if (!req.user) return false
+
+  const userPhone = (req.user.phone || '').replace(/\D/g, '')
+  const userId = req.user._id.toString()
+
+  if (sessionId === userId) return true
+  if (userPhone && targetPhone && (userPhone === targetPhone || targetPhone.endsWith(userPhone) || userPhone.endsWith(targetPhone))) return true
+
+  return false
+}
+
 export const getWishlist = asyncHandler(async (req, res) => {
-  if (req.user && req.user.phone !== req.params.sessionId && req.user._id.toString() !== req.params.sessionId) {
+  if (!validateSession(req, req.params.sessionId)) {
     res.status(403)
     throw new Error('Access denied to requested wishlist')
   }
@@ -11,7 +29,7 @@ export const getWishlist = asyncHandler(async (req, res) => {
 })
 
 export const toggleWishlist = asyncHandler(async (req, res) => {
-  if (req.user && req.user.phone !== req.params.sessionId && req.user._id.toString() !== req.params.sessionId) {
+  if (!validateSession(req, req.params.sessionId)) {
     res.status(403)
     throw new Error('Access denied to requested wishlist')
   }
@@ -21,16 +39,16 @@ export const toggleWishlist = asyncHandler(async (req, res) => {
     throw new Error('Valid Product ID is required')
   }
 
-  let wishlist = await Wishlist.findOne({ sessionId: req.params.sessionId })
-  if (!wishlist) {
-    wishlist = await Wishlist.create({ sessionId: req.params.sessionId, products: [] })
-  }
+  const existing = await Wishlist.findOne({ sessionId: req.params.sessionId, products: productId })
+  const updateOp = existing
+    ? { $pull: { products: productId } }
+    : { $addToSet: { products: productId } }
 
-  const exists = wishlist.products.some((p) => String(p) === String(productId))
-  wishlist.products = exists
-    ? wishlist.products.filter((p) => String(p) !== String(productId))
-    : [...wishlist.products, productId]
+  const wishlist = await Wishlist.findOneAndUpdate(
+    { sessionId: req.params.sessionId },
+    updateOp,
+    { new: true, upsert: true }
+  ).populate('products')
 
-  await wishlist.save()
   res.json(wishlist)
 })
