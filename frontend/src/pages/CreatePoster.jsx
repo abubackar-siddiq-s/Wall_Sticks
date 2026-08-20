@@ -105,17 +105,16 @@ export default function CreatePoster() {
             onDrop={(e) => { e.preventDefault(); !uploading && handleFile(e.dataTransfer.files[0]) }}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => !uploading && fileInput.current.click()}
-            className={`w-full aspect-[3/4] rounded-3xl flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative ${
-              preview ? 'border border-black/5 shadow-card' : 'border-2 border-dashed border-black/15 hover:border-brand-yellow bg-brand-smoke'
+            className={`w-full rounded-3xl flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative ${
+              preview ? 'border border-black/5 shadow-card' : 'border-2 border-dashed border-black/15 hover:border-brand-yellow bg-brand-smoke aspect-[3/4]'
             }`}
             style={{
-              aspectRatio: '3 / 4',
               backgroundColor: selectedBorder === 'White Border' ? '#FFFFFF' : selectedBorder === 'Custom Border' ? customBorderColor : 'transparent',
               padding: preview && selectedBorder !== 'No Border' ? '16px' : '0px',
             }}
           >
             {uploading ? (
-              <div className="text-center px-8 animate-pulse">
+              <div className="text-center px-8 py-20 animate-pulse">
                 <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mx-auto mb-4 shadow-soft">
                   <Loader2 size={24} className="text-brand-gold animate-spin" />
                 </div>
@@ -127,7 +126,7 @@ export default function CreatePoster() {
                 <img
                   src={preview}
                   alt="Uploaded preview"
-                  className="w-full h-full object-contain"
+                  className="w-full h-auto object-cover rounded-2xl"
                 />
               </div>
             ) : (
