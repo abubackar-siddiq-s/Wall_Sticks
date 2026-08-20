@@ -1,3 +1,6 @@
+import dns from 'node:dns'
+try { dns.setServers(['1.1.1.1', '8.8.8.8']) } catch {}
+
 import express from 'express'
 import dotenv from 'dotenv'
 import cors from 'cors'
