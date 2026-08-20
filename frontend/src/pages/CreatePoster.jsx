@@ -105,10 +105,12 @@ export default function CreatePoster() {
             onDrop={(e) => { e.preventDefault(); !uploading && handleFile(e.dataTransfer.files[0]) }}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => !uploading && fileInput.current.click()}
-            className="w-full aspect-[3/4] rounded-xl3 border-2 border-dashed border-black/15 hover:border-brand-yellow flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative"
+            className={`w-full aspect-[3/4] rounded-3xl flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative ${
+              preview ? 'border border-black/5 shadow-card' : 'border-2 border-dashed border-black/15 hover:border-brand-yellow bg-brand-smoke'
+            }`}
             style={{
               aspectRatio: '3 / 4',
-              backgroundColor: selectedBorder === 'White Border' ? '#FFFFFF' : selectedBorder === 'Custom Border' ? customBorderColor : '#FFFFFF',
+              backgroundColor: selectedBorder === 'White Border' ? '#FFFFFF' : selectedBorder === 'Custom Border' ? customBorderColor : 'transparent',
               padding: preview && selectedBorder !== 'No Border' ? '16px' : '0px',
             }}
           >
