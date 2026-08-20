@@ -23,9 +23,10 @@ const fromServerItem = (i) => ({
 })
 
 export function CartProvider({ children }) {
-  const { customer, isCustomerLoggedIn, openLoginModal } = useCustomerAuth()
+  const { customer } = useCustomerAuth()
   
-  const getStorageKey = () => (customer ? `pw_cart_${customer.phone}` : null)
+  const getStorageKey = () => (customer?.phone ? `pw_cart_${customer.phone.replace(/\D/g, '')}` : `pw_cart_guest_${getSessionId()}`)
+  const getActiveSessionId = () => (customer?.phone ? customer.phone.replace(/\D/g, '') : getSessionId())
 
   const [items, setItems] = useState([])
   const hydrated = useRef(false)
@@ -34,18 +35,15 @@ export function CartProvider({ children }) {
   // Reload cart whenever customer changes (log in / log out / switch account)
   useEffect(() => {
     const key = getStorageKey()
-    if (!key) {
-      setItems([])
-      return
-    }
     try {
       const saved = localStorage.getItem(key)
-      setItems(saved ? JSON.parse(saved) : [])
+      if (saved) setItems(JSON.parse(saved))
+      else setItems([])
     } catch {
       setItems([])
     }
 
-    const sessionId = customer?.phone || getSessionId()
+    const sessionId = getActiveSessionId()
     api.get(`/cart/${sessionId}`)
       .then(({ data }) => {
         if (data?.items?.length) setItems(data.items.map(fromServerItem))
@@ -57,24 +55,17 @@ export function CartProvider({ children }) {
   // Sync to local storage & backend
   useEffect(() => {
     const key = getStorageKey()
-    if (!key) return
     localStorage.setItem(key, JSON.stringify(items))
     if (!hydrated.current) return
     clearTimeout(syncTimer.current)
     syncTimer.current = setTimeout(() => {
-      const sessionId = customer?.phone || getSessionId()
+      const sessionId = getActiveSessionId()
       api.put(`/cart/${sessionId}`, { items: items.map(toServerItem) }).catch(() => {})
     }, 600)
     return () => clearTimeout(syncTimer.current)
   }, [items, customer?.phone])
 
   const addToCart = (product, options = {}) => {
-    if (!isCustomerLoggedIn) {
-      toast('Please login to add items to cart', { icon: '🔒' })
-      openLoginModal()
-      return
-    }
-
     const size = options.size || product.sizes?.[2] || 'A3'
     const finish = options.finish || product.finishes?.[0] || 'Premium Matte'
     const border = options.border || 'No Border'

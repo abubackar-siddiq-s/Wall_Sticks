@@ -2,21 +2,20 @@ import asyncHandler from 'express-async-handler'
 import Cart from '../models/Cart.js'
 
 const validateSession = (req, sessionId) => {
+  if (!sessionId) return false
   if (req.admin) return true
-  const targetPhone = (sessionId || '').replace(/\D/g, '')
-  const isUserTarget = String(sessionId).length === 24 || (targetPhone.length >= 10 && targetPhone.length <= 13)
+  
+  if (req.user) {
+    const userPhone = (req.user.phone || '').replace(/\D/g, '')
+    const targetPhone = (sessionId || '').replace(/\D/g, '')
+    const userId = req.user._id.toString()
 
-  if (!isUserTarget) return true
+    if (sessionId === userId) return true
+    if (userPhone && targetPhone && (userPhone === targetPhone || targetPhone.endsWith(userPhone) || userPhone.endsWith(targetPhone))) return true
+  }
 
-  if (!req.user) return false
-
-  const userPhone = (req.user.phone || '').replace(/\D/g, '')
-  const userId = req.user._id.toString()
-
-  if (sessionId === userId) return true
-  if (userPhone && targetPhone && (userPhone === targetPhone || targetPhone.endsWith(userPhone) || userPhone.endsWith(targetPhone))) return true
-
-  return false
+  // Allow guest sessions (UUIDs or session strings)
+  return true
 }
 
 export const getCart = asyncHandler(async (req, res) => {

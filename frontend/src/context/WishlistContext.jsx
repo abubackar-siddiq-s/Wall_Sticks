@@ -7,26 +7,24 @@ import { useCustomerAuth } from './CustomerAuthContext'
 const WishlistContext = createContext(null)
 
 export function WishlistProvider({ children }) {
-  const { customer, isCustomerLoggedIn, openLoginModal } = useCustomerAuth()
+  const { customer } = useCustomerAuth()
 
-  const getStorageKey = () => (customer ? `pw_wishlist_${customer.phone}` : null)
+  const getStorageKey = () => (customer?.phone ? `pw_wishlist_${customer.phone.replace(/\D/g, '')}` : `pw_wishlist_guest_${getSessionId()}`)
+  const getActiveSessionId = () => (customer?.phone ? customer.phone.replace(/\D/g, '') : getSessionId())
 
   const [items, setItems] = useState([])
 
   useEffect(() => {
     const key = getStorageKey()
-    if (!key) {
-      setItems([])
-      return
-    }
     try {
       const saved = localStorage.getItem(key)
-      setItems(saved ? JSON.parse(saved) : [])
+      if (saved) setItems(JSON.parse(saved))
+      else setItems([])
     } catch {
       setItems([])
     }
 
-    const sessionId = customer?.phone || getSessionId()
+    const sessionId = getActiveSessionId()
     api.get(`/wishlist/${sessionId}`)
       .then(({ data }) => {
         if (data?.products?.length) setItems(data.products)
@@ -36,16 +34,10 @@ export function WishlistProvider({ children }) {
 
   useEffect(() => {
     const key = getStorageKey()
-    if (key) localStorage.setItem(key, JSON.stringify(items))
+    localStorage.setItem(key, JSON.stringify(items))
   }, [items, customer?.phone])
 
   const toggleWishlist = (product) => {
-    if (!isCustomerLoggedIn) {
-      toast('Please login to save items to wishlist', { icon: '🔒' })
-      openLoginModal()
-      return
-    }
-
     setItems((prev) => {
       const exists = prev.find((p) => p._id === product._id)
       if (exists) {
@@ -56,8 +48,8 @@ export function WishlistProvider({ children }) {
       return [...prev, product]
     })
 
-    if (!product._id?.startsWith?.('custom-')) {
-      const sessionId = customer?.phone || getSessionId()
+    if (product._id && !product._id.startsWith?.('custom-')) {
+      const sessionId = getActiveSessionId()
       api.post(`/wishlist/${sessionId}/toggle`, { productId: product._id }).catch(() => {})
     }
   }
