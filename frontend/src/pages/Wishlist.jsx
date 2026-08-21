@@ -42,8 +42,13 @@ export default function Wishlist() {
             <div key={product._id} className="bg-white rounded-xl2 overflow-hidden shadow-soft">
               <Link 
                 to={`/product/${product._id}`} 
-                className="block w-full aspect-[3/4] overflow-hidden bg-white"
-                style={{ aspectRatio: '3 / 4' }}
+                className="block w-full aspect-[3/4] overflow-hidden"
+                style={{ 
+                  aspectRatio: '3 / 4',
+                  backgroundImage: "url('/transparent-background.avif')",
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
               >
                 <img 
                   src={imageSrc} 
