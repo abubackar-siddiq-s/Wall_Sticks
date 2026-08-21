@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Truck, Store, ShoppingBag } from 'lucide-react'
+import { Truck, Store, ShoppingBag, MapPin, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useCart } from '../context/CartContext'
 import { useSettings } from '../hooks/useSettings'
 import { useCustomerAuth } from '../context/CustomerAuthContext'
 import { imgSrc } from '../lib/imageUrl'
+import { INDIA_STATES_DISTRICTS } from '../data/indiaLocations'
 
 export default function Checkout() {
   const { items = [], subtotal = 0 } = useCart() || {}
@@ -13,6 +14,7 @@ export default function Checkout() {
   const { customer } = useCustomerAuth() || {}
   const navigate = useNavigate()
   const [deliveryMethod, setDeliveryMethod] = useState('courier')
+  const [pincodeLoading, setPincodeLoading] = useState(false)
 
   const [form, setForm] = useState(() => {
     try {
@@ -32,16 +34,48 @@ export default function Checkout() {
       email: customer?.email || '',
       address: '',
       city: '',
-      state: '',
+      state: 'Tamil Nadu', // Default Tamil Nadu
       pincode: '',
     }
   })
+
+  // List of districts for the currently selected state
+  const availableDistricts = useMemo(() => {
+    if (!form.state) return []
+    return INDIA_STATES_DISTRICTS[form.state] || []
+  }, [form.state])
 
   useEffect(() => {
     if (customer?.phone && !form.phone) {
       setForm((f) => ({ ...f, phone: customer.phone, email: f.email || customer?.email || '' }))
     }
   }, [customer?.phone])
+
+  // Pincode reverse lookup: Typing a 6-digit Pincode automatically sets State & District!
+  useEffect(() => {
+    const pin = (form.pincode || '').trim()
+    if (/^\d{6}$/.test(pin)) {
+      setPincodeLoading(true)
+      fetch(`https://api.postalpincode.in/pincode/${pin}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data[0] && data[0].Status === 'Success' && data[0].PostOffice?.length > 0) {
+            const po = data[0].PostOffice[0]
+            const foundState = po.State
+            const foundDistrict = po.District
+
+            setForm((f) => ({
+              ...f,
+              state: Object.keys(INDIA_STATES_DISTRICTS).includes(foundState) ? foundState : f.state,
+              city: foundDistrict || f.city,
+            }))
+            toast.success(`Location detected: ${foundDistrict}, ${foundState}`)
+          }
+        })
+        .catch(() => {})
+        .finally(() => setPincodeLoading(false))
+    }
+  }, [form.pincode])
 
   const safeCourierCharge = settings?.courierCharge ?? 79
   const safeGstPercent = settings?.gstPercent ?? 0
@@ -51,6 +85,16 @@ export default function Checkout() {
   const total = Math.max(0, subtotal + courierCharge + gst)
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
+
+  const handleStateChange = (e) => {
+    const newState = e.target.value
+    const districts = INDIA_STATES_DISTRICTS[newState] || []
+    setForm((f) => ({
+      ...f,
+      state: newState,
+      city: districts.length > 0 ? districts[0] : '',
+    }))
+  }
 
   const handleContinue = (e) => {
     e.preventDefault()
@@ -91,21 +135,21 @@ export default function Checkout() {
                 value={form.name}
                 onChange={update('name')}
                 placeholder="Full name"
-                className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm sm:col-span-2"
+                className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm sm:col-span-2 font-medium"
               />
               <input
                 required
                 value={form.phone}
                 onChange={update('phone')}
                 placeholder="Phone number"
-                className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm sm:col-span-2"
+                className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm sm:col-span-2 font-medium"
               />
               <input
                 type="email"
                 value={form.email || ''}
                 onChange={update('email')}
                 placeholder="Email address (for shipping tracking & receipts)"
-                className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm sm:col-span-2"
+                className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm sm:col-span-2 font-medium"
               />
               {deliveryMethod === 'courier' && (
                 <>
@@ -113,31 +157,79 @@ export default function Checkout() {
                     required
                     value={form.address}
                     onChange={update('address')}
-                    placeholder="Address"
+                    placeholder="Street Address / House No. / Landmark"
                     rows={2}
-                    className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm sm:col-span-2 resize-none"
+                    className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm sm:col-span-2 resize-none font-medium"
                   />
-                  <input
-                    required
-                    value={form.city}
-                    onChange={update('city')}
-                    placeholder="City"
-                    className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm"
-                  />
-                  <input
-                    required
-                    value={form.state}
-                    onChange={update('state')}
-                    placeholder="State"
-                    className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm"
-                  />
-                  <input
-                    required
-                    value={form.pincode}
-                    onChange={update('pincode')}
-                    placeholder="Pincode"
-                    className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm sm:col-span-2"
-                  />
+
+                  {/* DYNAMIC STATE DROPDOWN */}
+                  <div className="flex flex-col">
+                    <label className="text-[11px] font-bold text-black/50 mb-1 px-1">State</label>
+                    <select
+                      required
+                      value={form.state}
+                      onChange={handleStateChange}
+                      className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm font-semibold text-brand-black"
+                    >
+                      <option value="">Select State</option>
+                      {Object.keys(INDIA_STATES_DISTRICTS).map((st) => (
+                        <option key={st} value={st}>
+                          {st}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* DYNAMIC DISTRICT DROPDOWN BASED ON SELECTED STATE */}
+                  <div className="flex flex-col">
+                    <label className="text-[11px] font-bold text-black/50 mb-1 px-1">District / City</label>
+                    {availableDistricts.length > 0 ? (
+                      <select
+                        required
+                        value={form.city}
+                        onChange={update('city')}
+                        className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm font-semibold text-brand-black"
+                      >
+                        <option value="">Select District</option>
+                        {availableDistricts.map((dst) => (
+                          <option key={dst} value={dst}>
+                            {dst}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        required
+                        value={form.city}
+                        onChange={update('city')}
+                        placeholder="Enter City / District"
+                        className="px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm font-medium"
+                      />
+                    )}
+                  </div>
+
+                  {/* PINCODE WITH AUTO-LOCATION LOOKUP */}
+                  <div className="sm:col-span-2 relative">
+                    <label className="text-[11px] font-bold text-black/50 mb-1 px-1 flex items-center justify-between">
+                      <span>Pincode</span>
+                      {pincodeLoading && (
+                        <span className="text-brand-gold flex items-center gap-1">
+                          <Loader2 size={11} className="animate-spin" /> Detecting City & State...
+                        </span>
+                      )}
+                    </label>
+                    <div className="relative">
+                      <input
+                        required
+                        maxLength={6}
+                        value={form.pincode}
+                        onChange={update('pincode')}
+                        placeholder="6-Digit Postal Pincode (e.g. 600001)"
+                        className="w-full px-4 py-3.5 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm font-semibold"
+                      />
+                      <MapPin size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-black/30 pointer-events-none" />
+                    </div>
+                  </div>
                 </>
               )}
             </div>
