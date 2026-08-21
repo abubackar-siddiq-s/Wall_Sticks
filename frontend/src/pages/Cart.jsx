@@ -43,7 +43,14 @@ export default function Cart() {
 
             return (
               <div key={item.key} className="flex gap-4 bg-white rounded-xl2 p-4 shadow-soft">
-                <div className="w-24 h-28 overflow-hidden rounded-xl shrink-0 border border-black/5 flex items-center justify-center bg-white">
+                <div 
+                  className="w-24 h-28 overflow-hidden rounded-xl shrink-0 border border-black/5 flex items-center justify-center"
+                  style={{ 
+                    backgroundImage: "url('/transparent-background.avif')",
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
+                >
                   <img
                     src={imageSrc}
                     alt={product.name || 'Poster'}
