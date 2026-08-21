@@ -16,14 +16,12 @@ import {
   Activity,
   Award,
   Maximize2,
-  Camera,
-  Code2,
 } from 'lucide-react'
 import { imgSrc } from '../../lib/imageUrl'
 import AdminLayout from '../../components/AdminLayout'
 import api from '../../lib/api'
 
-// TRADINGVIEW-INSPIRED PREMIUM REVENUE & FINANCIAL ANALYTICS SUITE
+// CLEAN LIGHT-MODE TRADINGVIEW REVENUE & FINANCIAL ANALYTICS SUITE
 function RevenueFinancialAnalytics({ stats = {} }) {
   const [timeframe, setTimeframe] = useState('weekly')
   const [hoveredIndex, setHoveredIndex] = useState(null)
@@ -158,19 +156,19 @@ function RevenueFinancialAnalytics({ stats = {} }) {
   const activeHoveredPoint = hoveredIndex !== null ? points[hoveredIndex] : null
 
   return (
-    <div className={`bg-[#0A0A0D] text-white rounded-3xl p-6 shadow-2xl border border-white/10 flex flex-col justify-between transition-all ${
-      isFullScreen ? 'fixed inset-4 z-50 overflow-y-auto bg-[#0A0A0D]' : ''
+    <div className={`bg-white text-brand-black rounded-3xl p-6 shadow-soft border border-black/5 flex flex-col justify-between transition-all ${
+      isFullScreen ? 'fixed inset-4 z-50 overflow-y-auto bg-white' : ''
     }`}>
       {/* HEADER & TRADINGVIEW TOP TOOLBAR */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-lg">
+            <div className="w-9 h-9 rounded-xl bg-brand-yellow/20 flex items-center justify-center text-brand-gold shadow-sm">
               <Activity size={20} />
             </div>
             <div>
-              <h3 className="font-extrabold text-lg text-white">Revenue & Financial Analytics</h3>
-              <p className="text-xs text-white/50">Live sales performance, order volume & custom date breakdown</p>
+              <h3 className="font-extrabold text-lg text-brand-black">Revenue & Financial Analytics</h3>
+              <p className="text-xs text-black/50">Live sales performance, order volume & custom date breakdown</p>
             </div>
           </div>
         </div>
@@ -179,14 +177,14 @@ function RevenueFinancialAnalytics({ stats = {} }) {
         <div className="flex items-center gap-2">
           <button
             onClick={exportCsv}
-            className="p-2 rounded-xl bg-[#16161E] border border-white/10 text-white/70 hover:text-amber-400 hover:border-amber-400/50 transition-all text-xs font-semibold flex items-center gap-1.5"
+            className="px-3 py-2 rounded-xl bg-brand-smoke hover:bg-brand-yellow/20 border border-black/10 text-brand-black transition-all text-xs font-bold flex items-center gap-1.5"
             title="Download CSV"
           >
             <Download size={14} /> Export CSV
           </button>
           <button
             onClick={() => setIsFullScreen((prev) => !prev)}
-            className="px-3 py-2 rounded-xl bg-[#16161E] border border-white/10 text-white/70 hover:text-white hover:border-white/30 transition-all text-xs font-semibold flex items-center gap-1.5"
+            className="px-3 py-2 rounded-xl bg-brand-smoke hover:bg-black/5 border border-black/10 text-black/70 hover:text-black transition-all text-xs font-bold flex items-center gap-1.5"
           >
             <Maximize2 size={14} /> {isFullScreen ? 'Exit Full' : 'Full Chart'}
           </button>
@@ -195,82 +193,82 @@ function RevenueFinancialAnalytics({ stats = {} }) {
 
       {/* CUSTOM DATE RANGE PICKER */}
       {timeframe === 'custom' && (
-        <div className="flex flex-wrap items-center gap-3 bg-[#14141B] p-3 rounded-2xl border border-white/10 mb-6 animate-fade-in text-xs font-semibold">
-          <Calendar size={15} className="text-amber-400" />
+        <div className="flex flex-wrap items-center gap-3 bg-brand-smoke/60 p-3 rounded-2xl border border-black/5 mb-6 animate-fade-in text-xs font-semibold">
+          <Calendar size={15} className="text-brand-gold" />
           <div className="flex items-center gap-2">
-            <span className="text-white/50">From:</span>
+            <span className="text-black/50">From:</span>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-1.5 rounded-xl bg-[#1F1F2A] border border-white/15 text-white outline-none focus:border-amber-400 font-bold"
+              className="px-3 py-1.5 rounded-xl bg-white border border-black/10 text-brand-black outline-none focus:border-brand-black font-bold"
             />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-white/50">To:</span>
+            <span className="text-black/50">To:</span>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-1.5 rounded-xl bg-[#1F1F2A] border border-white/15 text-white outline-none focus:border-amber-400 font-bold"
+              className="px-3 py-1.5 rounded-xl bg-white border border-black/10 text-brand-black outline-none focus:border-brand-black font-bold"
             />
           </div>
-          <span className="text-[11px] text-amber-400 font-bold ml-auto">{chartData.length} Days Window</span>
+          <span className="text-[11px] text-brand-gold font-extrabold ml-auto">{chartData.length} Days Window</span>
         </div>
       )}
 
       {/* METRICS HUD DISPLAY (4 CARDS) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 p-4 rounded-2xl bg-[#121218] border border-white/10">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 p-4 rounded-2xl bg-brand-smoke/40 border border-black/5">
         <div>
-          <span className="text-[11px] font-bold text-white/45 uppercase tracking-wider block mb-1">Gross Revenue</span>
-          <span className="text-xl sm:text-2xl font-extrabold text-amber-400">₹{totalRevenue.toLocaleString('en-IN')}</span>
+          <span className="text-[11px] font-bold text-black/45 uppercase tracking-wider block mb-1">Gross Revenue</span>
+          <span className="text-xl sm:text-2xl font-extrabold text-brand-black">₹{totalRevenue.toLocaleString('en-IN')}</span>
         </div>
         <div>
-          <span className="text-[11px] font-bold text-white/45 uppercase tracking-wider block mb-1">Total Orders</span>
-          <span className="text-xl sm:text-2xl font-extrabold text-white">{totalOrdersCount}</span>
+          <span className="text-[11px] font-bold text-black/45 uppercase tracking-wider block mb-1">Total Orders</span>
+          <span className="text-xl sm:text-2xl font-extrabold text-brand-black">{totalOrdersCount}</span>
         </div>
         <div>
-          <span className="text-[11px] font-bold text-white/45 uppercase tracking-wider block mb-1">Avg Order Value</span>
-          <span className="text-xl sm:text-2xl font-extrabold text-white">₹{aov.toLocaleString('en-IN')}</span>
+          <span className="text-[11px] font-bold text-black/45 uppercase tracking-wider block mb-1">Avg Order Value</span>
+          <span className="text-xl sm:text-2xl font-extrabold text-brand-black">₹{aov.toLocaleString('en-IN')}</span>
         </div>
         <div>
-          <span className="text-[11px] font-bold text-white/45 uppercase tracking-wider block mb-1">Period Peak</span>
-          <span className="text-xs font-extrabold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg inline-flex items-center gap-1 border border-amber-500/20 mt-1">
+          <span className="text-[11px] font-bold text-black/45 uppercase tracking-wider block mb-1">Period Peak</span>
+          <span className="text-xs font-extrabold text-amber-700 bg-amber-500/10 px-2.5 py-1 rounded-lg inline-flex items-center gap-1 border border-amber-500/20 mt-1">
             <Award size={13} /> {peakItem ? `${peakItem.label || peakItem.week}: ₹${maxAmount.toLocaleString('en-IN')}` : '₹0'}
           </span>
         </div>
       </div>
 
-      {/* TRADINGVIEW CANVAS WITH RIGHT Y-AXIS SCALE */}
+      {/* TRADINGVIEW LIGHT-MODE CANVAS WITH RIGHT Y-AXIS SCALE */}
       {chartData.length === 0 || maxAmount === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-white/10 rounded-2xl p-6 text-center bg-[#121218]">
-          <Activity size={32} className="text-white/25 mb-2" />
-          <p className="text-xs font-bold text-white/60">No sales revenue recorded for selected timeframe</p>
-          <p className="text-[11px] text-white/40 mt-1">Try switching timeframe tabs or adjusting your custom date range.</p>
+        <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-black/10 rounded-2xl p-6 text-center bg-brand-smoke/30">
+          <Activity size={32} className="text-black/25 mb-2" />
+          <p className="text-xs font-bold text-black/60">No sales revenue recorded for selected timeframe</p>
+          <p className="text-[11px] text-black/40 mt-1">Try switching timeframe tabs or adjusting your custom date range.</p>
         </div>
       ) : (
         <div className="relative">
-          {/* FLOATING GLASS TOOLTIP CARD */}
+          {/* FLOATING HOVER TOOLTIP CARD */}
           {activeHovered && activeHoveredPoint && (
             <div
-              className="absolute -top-14 bg-black/95 text-white font-bold text-[11px] px-3.5 py-2 rounded-xl shadow-2xl z-40 pointer-events-none border border-amber-500/40 backdrop-blur-md flex flex-col items-center gap-0.5 -translate-x-1/2"
+              className="absolute -top-14 bg-brand-black text-brand-yellow font-bold text-[11px] px-3.5 py-2 rounded-xl shadow-2xl z-40 pointer-events-none border border-black/20 flex flex-col items-center gap-0.5 -translate-x-1/2 animate-fade-in"
               style={{ left: `${activeHoveredPoint.x * 0.85}%` }}
             >
-              <span className="text-amber-400 font-extrabold text-xs">{activeHovered.label || activeHovered.week}: ₹{activeHovered.amount.toLocaleString('en-IN')}</span>
-              <span className="text-white/70 text-[10px]">{activeHovered.ordersCount || 0} Orders · AOV ₹{activeHovered.ordersCount > 0 ? Math.round(activeHovered.amount / activeHovered.ordersCount) : 0}</span>
+              <span className="font-extrabold text-xs">₹{activeHovered.amount.toLocaleString('en-IN')}</span>
+              <span className="text-white/80 text-[10px]">{activeHovered.label || activeHovered.week} · {activeHovered.ordersCount || 0} Orders</span>
             </div>
           )}
 
           {/* MAIN GRAPH CANVAS WITH RIGHT SCALE */}
-          <div className="grid grid-cols-[1fr_80px] bg-[#121218] rounded-2xl border border-white/10 overflow-hidden">
+          <div className="grid grid-cols-[1fr_80px] bg-[#FAFAFB] rounded-2xl border border-black/10 overflow-hidden shadow-inner">
             {/* SVG CANVAS AREA */}
             <div className="relative h-64 pt-6 pb-2 px-3">
               {/* BACKGROUND GRID LINES */}
-              <div className="absolute inset-x-0 top-6 bottom-2 flex flex-col justify-between pointer-events-none opacity-10">
-                <div className="border-b border-dashed border-white w-full" />
-                <div className="border-b border-dashed border-white w-full" />
-                <div className="border-b border-dashed border-white w-full" />
-                <div className="border-b border-dashed border-white w-full" />
+              <div className="absolute inset-x-0 top-6 bottom-2 flex flex-col justify-between pointer-events-none opacity-40">
+                <div className="border-b border-dashed border-black/10 w-full" />
+                <div className="border-b border-dashed border-black/10 w-full" />
+                <div className="border-b border-dashed border-black/10 w-full" />
+                <div className="border-b border-dashed border-black/10 w-full" />
               </div>
 
               <svg
@@ -279,28 +277,28 @@ function RevenueFinancialAnalytics({ stats = {} }) {
                 className="w-full h-full overflow-visible"
               >
                 <defs>
-                  <linearGradient id="tvWallSticksGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.45" />
-                    <stop offset="70%" stopColor="#F59E0B" stopOpacity="0.08" />
+                  <linearGradient id="lightWallSticksGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.35" />
+                    <stop offset="70%" stopColor="#F59E0B" stopOpacity="0.05" />
                     <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
                   </linearGradient>
                 </defs>
 
                 {/* AREA CURVE */}
-                <path d={areaD} fill="url(#tvWallSticksGradient)" />
+                <path d={areaD} fill="url(#lightWallSticksGradient)" />
 
-                {/* SMOOTH BEZIER LINE CURVE */}
+                {/* SMOOTH BEZIER LINE CURVE (CLEAN WITH ZERO DOTS) */}
                 <path
                   d={lineD}
                   fill="none"
-                  stroke="#F59E0B"
-                  strokeWidth="2.5"
+                  stroke="#D97706"
+                  strokeWidth="2.8"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   vectorEffect="non-scaling-stroke"
                 />
 
-                {/* CROSSHAIR VERTICAL & HORIZONTAL DASHED LINES */}
+                {/* CROSSHAIR VERTICAL & HORIZONTAL DASHED GUIDELINES */}
                 {activeHoveredPoint && (
                   <>
                     <line
@@ -308,7 +306,7 @@ function RevenueFinancialAnalytics({ stats = {} }) {
                       y1="0"
                       x2={activeHoveredPoint.x}
                       y2="100"
-                      stroke="rgba(245, 158, 11, 0.6)"
+                      stroke="#D97706"
                       strokeWidth="1"
                       strokeDasharray="2,2"
                       vectorEffect="non-scaling-stroke"
@@ -318,29 +316,13 @@ function RevenueFinancialAnalytics({ stats = {} }) {
                       y1={activeHoveredPoint.y}
                       x2="100"
                       y2={activeHoveredPoint.y}
-                      stroke="rgba(245, 158, 11, 0.4)"
+                      stroke="rgba(0,0,0,0.25)"
                       strokeWidth="1"
                       strokeDasharray="2,2"
                       vectorEffect="non-scaling-stroke"
                     />
                   </>
                 )}
-
-                {/* DATA POINT NODES */}
-                {points.map((pt, i) => (
-                  <g key={i}>
-                    <circle
-                      cx={pt.x}
-                      cy={pt.y}
-                      r={hoveredIndex === i ? '4' : '2'}
-                      fill={hoveredIndex === i ? '#F59E0B' : '#0A0A0D'}
-                      stroke="#F59E0B"
-                      strokeWidth={hoveredIndex === i ? '2' : '1'}
-                      className="transition-all duration-150"
-                      vectorEffect="non-scaling-stroke"
-                    />
-                  </g>
-                ))}
               </svg>
 
               {/* TRANSPARENT HOVER ZONES */}
@@ -357,7 +339,7 @@ function RevenueFinancialAnalytics({ stats = {} }) {
             </div>
 
             {/* TRADINGVIEW RIGHT-SIDE Y-AXIS PRICE SCALE */}
-            <div className="border-l border-white/10 py-6 px-2 flex flex-col justify-between text-[11px] font-mono font-bold text-white/50 bg-[#0E0E14] select-none relative">
+            <div className="border-l border-black/10 py-6 px-2 flex flex-col justify-between text-[11px] font-mono font-bold text-black/60 bg-brand-smoke/60 select-none relative">
               {yTicks.map((val, idx) => (
                 <div key={idx} className="text-right tracking-tighter">
                   ₹{val.toLocaleString('en-IN')}
@@ -365,7 +347,7 @@ function RevenueFinancialAnalytics({ stats = {} }) {
               ))}
               {activeHovered && (
                 <div
-                  className="absolute right-0 bg-amber-500 text-black font-extrabold text-[10px] px-1.5 py-0.5 rounded-l-sm shadow-md transition-all pointer-events-none -translate-y-1/2"
+                  className="absolute right-0 bg-brand-black text-brand-yellow font-extrabold text-[10px] px-1.5 py-0.5 rounded-l-sm shadow-md transition-all pointer-events-none -translate-y-1/2"
                   style={{ top: activeHoveredPoint ? `${activeHoveredPoint.y}%` : '50%' }}
                 >
                   ₹{activeHovered.amount.toLocaleString('en-IN')}
@@ -375,12 +357,12 @@ function RevenueFinancialAnalytics({ stats = {} }) {
           </div>
 
           {/* X-AXIS LABELS */}
-          <div className="flex justify-between text-[11px] font-bold text-white/50 px-2 pt-3">
+          <div className="flex justify-between text-[11px] font-bold text-black/50 px-2 pt-3">
             {chartData.length <= 15
               ? chartData.map((d, i) => (
                   <div key={i} className="text-center flex flex-col items-center">
                     <span>{d.label || d.week}</span>
-                    {d.subLabel && <span className="text-[9px] text-white/35 font-normal">{d.subLabel}</span>}
+                    {d.subLabel && <span className="text-[9px] text-black/35 font-normal">{d.subLabel}</span>}
                   </div>
                 ))
               : Array.from({ length: 6 }).map((_, idx) => {
@@ -390,7 +372,7 @@ function RevenueFinancialAnalytics({ stats = {} }) {
                   return (
                     <div key={idx} className="text-center flex flex-col items-center">
                       <span>{d.label || d.week}</span>
-                      {d.subLabel && <span className="text-[9px] text-white/35 font-normal">{d.subLabel}</span>}
+                      {d.subLabel && <span className="text-[9px] text-black/35 font-normal">{d.subLabel}</span>}
                     </div>
                   )
                 })}
@@ -399,7 +381,7 @@ function RevenueFinancialAnalytics({ stats = {} }) {
       )}
 
       {/* TRADINGVIEW BOTTOM TIMEFRAME PILLS */}
-      <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-6 pt-4 border-t border-black/5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
           {[
             { id: 'daily', label: '7 Days' },
@@ -413,8 +395,8 @@ function RevenueFinancialAnalytics({ stats = {} }) {
               onClick={() => { setTimeframe(t.id); setHoveredIndex(null); }}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 timeframe === t.id
-                  ? 'bg-[#1F1F2A] text-amber-400 border border-amber-500/40 shadow-md'
-                  : 'text-white/50 hover:text-white hover:bg-white/5'
+                  ? 'bg-brand-black text-brand-yellow shadow-md'
+                  : 'text-black/50 hover:text-black hover:bg-black/5'
               }`}
             >
               {t.label}
@@ -422,7 +404,7 @@ function RevenueFinancialAnalytics({ stats = {} }) {
           ))}
         </div>
 
-        <span className="text-xs font-semibold text-white/40">{chartData.length} Datapoints Loaded</span>
+        <span className="text-xs font-semibold text-black/40">{chartData.length} Datapoints Loaded</span>
       </div>
     </div>
   )
