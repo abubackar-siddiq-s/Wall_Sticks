@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   TrendingUp,
-  TrendingDown,
   ShoppingBag,
   Clock3,
   CheckCircle2,
@@ -14,15 +13,16 @@ import {
   ExternalLink,
   Download,
   Calendar,
-  DollarSign,
   BarChart2,
   Award,
+  Activity,
+  Layers,
 } from 'lucide-react'
 import { imgSrc } from '../../lib/imageUrl'
 import AdminLayout from '../../components/AdminLayout'
 import api from '../../lib/api'
 
-// STOCK MARKET GRADE REVENUE ANALYTICS SUITE
+// TRADINGVIEW-GRADE SVG AREA LINE CHART & REVENUE SUITE
 function StockRevenueAnalytics({ stats = {} }) {
   const [timeframe, setTimeframe] = useState('weekly')
   const [hoveredIndex, setHoveredIndex] = useState(null)
@@ -82,16 +82,31 @@ function StockRevenueAnalytics({ stats = {} }) {
   const maxAmount = useMemo(() => Math.max(...chartData.map((d) => d.amount || 0), 0), [chartData])
   const peakItem = useMemo(() => chartData.find((d) => (d.amount || 0) === maxAmount && maxAmount > 0), [chartData, maxAmount])
 
-  // Growth Trend (Second half vs First half of active range)
-  const growthTrend = useMemo(() => {
-    if (chartData.length < 2) return 0
-    const mid = Math.floor(chartData.length / 2)
-    const firstHalf = chartData.slice(0, mid).reduce((sum, d) => sum + (d.amount || 0), 0)
-    const secondHalf = chartData.slice(mid).reduce((sum, d) => sum + (d.amount || 0), 0)
+  // Calculate SVG Points for Smooth TradingView Line Curve
+  const points = useMemo(() => {
+    if (!chartData || chartData.length === 0) return []
+    const width = 100
+    const height = 100
+    const len = chartData.length
 
-    if (firstHalf === 0) return secondHalf > 0 ? 100 : 0
-    return Math.round(((secondHalf - firstHalf) / firstHalf) * 100)
-  }, [chartData])
+    return chartData.map((d, i) => {
+      const x = len > 1 ? (i / (len - 1)) * width : width / 2
+      const y = maxAmount > 0 ? height - ((d.amount || 0) / maxAmount) * (height - 20) - 10 : height - 10
+      return { x, y, amount: d.amount || 0, ordersCount: d.ordersCount || 0, label: d.label || d.week, subLabel: d.subLabel }
+    })
+  }, [chartData, maxAmount])
+
+  const lineD = useMemo(() => {
+    if (points.length === 0) return ''
+    return points.reduce((acc, pt, i) => (i === 0 ? `M ${pt.x},${pt.y}` : `${acc} L ${pt.x},${pt.y}`), '')
+  }, [points])
+
+  const areaD = useMemo(() => {
+    if (points.length === 0) return ''
+    const first = points[0]
+    const last = points[points.length - 1]
+    return `${lineD} L ${last.x},100 L ${first.x},100 Z`
+  }, [lineD, points])
 
   // Export CSV Report
   const exportCsv = () => {
@@ -112,6 +127,9 @@ function StockRevenueAnalytics({ stats = {} }) {
     document.body.removeChild(link)
   }
 
+  const activeHovered = hoveredIndex !== null ? chartData[hoveredIndex] : null
+  const activeHoveredPoint = hoveredIndex !== null ? points[hoveredIndex] : null
+
   return (
     <div className="bg-white rounded-3xl p-6 shadow-soft border border-black/5 flex flex-col justify-between">
       {/* TIMEFRAME HEADER & CONTROLS */}
@@ -119,11 +137,11 @@ function StockRevenueAnalytics({ stats = {} }) {
         <div>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-brand-yellow/20 flex items-center justify-center text-brand-gold">
-              <BarChart2 size={18} />
+              <Activity size={18} />
             </div>
             <h3 className="font-extrabold text-lg text-brand-black">Stock Revenue Analytics</h3>
           </div>
-          <p className="text-xs text-black/45 mt-0.5">Real-time financial performance, volume & growth analytics</p>
+          <p className="text-xs text-black/45 mt-0.5">Live stock-market area curve & time-series performance analytics</p>
         </div>
 
         {/* TIMEFRAME SELECTOR TABS */}
@@ -137,8 +155,8 @@ function StockRevenueAnalytics({ stats = {} }) {
           ].map((t) => (
             <button
               key={t.id}
-              onClick={() => setTimeframe(t.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              onClick={() => { setTimeframe(t.id); setHoveredIndex(null); }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 timeframe === t.id
                   ? 'bg-brand-black text-brand-yellow shadow-md'
                   : 'text-black/60 hover:text-black hover:bg-black/5'
@@ -172,28 +190,19 @@ function StockRevenueAnalytics({ stats = {} }) {
               className="px-3 py-1.5 rounded-xl bg-white border border-black/10 text-brand-black outline-none focus:border-brand-black font-bold"
             />
           </div>
+          <span className="text-[11px] text-black/40 ml-auto">{chartData.length} days range</span>
         </div>
       )}
 
-      {/* METRICS HUD DISPLAY */}
+      {/* METRICS HUD DISPLAY (4 CARDS - GROWTH TREND REMOVED) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 p-4 rounded-2xl bg-brand-smoke/40 border border-black/5">
         <div>
           <span className="text-[11px] font-bold text-black/45 uppercase tracking-wider block mb-1">Gross Revenue</span>
           <span className="text-xl sm:text-2xl font-extrabold text-brand-black">₹{totalRevenue.toLocaleString('en-IN')}</span>
         </div>
         <div>
-          <span className="text-[11px] font-bold text-black/45 uppercase tracking-wider block mb-1">Growth Trend</span>
-          <div className="flex items-center gap-1.5">
-            {growthTrend >= 0 ? (
-              <span className="inline-flex items-center gap-0.5 text-xs font-extrabold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-md">
-                <TrendingUp size={13} /> +{growthTrend}%
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-0.5 text-xs font-extrabold text-rose-600 bg-rose-500/10 px-2 py-0.5 rounded-md">
-                <TrendingDown size={13} /> {growthTrend}%
-              </span>
-            )}
-          </div>
+          <span className="text-[11px] font-bold text-black/45 uppercase tracking-wider block mb-1">Total Orders</span>
+          <span className="text-xl sm:text-2xl font-extrabold text-brand-black">{totalOrdersCount}</span>
         </div>
         <div>
           <span className="text-[11px] font-bold text-black/45 uppercase tracking-wider block mb-1">Avg Order Value</span>
@@ -201,76 +210,133 @@ function StockRevenueAnalytics({ stats = {} }) {
         </div>
         <div>
           <span className="text-[11px] font-bold text-black/45 uppercase tracking-wider block mb-1">Period High</span>
-          <span className="text-xs font-extrabold text-amber-600 bg-amber-500/10 px-2 py-1 rounded-lg inline-flex items-center gap-1">
+          <span className="text-xs font-extrabold text-amber-600 bg-amber-500/10 px-2.5 py-1 rounded-lg inline-flex items-center gap-1 mt-1">
             <Award size={13} /> {peakItem ? `${peakItem.label || peakItem.week}: ₹${maxAmount.toLocaleString('en-IN')}` : '₹0'}
           </span>
         </div>
       </div>
 
-      {/* CHART CANVAS */}
+      {/* TRADINGVIEW STOCK LINE CHART CANVAS */}
       {chartData.length === 0 || maxAmount === 0 ? (
-        <div className="flex flex-col items-center justify-center h-52 border-2 border-dashed border-black/10 rounded-2xl p-6 text-center">
-          <BarChart2 size={28} className="text-black/25 mb-2" />
+        <div className="flex flex-col items-center justify-center h-60 border-2 border-dashed border-black/10 rounded-2xl p-6 text-center">
+          <Activity size={32} className="text-black/25 mb-2" />
           <p className="text-xs font-bold text-black/60">No sales revenue recorded for selected timeframe</p>
           <p className="text-[11px] text-black/40 mt-1">Try switching timeframe tabs or adjusting your custom date range.</p>
         </div>
       ) : (
-        <div>
-          {/* GRID & BARS CONTAINER */}
-          <div className="relative h-56 pt-8 pb-3 px-2 border-b border-black/10">
+        <div className="relative">
+          {/* HOVER TOOLTIP CARD */}
+          {activeHovered && activeHoveredPoint && (
+            <div
+              className="absolute -top-14 bg-brand-black text-white font-bold text-[11px] px-3.5 py-2 rounded-xl shadow-2xl z-30 pointer-events-none border border-white/10 animate-fade-in flex flex-col items-center gap-0.5 -translate-x-1/2"
+              style={{ left: `${activeHoveredPoint.x}%` }}
+            >
+              <span className="text-brand-yellow font-extrabold text-xs">{activeHovered.label || activeHovered.week}: ₹{activeHovered.amount.toLocaleString('en-IN')}</span>
+              <span className="text-white/70 text-[10px]">{activeHovered.ordersCount || 0} Orders · AOV ₹{activeHovered.ordersCount > 0 ? Math.round(activeHovered.amount / activeHovered.ordersCount) : 0}</span>
+            </div>
+          )}
+
+          {/* SVG STOCK AREA CURVE CONTAINER */}
+          <div className="relative h-60 pt-6 pb-2 border-b border-black/10">
             {/* BACKGROUND GRID LINES */}
-            <div className="absolute inset-x-0 top-0 bottom-6 flex flex-col justify-between pointer-events-none opacity-20">
-              <div className="border-b border-dashed border-black/30 w-full" />
-              <div className="border-b border-dashed border-black/30 w-full" />
-              <div className="border-b border-dashed border-black/30 w-full" />
+            <div className="absolute inset-x-0 top-6 bottom-2 flex flex-col justify-between pointer-events-none opacity-20">
+              <div className="border-b border-dashed border-black/40 w-full" />
+              <div className="border-b border-dashed border-black/40 w-full" />
+              <div className="border-b border-dashed border-black/40 w-full" />
             </div>
 
-            <div className="flex items-end gap-2 h-full relative z-10">
-              {chartData.map((item, i) => {
-                const heightPercent = maxAmount > 0 ? (item.amount / maxAmount) * 100 : 0
-                const isHovered = hoveredIndex === i
-                const isPeak = maxAmount > 0 && item.amount === maxAmount
+            <svg
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              className="w-full h-full overflow-visible"
+            >
+              <defs>
+                <linearGradient id="stockAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.4" />
+                  <stop offset="70%" stopColor="#F59E0B" stopOpacity="0.05" />
+                  <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
+                </linearGradient>
+              </defs>
 
-                return (
-                  <div
-                    key={i}
-                    onMouseEnter={() => setHoveredIndex(i)}
-                    onMouseLeave={() => setHoveredIndex(null)}
-                    className="flex-1 flex flex-col items-center h-full justify-end relative group cursor-pointer"
-                  >
-                    {/* HOVER TOOLTIP CARD */}
-                    {isHovered && (
-                      <div className="absolute -top-16 bg-brand-black text-white font-bold text-[11px] p-2 rounded-xl shadow-2xl z-30 whitespace-nowrap border border-white/10 animate-fade-in flex flex-col items-center gap-0.5">
-                        <span className="text-brand-yellow font-extrabold text-xs">₹{item.amount.toLocaleString('en-IN')}</span>
-                        <span className="text-white/70 text-[10px]">{item.ordersCount || 0} Orders · AOV ₹{item.ordersCount > 0 ? Math.round(item.amount / item.ordersCount) : 0}</span>
-                      </div>
-                    )}
+              {/* AREA FILLS */}
+              <path d={areaD} fill="url(#stockAreaGradient)" />
 
-                    {/* BAR VISUAL */}
-                    <div
-                      className={`w-full rounded-t-xl transition-all duration-300 ${
-                        isPeak
-                          ? 'bg-gradient-to-t from-brand-black via-amber-700 to-brand-gold shadow-lg ring-2 ring-brand-gold/40'
-                          : isHovered
-                          ? 'bg-brand-black shadow-md'
-                          : 'bg-brand-yellow/35 hover:bg-brand-yellow/70'
-                      }`}
-                      style={{ height: `${Math.max(heightPercent, 4)}%` }}
-                    />
-                  </div>
-                )
-              })}
+              {/* STOCK LINE STROKE */}
+              <path
+                d={lineD}
+                fill="none"
+                stroke="#18181B"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                vectorEffect="non-scaling-stroke"
+              />
+
+              {/* CROSSHAIR VERTICAL DASHED LINE */}
+              {activeHoveredPoint && (
+                <line
+                  x1={activeHoveredPoint.x}
+                  y1="0"
+                  x2={activeHoveredPoint.x}
+                  y2="100"
+                  stroke="#F59E0B"
+                  strokeWidth="1"
+                  strokeDasharray="2,2"
+                  vectorEffect="non-scaling-stroke"
+                />
+              )}
+
+              {/* DATA POINTS & HOVER TRIGGER ZONES */}
+              {points.map((pt, i) => (
+                <g key={i}>
+                  <circle
+                    cx={pt.x}
+                    cy={pt.y}
+                    r={hoveredIndex === i ? '3.5' : '1.8'}
+                    fill={hoveredIndex === i ? '#F59E0B' : '#18181B'}
+                    stroke="#FFFFFF"
+                    strokeWidth={hoveredIndex === i ? '1.5' : '0.8'}
+                    className="transition-all duration-150"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </g>
+              ))}
+            </svg>
+
+            {/* TRANSPARENT HOVER TRIGGER OVERLAYS */}
+            <div className="absolute inset-0 flex items-stretch z-20">
+              {points.map((_, i) => (
+                <div
+                  key={i}
+                  onMouseEnter={() => setHoveredIndex(i)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                  className="flex-1 cursor-pointer"
+                />
+              ))}
             </div>
           </div>
 
-          {/* X-AXIS LABELS */}
+          {/* X-AXIS LABELS (ADAPTIVE SAMPLING FOR LONG RANGES) */}
           <div className="flex justify-between text-[11px] font-bold text-black/50 px-1 pt-3">
-            {chartData.map((d, i) => (
-              <div key={i} className="text-center flex flex-col items-center">
-                <span>{d.label || d.week}</span>
-                {d.subLabel && <span className="text-[9px] text-black/35 font-normal">{d.subLabel}</span>}
-              </div>
-            ))}
+            {chartData.length <= 15
+              ? chartData.map((d, i) => (
+                  <div key={i} className="text-center flex flex-col items-center">
+                    <span>{d.label || d.week}</span>
+                    {d.subLabel && <span className="text-[9px] text-black/35 font-normal">{d.subLabel}</span>}
+                  </div>
+                ))
+              : // Sample 6 key markers when custom range has 15+ days
+                Array.from({ length: 6 }).map((_, idx) => {
+                  const dataIdx = Math.floor((idx / 5) * (chartData.length - 1))
+                  const d = chartData[dataIdx]
+                  if (!d) return null
+                  return (
+                    <div key={idx} className="text-center flex flex-col items-center">
+                      <span>{d.label || d.week}</span>
+                      {d.subLabel && <span className="text-[9px] text-black/35 font-normal">{d.subLabel}</span>}
+                    </div>
+                  )
+                })}
           </div>
         </div>
       )}
