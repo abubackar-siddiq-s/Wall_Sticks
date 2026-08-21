@@ -47,8 +47,13 @@ export default function QuickViewModal({ product, onClose, showPrice = false }) 
         onClick={(e) => e.stopPropagation()}
       >
         <div 
-          className="w-full aspect-[3/4] overflow-hidden bg-white relative"
-          style={{ aspectRatio: '3 / 4' }}
+          className="w-full aspect-[3/4] overflow-hidden relative"
+          style={{ 
+            aspectRatio: '3 / 4',
+            backgroundImage: "url('/transparent-background.avif')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
         >
           <img 
             src={imgSrc(product.images?.[0])} 

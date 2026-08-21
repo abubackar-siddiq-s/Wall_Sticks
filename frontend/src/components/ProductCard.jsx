@@ -20,8 +20,13 @@ export default function ProductCard({ product, onQuickView, showPrice = false })
     >
       <Link 
         to={`/product/${product._id}`} 
-        className="block relative w-full overflow-hidden bg-white aspect-[3/4]"
-        style={{ aspectRatio: '3 / 4' }}
+        className="block relative w-full overflow-hidden aspect-[3/4]"
+        style={{ 
+          aspectRatio: '3 / 4',
+          backgroundImage: "url('/transparent-background.avif')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
       >
         {/* Primary Image */}
         <img

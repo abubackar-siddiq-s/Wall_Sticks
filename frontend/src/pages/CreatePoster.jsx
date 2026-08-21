@@ -110,6 +110,9 @@ export default function CreatePoster() {
             }`}
             style={{
               backgroundColor: selectedBorder === 'White Border' ? '#FFFFFF' : selectedBorder === 'Custom Border' ? customBorderColor : 'transparent',
+              backgroundImage: selectedBorder === 'No Border' ? "url('/transparent-background.avif')" : undefined,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
               padding: preview && selectedBorder !== 'No Border' ? '16px' : '0px',
             }}
           >

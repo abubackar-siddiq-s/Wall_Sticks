@@ -224,6 +224,9 @@ export default function ProductDetail() {
             className="relative rounded-3xl overflow-hidden shadow-card border border-black/5 group w-full transition-all duration-300 flex items-center justify-center"
             style={{ 
               backgroundColor: selectedBorder === 'White Border' ? '#FFFFFF' : selectedBorder === 'Custom Border' ? customBorderColor : 'transparent',
+              backgroundImage: selectedBorder === 'No Border' ? "url('/transparent-background.avif')" : undefined,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
               padding: selectedBorder === 'No Border' ? '0px' : '16px',
             }}
           >
