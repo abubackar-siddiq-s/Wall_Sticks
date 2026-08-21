@@ -17,7 +17,7 @@ export default function AdminBestSellers() {
         const prodData = data.products || data
         if (Array.isArray(prodData)) {
           setAllProducts(prodData)
-          const filteredBs = prodData.filter((p) => p.bestSeller).slice(0, 8)
+          const filteredBs = prodData.filter((p) => p.bestSeller)
           setBestSellers(filteredBs)
         }
       })
@@ -39,9 +39,6 @@ export default function AdminBestSellers() {
   const onDragEnd = () => setDragIndex(null)
 
   const addBestSeller = async (product) => {
-    if (bestSellers.length >= 8) {
-      return toast.error('Maximum 8 Best Sellers allowed.')
-    }
     if (bestSellers.some((p) => p._id === product._id)) {
       return toast.error('Poster is already in Best Sellers')
     }
@@ -67,14 +64,18 @@ export default function AdminBestSellers() {
   }
 
   const saveBestSellers = async () => {
-    toast.success('Best Sellers list saved!')
+    if (bestSellers.length < 5) {
+      toast.error(`Please select at least 5 Best Seller posters (currently ${bestSellers.length}).`)
+    } else {
+      toast.success('Best Sellers selection saved!')
+    }
   }
 
   const availableToAdd = allProducts.filter(
     (p) => !bestSellers.some((b) => b._id === p._id)
   )
 
-  const isCountValid = bestSellers.length >= 5 && bestSellers.length <= 8
+  const isCountValid = bestSellers.length >= 5
 
   return (
     <AdminLayout title="Best Seller Posters Management">
@@ -87,28 +88,22 @@ export default function AdminBestSellers() {
             </h2>
             <span
               className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
-                isCountValid ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                isCountValid ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
               }`}
             >
               {isCountValid ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
-              {bestSellers.length} / 8 Selected (5–8 Allowed)
+              {bestSellers.length} Selected (Min: 5, Max: Unlimited)
             </span>
           </div>
           <p className="text-xs text-black/50 mt-0.5">
-            Manage posters that feature the "Best Seller" badge and rank in top store collections.
+            Manage posters that feature the "Best Seller" badge in store collections. Add unlimited posters (Minimum 5 required).
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => {
-              if (bestSellers.length >= 8) {
-                return toast.error('Maximum limit of 8 Best Sellers reached.')
-              }
-              setShowAdd(true)
-            }}
-            disabled={bestSellers.length >= 8}
-            className="flex items-center gap-2 bg-white border-2 border-black/10 hover:border-brand-black font-bold px-4 py-2.5 rounded-xl text-xs transition-colors disabled:opacity-40"
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-2 bg-white border-2 border-black/10 hover:border-brand-black font-bold px-4 py-2.5 rounded-xl text-xs transition-colors"
           >
             <Plus size={16} /> Add Best Seller
           </button>
@@ -164,7 +159,7 @@ export default function AdminBestSellers() {
         {bestSellers.length === 0 && (
           <div className="text-center bg-white rounded-2xl p-12 border border-black/5">
             <p className="text-sm font-bold text-black/40">No Best Seller posters selected.</p>
-            <p className="text-xs text-black/30 mt-1">Add between 5 and 8 posters to highlight as Best Sellers.</p>
+            <p className="text-xs text-black/30 mt-1">Add at least 5 posters to highlight as Best Sellers.</p>
           </div>
         )}
       </div>
@@ -176,7 +171,7 @@ export default function AdminBestSellers() {
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-black/10">
               <div>
                 <h3 className="font-extrabold text-lg text-brand-black">Select Best Seller Poster</h3>
-                <p className="text-xs text-black/50">Pick from catalog ({bestSellers.length}/8 selected)</p>
+                <p className="text-xs text-black/50">Pick from catalog ({bestSellers.length} selected)</p>
               </div>
               <button onClick={() => setShowAdd(false)} className="p-2 rounded-full hover:bg-brand-smoke transition-colors"><X size={18} /></button>
             </div>

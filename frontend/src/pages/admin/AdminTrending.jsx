@@ -14,7 +14,7 @@ export default function AdminTrending() {
   useEffect(() => {
     Promise.all([api.get('/trending'), api.get('/products')])
       .then(([trendingRes, prodRes]) => {
-        const trendingData = Array.isArray(trendingRes.data) ? trendingRes.data.slice(0, 8) : []
+        const trendingData = Array.isArray(trendingRes.data) ? trendingRes.data : []
         setItems(trendingData)
         const productsList = prodRes.data.products || prodRes.data
         setAllProducts(Array.isArray(productsList) ? productsList : [])
@@ -37,9 +37,6 @@ export default function AdminTrending() {
   const onDragEnd = () => setDragIndex(null)
 
   const addProduct = async (product) => {
-    if (items.length >= 8) {
-      return toast.error('Maximum limit reached: You can add 5 to 8 trending posters only.')
-    }
     if (items.some((i) => (i.product?._id || i._id) === product._id)) {
       return toast.error('Poster is already in trending list')
     }
@@ -65,6 +62,11 @@ export default function AdminTrending() {
   }
 
   const saveOrder = async () => {
+    if (items.length < 5) {
+      toast.error(`Please select at least 5 Trending posters (currently ${items.length}).`)
+      return
+    }
+
     try {
       await api.put('/trending/reorder', { items: items.map((i, order) => ({ id: i._id, order })) })
       toast.success('Trending order saved to database!')
@@ -74,7 +76,7 @@ export default function AdminTrending() {
   }
 
   const availableToAdd = allProducts.filter((p) => !items.some((i) => (i.product?._id || i._id) === p._id))
-  const isCountValid = items.length >= 5 && items.length <= 8
+  const isCountValid = items.length >= 5
 
   return (
     <AdminLayout title="Trending Posters Carousel">
@@ -85,26 +87,22 @@ export default function AdminTrending() {
             <h2 className="font-extrabold text-lg text-brand-black">Homepage Trending Carousel</h2>
             <span
               className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
-                isCountValid ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                isCountValid ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
               }`}
             >
               {isCountValid ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
-              {items.length} / 8 Posters Selected (5–8 Allowed)
+              {items.length} Selected (Min: 5, Max: Unlimited)
             </span>
           </div>
-          <p className="text-xs text-black/50 mt-0.5">Drag to reorder posters shown in the homepage trending section.</p>
+          <p className="text-xs text-black/50 mt-0.5">
+            Drag to reorder posters shown in the homepage trending carousel. Add unlimited posters (Minimum 5 required).
+          </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => {
-              if (items.length >= 8) {
-                return toast.error('Maximum limit of 8 posters reached.')
-              }
-              setShowAdd(true)
-            }}
-            disabled={items.length >= 8}
-            className="flex items-center gap-2 bg-white border-2 border-black/10 hover:border-brand-black font-bold px-4 py-2.5 rounded-xl text-xs transition-colors disabled:opacity-40"
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-2 bg-white border-2 border-black/10 hover:border-brand-black font-bold px-4 py-2.5 rounded-xl text-xs transition-colors"
           >
             <Plus size={16} /> Add Poster
           </button>
@@ -118,7 +116,7 @@ export default function AdminTrending() {
         </div>
       </div>
 
-      {/* TRENDING ITEMS LIST (MAX 8, MIN 5) */}
+      {/* TRENDING ITEMS LIST */}
       <div className="space-y-3 max-w-2xl">
         {items.map((item, i) => {
           const p = item.product || item
@@ -161,7 +159,7 @@ export default function AdminTrending() {
         {items.length === 0 && (
           <div className="text-center bg-white rounded-2xl p-12 border border-black/5">
             <p className="text-sm font-bold text-black/40">No trending posters selected.</p>
-            <p className="text-xs text-black/30 mt-1">Add between 5 and 8 posters for the home carousel.</p>
+            <p className="text-xs text-black/30 mt-1">Add at least 5 posters for the home carousel.</p>
           </div>
         )}
       </div>
@@ -173,7 +171,7 @@ export default function AdminTrending() {
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-black/10">
               <div>
                 <h3 className="font-extrabold text-lg text-brand-black">Select Poster for Trending</h3>
-                <p className="text-xs text-black/50">Pick from catalog ({items.length}/8 selected)</p>
+                <p className="text-xs text-black/50">Pick from catalog ({items.length} selected)</p>
               </div>
               <button onClick={() => setShowAdd(false)} className="p-2 rounded-full hover:bg-brand-smoke transition-colors"><X size={18} /></button>
             </div>

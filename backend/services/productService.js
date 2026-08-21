@@ -41,7 +41,7 @@ export async function getTrendingProducts() {
 }
 
 export async function getBestSellerProducts() {
-  return await Product.find({ bestSeller: true, active: true }).limit(12)
+  return await Product.find({ bestSeller: true, active: true })
 }
 
 export async function getProductById(id) {
