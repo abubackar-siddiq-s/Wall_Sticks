@@ -271,9 +271,9 @@ export default function Checkout() {
                 <p>
                   <span className="font-semibold">Pickup address:</span> {settings?.pickupAddress || 'Store Location'}
                 </p>
-                <p>
+                {/* <p>
                   <span className="font-semibold">Pickup time:</span> {settings?.pickupTime || '10:00 AM - 8:00 PM'}
-                </p>
+                </p> */}
                 <p>
                   <span className="font-semibold">Owner contact:</span> {settings?.phone || ''}
                 </p>

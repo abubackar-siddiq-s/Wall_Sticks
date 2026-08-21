@@ -221,9 +221,8 @@ export default function ProductDetail() {
         {/* MAIN POSTER IMAGE & THUMBNAILS (AMAZON STYLE GALLERY) */}
         <div className="flex flex-col gap-4">
           <div 
-            className="relative rounded-3xl overflow-hidden shadow-card border border-black/5 group w-full aspect-[3/4] transition-all duration-300 flex items-center justify-center"
+            className="relative rounded-3xl overflow-hidden shadow-card border border-black/5 group w-full transition-all duration-300 flex items-center justify-center"
             style={{ 
-              aspectRatio: '3 / 4',
               backgroundColor: selectedBorder === 'White Border' ? '#FFFFFF' : selectedBorder === 'Custom Border' ? customBorderColor : 'transparent',
               padding: selectedBorder === 'No Border' ? '0px' : '16px',
             }}
@@ -232,7 +231,7 @@ export default function ProductDetail() {
               <img
                 {...responsiveImgProps(imagesList[selectedImgIndex] || product.images?.[0], { sizes: '(max-width: 768px) 100vw, 50vw' })}
                 alt={product.name}
-                className="w-full h-full object-contain transition-all duration-300"
+                className="w-full h-auto max-h-[75vh] object-cover transition-all duration-300 rounded-2xl"
               />
             </div>
             {imagesList.length > 1 && (
