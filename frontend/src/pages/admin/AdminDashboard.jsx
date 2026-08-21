@@ -13,11 +13,11 @@ import {
   ExternalLink,
   Download,
   Calendar,
-  BarChart2,
-  Award,
   Activity,
-  DollarSign,
-  PieChart,
+  Award,
+  Maximize2,
+  Camera,
+  Code2,
 } from 'lucide-react'
 import { imgSrc } from '../../lib/imageUrl'
 import AdminLayout from '../../components/AdminLayout'
@@ -27,6 +27,7 @@ import api from '../../lib/api'
 function RevenueFinancialAnalytics({ stats = {} }) {
   const [timeframe, setTimeframe] = useState('weekly')
   const [hoveredIndex, setHoveredIndex] = useState(null)
+  const [isFullScreen, setIsFullScreen] = useState(false)
 
   // Custom Date Range State
   const [startDate, setStartDate] = useState(() => {
@@ -122,6 +123,18 @@ function RevenueFinancialAnalytics({ stats = {} }) {
     return `${lineD} L ${last.x},100 L ${first.x},100 Z`
   }, [lineD, points])
 
+  // Y-Axis Ticks (TradingView Right Scale)
+  const yTicks = useMemo(() => {
+    if (maxAmount === 0) return [0]
+    return [
+      maxAmount,
+      Math.round(maxAmount * 0.75),
+      Math.round(maxAmount * 0.5),
+      Math.round(maxAmount * 0.25),
+      0,
+    ]
+  }, [maxAmount])
+
   // Export CSV Report
   const exportCsv = () => {
     if (!chartData || chartData.length === 0) return
@@ -145,8 +158,10 @@ function RevenueFinancialAnalytics({ stats = {} }) {
   const activeHoveredPoint = hoveredIndex !== null ? points[hoveredIndex] : null
 
   return (
-    <div className="bg-[#111115] text-white rounded-3xl p-6 shadow-2xl border border-white/10 flex flex-col justify-between">
-      {/* HEADER & TIMEFRAME CONTROLS */}
+    <div className={`bg-[#0A0A0D] text-white rounded-3xl p-6 shadow-2xl border border-white/10 flex flex-col justify-between transition-all ${
+      isFullScreen ? 'fixed inset-4 z-50 overflow-y-auto bg-[#0A0A0D]' : ''
+    }`}>
+      {/* HEADER & TRADINGVIEW TOP TOOLBAR */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2.5">
@@ -160,33 +175,27 @@ function RevenueFinancialAnalytics({ stats = {} }) {
           </div>
         </div>
 
-        {/* TIMEFRAME SELECTOR TABS */}
-        <div className="flex flex-wrap items-center gap-1 bg-[#1A1A20] p-1.5 rounded-2xl border border-white/10">
-          {[
-            { id: 'daily', label: '7D Daily' },
-            { id: 'weekly', label: '12W Weekly' },
-            { id: 'monthly', label: '12M Monthly' },
-            { id: 'yearly', label: 'Yearly' },
-            { id: 'custom', label: 'Custom Date' },
-          ].map((t) => (
-            <button
-              key={t.id}
-              onClick={() => { setTimeframe(t.id); setHoveredIndex(null); }}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                timeframe === t.id
-                  ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
-                  : 'text-white/60 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+        {/* TRADINGVIEW TOP ACTION BUTTONS */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={exportCsv}
+            className="p-2 rounded-xl bg-[#16161E] border border-white/10 text-white/70 hover:text-amber-400 hover:border-amber-400/50 transition-all text-xs font-semibold flex items-center gap-1.5"
+            title="Download CSV"
+          >
+            <Download size={14} /> Export CSV
+          </button>
+          <button
+            onClick={() => setIsFullScreen((prev) => !prev)}
+            className="px-3 py-2 rounded-xl bg-[#16161E] border border-white/10 text-white/70 hover:text-white hover:border-white/30 transition-all text-xs font-semibold flex items-center gap-1.5"
+          >
+            <Maximize2 size={14} /> {isFullScreen ? 'Exit Full' : 'Full Chart'}
+          </button>
         </div>
       </div>
 
       {/* CUSTOM DATE RANGE PICKER */}
       {timeframe === 'custom' && (
-        <div className="flex flex-wrap items-center gap-3 bg-[#18181F] p-3 rounded-2xl border border-white/10 mb-6 animate-fade-in text-xs font-semibold">
+        <div className="flex flex-wrap items-center gap-3 bg-[#14141B] p-3 rounded-2xl border border-white/10 mb-6 animate-fade-in text-xs font-semibold">
           <Calendar size={15} className="text-amber-400" />
           <div className="flex items-center gap-2">
             <span className="text-white/50">From:</span>
@@ -194,7 +203,7 @@ function RevenueFinancialAnalytics({ stats = {} }) {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-1.5 rounded-xl bg-[#22222A] border border-white/15 text-white outline-none focus:border-amber-400 font-bold"
+              className="px-3 py-1.5 rounded-xl bg-[#1F1F2A] border border-white/15 text-white outline-none focus:border-amber-400 font-bold"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -203,15 +212,15 @@ function RevenueFinancialAnalytics({ stats = {} }) {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-1.5 rounded-xl bg-[#22222A] border border-white/15 text-white outline-none focus:border-amber-400 font-bold"
+              className="px-3 py-1.5 rounded-xl bg-[#1F1F2A] border border-white/15 text-white outline-none focus:border-amber-400 font-bold"
             />
           </div>
-          <span className="text-[11px] text-amber-400/80 font-bold ml-auto">{chartData.length} Days Window</span>
+          <span className="text-[11px] text-amber-400 font-bold ml-auto">{chartData.length} Days Window</span>
         </div>
       )}
 
       {/* METRICS HUD DISPLAY (4 CARDS) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 p-4 rounded-2xl bg-[#18181F] border border-white/10">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 p-4 rounded-2xl bg-[#121218] border border-white/10">
         <div>
           <span className="text-[11px] font-bold text-white/45 uppercase tracking-wider block mb-1">Gross Revenue</span>
           <span className="text-xl sm:text-2xl font-extrabold text-amber-400">₹{totalRevenue.toLocaleString('en-IN')}</span>
@@ -232,9 +241,9 @@ function RevenueFinancialAnalytics({ stats = {} }) {
         </div>
       </div>
 
-      {/* TRADINGVIEW STYLE SMOOTH BEZIER AREA CANVAS */}
+      {/* TRADINGVIEW CANVAS WITH RIGHT Y-AXIS SCALE */}
       {chartData.length === 0 || maxAmount === 0 ? (
-        <div className="flex flex-col items-center justify-center h-60 border-2 border-dashed border-white/10 rounded-2xl p-6 text-center bg-[#15151A]">
+        <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-white/10 rounded-2xl p-6 text-center bg-[#121218]">
           <Activity size={32} className="text-white/25 mb-2" />
           <p className="text-xs font-bold text-white/60">No sales revenue recorded for selected timeframe</p>
           <p className="text-[11px] text-white/40 mt-1">Try switching timeframe tabs or adjusting your custom date range.</p>
@@ -244,91 +253,124 @@ function RevenueFinancialAnalytics({ stats = {} }) {
           {/* FLOATING GLASS TOOLTIP CARD */}
           {activeHovered && activeHoveredPoint && (
             <div
-              className="absolute -top-14 bg-black/90 text-white font-bold text-[11px] px-3.5 py-2 rounded-xl shadow-2xl z-30 pointer-events-none border border-amber-500/40 backdrop-blur-md flex flex-col items-center gap-0.5 -translate-x-1/2"
-              style={{ left: `${activeHoveredPoint.x}%` }}
+              className="absolute -top-14 bg-black/95 text-white font-bold text-[11px] px-3.5 py-2 rounded-xl shadow-2xl z-40 pointer-events-none border border-amber-500/40 backdrop-blur-md flex flex-col items-center gap-0.5 -translate-x-1/2"
+              style={{ left: `${activeHoveredPoint.x * 0.85}%` }}
             >
               <span className="text-amber-400 font-extrabold text-xs">{activeHovered.label || activeHovered.week}: ₹{activeHovered.amount.toLocaleString('en-IN')}</span>
               <span className="text-white/70 text-[10px]">{activeHovered.ordersCount || 0} Orders · AOV ₹{activeHovered.ordersCount > 0 ? Math.round(activeHovered.amount / activeHovered.ordersCount) : 0}</span>
             </div>
           )}
 
-          {/* SVG CANVAS */}
-          <div className="relative h-64 pt-6 pb-2 border-b border-white/10 bg-[#15151A] rounded-2xl px-3 border border-white/5 overflow-hidden">
-            {/* BACKGROUND GRID LINES */}
-            <div className="absolute inset-x-0 top-6 bottom-2 flex flex-col justify-between pointer-events-none opacity-10">
-              <div className="border-b border-dashed border-white w-full" />
-              <div className="border-b border-dashed border-white w-full" />
-              <div className="border-b border-dashed border-white w-full" />
-            </div>
+          {/* MAIN GRAPH CANVAS WITH RIGHT SCALE */}
+          <div className="grid grid-cols-[1fr_80px] bg-[#121218] rounded-2xl border border-white/10 overflow-hidden">
+            {/* SVG CANVAS AREA */}
+            <div className="relative h-64 pt-6 pb-2 px-3">
+              {/* BACKGROUND GRID LINES */}
+              <div className="absolute inset-x-0 top-6 bottom-2 flex flex-col justify-between pointer-events-none opacity-10">
+                <div className="border-b border-dashed border-white w-full" />
+                <div className="border-b border-dashed border-white w-full" />
+                <div className="border-b border-dashed border-white w-full" />
+                <div className="border-b border-dashed border-white w-full" />
+              </div>
 
-            <svg
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
-              className="w-full h-full overflow-visible"
-            >
-              <defs>
-                <linearGradient id="tvAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.45" />
-                  <stop offset="60%" stopColor="#F59E0B" stopOpacity="0.08" />
-                  <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
-                </linearGradient>
-              </defs>
+              <svg
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                className="w-full h-full overflow-visible"
+              >
+                <defs>
+                  <linearGradient id="tvWallSticksGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.45" />
+                    <stop offset="70%" stopColor="#F59E0B" stopOpacity="0.08" />
+                    <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
 
-              {/* AREA CURVE */}
-              <path d={areaD} fill="url(#tvAreaGradient)" />
+                {/* AREA CURVE */}
+                <path d={areaD} fill="url(#tvWallSticksGradient)" />
 
-              {/* SMOOTH BEZIER LINE CURVE */}
-              <path
-                d={lineD}
-                fill="none"
-                stroke="#F59E0B"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                vectorEffect="non-scaling-stroke"
-              />
-
-              {/* CROSSHAIR VERTICAL LINE */}
-              {activeHoveredPoint && (
-                <line
-                  x1={activeHoveredPoint.x}
-                  y1="0"
-                  x2={activeHoveredPoint.x}
-                  y2="100"
-                  stroke="rgba(245, 158, 11, 0.5)"
-                  strokeWidth="1"
-                  strokeDasharray="2,2"
+                {/* SMOOTH BEZIER LINE CURVE */}
+                <path
+                  d={lineD}
+                  fill="none"
+                  stroke="#F59E0B"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   vectorEffect="non-scaling-stroke"
                 />
-              )}
 
-              {/* DATA POINT NODES */}
-              {points.map((pt, i) => (
-                <g key={i}>
-                  <circle
-                    cx={pt.x}
-                    cy={pt.y}
-                    r={hoveredIndex === i ? '4' : '2'}
-                    fill={hoveredIndex === i ? '#F59E0B' : '#111115'}
-                    stroke="#F59E0B"
-                    strokeWidth={hoveredIndex === i ? '2' : '1'}
-                    className="transition-all duration-150"
-                    vectorEffect="non-scaling-stroke"
+                {/* CROSSHAIR VERTICAL & HORIZONTAL DASHED LINES */}
+                {activeHoveredPoint && (
+                  <>
+                    <line
+                      x1={activeHoveredPoint.x}
+                      y1="0"
+                      x2={activeHoveredPoint.x}
+                      y2="100"
+                      stroke="rgba(245, 158, 11, 0.6)"
+                      strokeWidth="1"
+                      strokeDasharray="2,2"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                    <line
+                      x1="0"
+                      y1={activeHoveredPoint.y}
+                      x2="100"
+                      y2={activeHoveredPoint.y}
+                      stroke="rgba(245, 158, 11, 0.4)"
+                      strokeWidth="1"
+                      strokeDasharray="2,2"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </>
+                )}
+
+                {/* DATA POINT NODES */}
+                {points.map((pt, i) => (
+                  <g key={i}>
+                    <circle
+                      cx={pt.x}
+                      cy={pt.y}
+                      r={hoveredIndex === i ? '4' : '2'}
+                      fill={hoveredIndex === i ? '#F59E0B' : '#0A0A0D'}
+                      stroke="#F59E0B"
+                      strokeWidth={hoveredIndex === i ? '2' : '1'}
+                      className="transition-all duration-150"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </g>
+                ))}
+              </svg>
+
+              {/* TRANSPARENT HOVER ZONES */}
+              <div className="absolute inset-0 flex items-stretch z-20">
+                {points.map((_, i) => (
+                  <div
+                    key={i}
+                    onMouseEnter={() => setHoveredIndex(i)}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                    className="flex-1 cursor-pointer"
                   />
-                </g>
-              ))}
-            </svg>
+                ))}
+              </div>
+            </div>
 
-            {/* TRANSPARENT HOVER ZONES */}
-            <div className="absolute inset-0 flex items-stretch z-20">
-              {points.map((_, i) => (
-                <div
-                  key={i}
-                  onMouseEnter={() => setHoveredIndex(i)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                  className="flex-1 cursor-pointer"
-                />
+            {/* TRADINGVIEW RIGHT-SIDE Y-AXIS PRICE SCALE */}
+            <div className="border-l border-white/10 py-6 px-2 flex flex-col justify-between text-[11px] font-mono font-bold text-white/50 bg-[#0E0E14] select-none relative">
+              {yTicks.map((val, idx) => (
+                <div key={idx} className="text-right tracking-tighter">
+                  ₹{val.toLocaleString('en-IN')}
+                </div>
               ))}
+              {activeHovered && (
+                <div
+                  className="absolute right-0 bg-amber-500 text-black font-extrabold text-[10px] px-1.5 py-0.5 rounded-l-sm shadow-md transition-all pointer-events-none -translate-y-1/2"
+                  style={{ top: activeHoveredPoint ? `${activeHoveredPoint.y}%` : '50%' }}
+                >
+                  ₹{activeHovered.amount.toLocaleString('en-IN')}
+                </div>
+              )}
             </div>
           </div>
 
@@ -356,15 +398,31 @@ function RevenueFinancialAnalytics({ stats = {} }) {
         </div>
       )}
 
-      {/* FOOTER ACTIONS */}
-      <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
-        <span className="text-xs font-semibold text-white/50">Showing {chartData.length} period datapoints</span>
-        <button
-          onClick={exportCsv}
-          className="bg-[#1F1F28] hover:bg-amber-500 hover:text-black text-amber-400 font-extrabold text-xs px-4 py-2 rounded-xl border border-white/10 flex items-center gap-1.5 transition-all shadow-md"
-        >
-          <Download size={14} /> Export CSV Report
-        </button>
+      {/* TRADINGVIEW BOTTOM TIMEFRAME PILLS */}
+      <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+          {[
+            { id: 'daily', label: '7 Days' },
+            { id: 'weekly', label: '12 Weeks' },
+            { id: 'monthly', label: '12 Months' },
+            { id: 'yearly', label: 'Yearly' },
+            { id: 'custom', label: 'Custom Date' },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => { setTimeframe(t.id); setHoveredIndex(null); }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                timeframe === t.id
+                  ? 'bg-[#1F1F2A] text-amber-400 border border-amber-500/40 shadow-md'
+                  : 'text-white/50 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <span className="text-xs font-semibold text-white/40">{chartData.length} Datapoints Loaded</span>
       </div>
     </div>
   )
