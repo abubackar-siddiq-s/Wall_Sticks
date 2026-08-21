@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   TrendingUp,
+  TrendingDown,
   ShoppingBag,
   Clock3,
   CheckCircle2,
@@ -11,76 +12,278 @@ import {
   Package,
   Sparkles,
   ExternalLink,
-  ShieldCheck,
+  Download,
+  Calendar,
+  DollarSign,
+  BarChart2,
+  Award,
 } from 'lucide-react'
 import { imgSrc } from '../../lib/imageUrl'
 import AdminLayout from '../../components/AdminLayout'
 import api from '../../lib/api'
 
-// Interactive Revenue Bar Chart
-function RevenueChart({ data = [] }) {
+// STOCK MARKET GRADE REVENUE ANALYTICS SUITE
+function StockRevenueAnalytics({ stats = {} }) {
+  const [timeframe, setTimeframe] = useState('weekly')
   const [hoveredIndex, setHoveredIndex] = useState(null)
-  const max = Math.max(...data.map((d) => d.amount), 0)
 
-  if (!data || data.length === 0 || max === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-48 border border-dashed border-black/10 rounded-xl p-4 text-center">
-        <TrendingUp size={24} className="text-black/25 mb-2" />
-        <p className="text-xs font-semibold text-black/50">No verified sales revenue recorded yet</p>
-        <p className="text-[11px] text-black/35 mt-0.5">Real sales breakdown will display here as customer orders are verified.</p>
-      </div>
-    )
+  // Custom Date Range State
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date()
+    d.setDate(d.getDate() - 30)
+    return d.toISOString().split('T')[0]
+  })
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0])
+
+  // Active chart data determination
+  const chartData = useMemo(() => {
+    if (timeframe === 'daily') return stats.dailyData || []
+    if (timeframe === 'weekly') return stats.weeklyData || []
+    if (timeframe === 'monthly') return stats.monthlyData || []
+    if (timeframe === 'yearly') return stats.yearlyData || []
+
+    if (timeframe === 'custom') {
+      const orders = stats.allVerifiedOrders || []
+      const start = new Date(startDate)
+      start.setHours(0, 0, 0, 0)
+      const end = new Date(endDate)
+      end.setHours(23, 59, 59, 999)
+
+      const dateMap = {}
+      const cur = new Date(start)
+      while (cur <= end) {
+        const key = cur.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+        dateMap[key] = { label: key, subLabel: cur.toLocaleDateString('en-IN', { year: '2-digit' }), amount: 0, ordersCount: 0 }
+        cur.setDate(cur.getDate() + 1)
+      }
+
+      orders.forEach((o) => {
+        const oDate = new Date(o.date)
+        if (oDate >= start && oDate <= end) {
+          const key = oDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+          if (dateMap[key]) {
+            dateMap[key].amount += o.total || 0
+            dateMap[key].ordersCount += 1
+          }
+        }
+      })
+
+      return Object.values(dateMap)
+    }
+
+    return stats.weeklyData || []
+  }, [timeframe, stats, startDate, endDate])
+
+  // Summary Metrics
+  const totalRevenue = useMemo(() => chartData.reduce((sum, d) => sum + (d.amount || 0), 0), [chartData])
+  const totalOrdersCount = useMemo(() => chartData.reduce((sum, d) => sum + (d.ordersCount || 0), 0), [chartData])
+  const aov = useMemo(() => (totalOrdersCount > 0 ? Math.round(totalRevenue / totalOrdersCount) : 0), [totalRevenue, totalOrdersCount])
+
+  const maxAmount = useMemo(() => Math.max(...chartData.map((d) => d.amount || 0), 0), [chartData])
+  const peakItem = useMemo(() => chartData.find((d) => (d.amount || 0) === maxAmount && maxAmount > 0), [chartData, maxAmount])
+
+  // Growth Trend (Second half vs First half of active range)
+  const growthTrend = useMemo(() => {
+    if (chartData.length < 2) return 0
+    const mid = Math.floor(chartData.length / 2)
+    const firstHalf = chartData.slice(0, mid).reduce((sum, d) => sum + (d.amount || 0), 0)
+    const secondHalf = chartData.slice(mid).reduce((sum, d) => sum + (d.amount || 0), 0)
+
+    if (firstHalf === 0) return secondHalf > 0 ? 100 : 0
+    return Math.round(((secondHalf - firstHalf) / firstHalf) * 100)
+  }, [chartData])
+
+  // Export CSV Report
+  const exportCsv = () => {
+    if (!chartData || chartData.length === 0) return
+    let csv = 'Timeframe / Date,Sub-Label,Gross Revenue (INR),Orders Count,Average Order Value (INR)\n'
+    chartData.forEach((d) => {
+      const itemAov = d.ordersCount > 0 ? Math.round(d.amount / d.ordersCount) : 0
+      csv += `"${d.label || d.week}","${d.subLabel || ''}",${d.amount || 0},${d.ordersCount || 0},${itemAov}\n`
+    })
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `WallSticks_Revenue_Report_${timeframe}_${Date.now()}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between text-xs text-black/50 font-semibold">
-        <span>Weekly Revenue Growth</span>
-        <span className="text-brand-gold bg-brand-yellow/15 px-2.5 py-1 rounded-full flex items-center gap-1">
-          <TrendingUp size={13} /> Peak: ₹{max.toLocaleString('en-IN')}
-        </span>
-      </div>
-
-      <div className="flex items-end gap-2.5 h-48 pt-6 pb-2 px-2 relative border-b border-black/10">
-        {data.map((item, i) => {
-          const heightPercent = max > 0 ? (item.amount / max) * 100 : 0
-          const isHovered = hoveredIndex === i
-          const isPeak = max > 0 && item.amount === max
-
-          return (
-            <div
-              key={item.week}
-              onMouseEnter={() => setHoveredIndex(i)}
-              onMouseLeave={() => setHoveredIndex(null)}
-              className="flex-1 flex flex-col items-center h-full justify-end relative group cursor-pointer"
-            >
-              {/* HOVER TOOLTIP */}
-              {isHovered && (
-                <div className="absolute -top-10 bg-brand-black text-brand-yellow font-bold text-[11px] px-2.5 py-1 rounded-lg shadow-lg whitespace-nowrap z-20 animate-fade-in">
-                  ₹{item.amount.toLocaleString('en-IN')}
-                </div>
-              )}
-
-              {/* BAR */}
-              <div
-                className={`w-full rounded-t-lg transition-all duration-300 ${
-                  isPeak
-                    ? 'bg-gradient-to-t from-brand-black to-brand-gold shadow-md'
-                    : isHovered
-                    ? 'bg-brand-black'
-                    : 'bg-brand-yellow/30 hover:bg-brand-yellow/60'
-                }`}
-                style={{ height: `${heightPercent}%` }}
-              />
+    <div className="bg-white rounded-3xl p-6 shadow-soft border border-black/5 flex flex-col justify-between">
+      {/* TIMEFRAME HEADER & CONTROLS */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-brand-yellow/20 flex items-center justify-center text-brand-gold">
+              <BarChart2 size={18} />
             </div>
-          )
-        })}
+            <h3 className="font-extrabold text-lg text-brand-black">Stock Revenue Analytics</h3>
+          </div>
+          <p className="text-xs text-black/45 mt-0.5">Real-time financial performance, volume & growth analytics</p>
+        </div>
+
+        {/* TIMEFRAME SELECTOR TABS */}
+        <div className="flex flex-wrap items-center gap-1.5 bg-brand-smoke/80 p-1.5 rounded-2xl border border-black/5">
+          {[
+            { id: 'daily', label: '7D Daily' },
+            { id: 'weekly', label: '12W Weekly' },
+            { id: 'monthly', label: '12M Monthly' },
+            { id: 'yearly', label: 'Yearly' },
+            { id: 'custom', label: 'Custom Date' },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTimeframe(t.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                timeframe === t.id
+                  ? 'bg-brand-black text-brand-yellow shadow-md'
+                  : 'text-black/60 hover:text-black hover:bg-black/5'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="flex justify-between text-[11px] font-bold text-black/45 px-1">
-        {data.map((d) => (
-          <span key={d.week}>{d.week}</span>
-        ))}
+      {/* CUSTOM DATE RANGE PICKER (WHEN CUSTOM IS SELECTED) */}
+      {timeframe === 'custom' && (
+        <div className="flex flex-wrap items-center gap-3 bg-brand-smoke/50 p-3 rounded-2xl border border-black/5 mb-6 animate-fade-in text-xs font-semibold">
+          <Calendar size={15} className="text-brand-gold" />
+          <div className="flex items-center gap-2">
+            <span className="text-black/50">From:</span>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="px-3 py-1.5 rounded-xl bg-white border border-black/10 text-brand-black outline-none focus:border-brand-black font-bold"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-black/50">To:</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="px-3 py-1.5 rounded-xl bg-white border border-black/10 text-brand-black outline-none focus:border-brand-black font-bold"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* METRICS HUD DISPLAY */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 p-4 rounded-2xl bg-brand-smoke/40 border border-black/5">
+        <div>
+          <span className="text-[11px] font-bold text-black/45 uppercase tracking-wider block mb-1">Gross Revenue</span>
+          <span className="text-xl sm:text-2xl font-extrabold text-brand-black">₹{totalRevenue.toLocaleString('en-IN')}</span>
+        </div>
+        <div>
+          <span className="text-[11px] font-bold text-black/45 uppercase tracking-wider block mb-1">Growth Trend</span>
+          <div className="flex items-center gap-1.5">
+            {growthTrend >= 0 ? (
+              <span className="inline-flex items-center gap-0.5 text-xs font-extrabold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-md">
+                <TrendingUp size={13} /> +{growthTrend}%
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-0.5 text-xs font-extrabold text-rose-600 bg-rose-500/10 px-2 py-0.5 rounded-md">
+                <TrendingDown size={13} /> {growthTrend}%
+              </span>
+            )}
+          </div>
+        </div>
+        <div>
+          <span className="text-[11px] font-bold text-black/45 uppercase tracking-wider block mb-1">Avg Order Value</span>
+          <span className="text-xl sm:text-2xl font-extrabold text-brand-black">₹{aov.toLocaleString('en-IN')}</span>
+        </div>
+        <div>
+          <span className="text-[11px] font-bold text-black/45 uppercase tracking-wider block mb-1">Period High</span>
+          <span className="text-xs font-extrabold text-amber-600 bg-amber-500/10 px-2 py-1 rounded-lg inline-flex items-center gap-1">
+            <Award size={13} /> {peakItem ? `${peakItem.label || peakItem.week}: ₹${maxAmount.toLocaleString('en-IN')}` : '₹0'}
+          </span>
+        </div>
+      </div>
+
+      {/* CHART CANVAS */}
+      {chartData.length === 0 || maxAmount === 0 ? (
+        <div className="flex flex-col items-center justify-center h-52 border-2 border-dashed border-black/10 rounded-2xl p-6 text-center">
+          <BarChart2 size={28} className="text-black/25 mb-2" />
+          <p className="text-xs font-bold text-black/60">No sales revenue recorded for selected timeframe</p>
+          <p className="text-[11px] text-black/40 mt-1">Try switching timeframe tabs or adjusting your custom date range.</p>
+        </div>
+      ) : (
+        <div>
+          {/* GRID & BARS CONTAINER */}
+          <div className="relative h-56 pt-8 pb-3 px-2 border-b border-black/10">
+            {/* BACKGROUND GRID LINES */}
+            <div className="absolute inset-x-0 top-0 bottom-6 flex flex-col justify-between pointer-events-none opacity-20">
+              <div className="border-b border-dashed border-black/30 w-full" />
+              <div className="border-b border-dashed border-black/30 w-full" />
+              <div className="border-b border-dashed border-black/30 w-full" />
+            </div>
+
+            <div className="flex items-end gap-2 h-full relative z-10">
+              {chartData.map((item, i) => {
+                const heightPercent = maxAmount > 0 ? (item.amount / maxAmount) * 100 : 0
+                const isHovered = hoveredIndex === i
+                const isPeak = maxAmount > 0 && item.amount === maxAmount
+
+                return (
+                  <div
+                    key={i}
+                    onMouseEnter={() => setHoveredIndex(i)}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                    className="flex-1 flex flex-col items-center h-full justify-end relative group cursor-pointer"
+                  >
+                    {/* HOVER TOOLTIP CARD */}
+                    {isHovered && (
+                      <div className="absolute -top-16 bg-brand-black text-white font-bold text-[11px] p-2 rounded-xl shadow-2xl z-30 whitespace-nowrap border border-white/10 animate-fade-in flex flex-col items-center gap-0.5">
+                        <span className="text-brand-yellow font-extrabold text-xs">₹{item.amount.toLocaleString('en-IN')}</span>
+                        <span className="text-white/70 text-[10px]">{item.ordersCount || 0} Orders · AOV ₹{item.ordersCount > 0 ? Math.round(item.amount / item.ordersCount) : 0}</span>
+                      </div>
+                    )}
+
+                    {/* BAR VISUAL */}
+                    <div
+                      className={`w-full rounded-t-xl transition-all duration-300 ${
+                        isPeak
+                          ? 'bg-gradient-to-t from-brand-black via-amber-700 to-brand-gold shadow-lg ring-2 ring-brand-gold/40'
+                          : isHovered
+                          ? 'bg-brand-black shadow-md'
+                          : 'bg-brand-yellow/35 hover:bg-brand-yellow/70'
+                      }`}
+                      style={{ height: `${Math.max(heightPercent, 4)}%` }}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* X-AXIS LABELS */}
+          <div className="flex justify-between text-[11px] font-bold text-black/50 px-1 pt-3">
+            {chartData.map((d, i) => (
+              <div key={i} className="text-center flex flex-col items-center">
+                <span>{d.label || d.week}</span>
+                {d.subLabel && <span className="text-[9px] text-black/35 font-normal">{d.subLabel}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* FOOTER ACTIONS */}
+      <div className="mt-6 pt-4 border-t border-black/5 flex items-center justify-between">
+        <span className="text-xs font-semibold text-black/50">Showing {chartData.length} period datapoints</span>
+        <button
+          onClick={exportCsv}
+          className="bg-brand-smoke hover:bg-brand-yellow/30 text-brand-black font-extrabold text-xs px-4 py-2 rounded-xl border border-black/10 flex items-center gap-1.5 transition-all shadow-sm"
+        >
+          <Download size={14} /> Export CSV Report
+        </button>
       </div>
     </div>
   )
@@ -92,7 +295,12 @@ const defaultStats = {
   pendingVerification: 0,
   completedOrders: 0,
   topProducts: [],
-  recentOrders: []
+  recentOrders: [],
+  dailyData: [],
+  weeklyData: [],
+  monthlyData: [],
+  yearlyData: [],
+  allVerifiedOrders: [],
 }
 
 export default function AdminDashboard() {
@@ -114,7 +322,7 @@ export default function AdminDashboard() {
     {
       label: 'Revenue (30 Days)',
       value: `₹${Number(stats.revenue30d || 0).toLocaleString('en-IN')}`,
-      change: '30-day total',
+      change: '30-day verified gross',
       icon: TrendingUp,
       bg: 'bg-amber-500/10 text-amber-600',
     },
@@ -128,7 +336,7 @@ export default function AdminDashboard() {
     {
       label: 'Pending Verification',
       value: stats.pendingVerification || 0,
-      change: 'Needs approval',
+      change: 'Needs payment approval',
       icon: Clock3,
       bg: 'bg-orange-500/10 text-orange-600',
       urgent: (stats.pendingVerification || 0) > 0,
@@ -136,7 +344,7 @@ export default function AdminDashboard() {
     {
       label: 'Completed Orders',
       value: stats.completedOrders || 0,
-      change: 'Fulfillment completed',
+      change: 'Delivered successfully',
       icon: CheckCircle2,
       bg: 'bg-emerald-500/10 text-emerald-600',
     },
@@ -227,19 +435,8 @@ export default function AdminDashboard() {
 
       {/* ANALYTICS CHARTS & TOP POSTERS */}
       <div className="grid lg:grid-cols-[1.6fr_1fr] gap-6 mb-8">
-        {/* REVENUE GRAPH */}
-        <div className="bg-white rounded-2xl p-6 shadow-soft border border-black/5">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="font-extrabold text-base text-brand-black">Revenue Analytics</h3>
-              <p className="text-xs text-black/45">Weekly gross sales breakdown</p>
-            </div>
-            <span className="text-xs font-bold text-black/60 bg-brand-smoke px-3 py-1.5 rounded-full border border-black/5">
-              12 Weeks
-            </span>
-          </div>
-          <RevenueChart data={stats.weeklyData || []} />
-        </div>
+        {/* STOCK-GRADE REVENUE ANALYTICS */}
+        <StockRevenueAnalytics stats={stats} />
 
         {/* TOP PERFORMING POSTERS */}
         <div className="bg-white rounded-2xl p-6 shadow-soft border border-black/5">
