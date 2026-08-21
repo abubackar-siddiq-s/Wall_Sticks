@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Truck, Store, ShoppingBag, MapPin, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
