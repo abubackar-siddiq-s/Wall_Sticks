@@ -18,10 +18,10 @@ export default function ProductCard({ product, onQuickView, showPrice = false })
       transition={{ type: 'spring', stiffness: 300, damping: 22 }}
       className="group/card relative bg-white rounded-xl2 overflow-hidden shadow-soft hover:shadow-card transition-all border border-black/5 hover:border-black/15"
     >
-      <Link 
-        to={`/product/${product._id}`} 
+      <Link
+        to={`/product/${product._id}`}
         className="block relative w-full overflow-hidden aspect-[3/4]"
-        style={{ 
+        style={{
           aspectRatio: '3 / 4',
           backgroundImage: "url('/transparent-background.avif')",
           backgroundSize: 'cover',
@@ -45,9 +45,8 @@ export default function ProductCard({ product, onQuickView, showPrice = false })
         <button
           onClick={(e) => { e.preventDefault(); toggleWishlist(product) }}
           aria-label="Toggle wishlist"
-          className={`absolute top-3 right-3 z-10 w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
-            wishlisted ? 'bg-brand-yellow text-brand-black' : 'bg-white/90 text-black hover:bg-white'
-          }`}
+          className={`absolute top-3 right-3 z-10 w-9 h-9 rounded-full flex items-center justify-center transition-colors ${wishlisted ? 'bg-brand-yellow text-brand-black' : 'bg-white/90 text-black hover:bg-white'
+            }`}
         >
           <Heart size={16} fill={wishlisted ? '#0A0A0A' : 'none'} />
         </button>

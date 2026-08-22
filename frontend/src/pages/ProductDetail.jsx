@@ -221,20 +221,22 @@ export default function ProductDetail() {
         {/* MAIN POSTER IMAGE & THUMBNAILS (AMAZON STYLE GALLERY) */}
         <div className="flex flex-col gap-4">
           <div 
-            className="relative rounded-3xl overflow-hidden shadow-card border border-black/5 group w-full transition-all duration-300 flex items-center justify-center"
+            className="w-full rounded-3xl flex flex-col items-center justify-center overflow-hidden transition-all relative border border-black/5 shadow-card group"
             style={{ 
               backgroundColor: selectedBorder === 'White Border' ? '#FFFFFF' : selectedBorder === 'Custom Border' ? customBorderColor : 'transparent',
               backgroundImage: selectedBorder === 'No Border' ? "url('/transparent-background.avif')" : undefined,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              padding: selectedBorder === 'No Border' ? '0px' : '16px',
+              padding: selectedBorder !== 'No Border' ? '16px' : '0px',
             }}
           >
             <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
               <img
                 {...responsiveImgProps(imagesList[selectedImgIndex] || product.images?.[0], { sizes: '(max-width: 768px) 100vw, 50vw' })}
                 alt={product.name}
-                className="w-full h-auto max-h-[75vh] object-cover transition-all duration-300 rounded-2xl"
+                className={`w-full h-auto object-cover transition-all duration-300 ${
+                  selectedBorder !== 'No Border' ? 'rounded-2xl' : 'rounded-3xl'
+                }`}
               />
             </div>
             {imagesList.length > 1 && (
