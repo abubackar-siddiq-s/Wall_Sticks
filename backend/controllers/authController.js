@@ -18,7 +18,7 @@ export const adminLogin = asyncHandler(async (req, res) => {
 
   const isPasswordValid = admin
     ? (await admin.comparePassword(password)) ||
-      (Boolean(envAdminPassword) && password === envAdminPassword)
+    (Boolean(envAdminPassword) && password === envAdminPassword)
     : false
 
   if (!admin || !isPasswordValid) {

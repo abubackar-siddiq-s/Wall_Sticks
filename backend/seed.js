@@ -1,7 +1,7 @@
 // Seeds starter admin account, categories, store settings, products, and reviews into MongoDB.
 // Run with: npm run seed
 import dns from 'node:dns'
-dns.setServers(['1.1.1.1', '8.8.8.8'])
+try { dns.setServers(['1.1.1.1', '1.0.0.1', '8.8.8.8']) } catch { }
 
 import dotenv from 'dotenv'
 import connectDB from './config/db.js'

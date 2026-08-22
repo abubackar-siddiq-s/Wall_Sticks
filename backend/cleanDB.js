@@ -3,7 +3,7 @@
 // Run with --with-products to also delete test products: npm run clean:db -- --with-products
 
 import dns from 'node:dns'
-dns.setServers(['1.1.1.1', '8.8.8.8'])
+try { dns.setServers(['1.1.1.1', '1.0.0.1', '8.8.8.8']) } catch { }
 
 import dotenv from 'dotenv'
 import connectDB from './config/db.js'

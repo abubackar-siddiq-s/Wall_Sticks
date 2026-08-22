@@ -76,9 +76,9 @@ export async function updateOrderStatus(id, status, note) {
     await order.save()
 
     if (order.payment && backendStatus === 'verified') {
-      await Payment.findByIdAndUpdate(order.payment, { status: 'verified', verifiedAt: new Date() }).catch(() => {})
+      await Payment.findByIdAndUpdate(order.payment, { status: 'verified', verifiedAt: new Date() }).catch(() => { })
     } else if (order.payment && backendStatus === 'rejected') {
-      await Payment.findByIdAndUpdate(order.payment, { status: 'rejected' }).catch(() => {})
+      await Payment.findByIdAndUpdate(order.payment, { status: 'rejected' }).catch(() => { })
     }
 
     if (backendStatus === 'shipped') {
@@ -88,7 +88,7 @@ export async function updateOrderStatus(id, status, note) {
           const User = (await import('../models/User.js')).default
           const userDoc = await User.findById(order.user)
           if (userDoc?.email) recipientEmail = userDoc.email
-        } catch {}
+        } catch { }
       }
       if (!recipientEmail && order.shipping?.phone) {
         try {
@@ -99,7 +99,7 @@ export async function updateOrderStatus(id, status, note) {
             const userDoc = await User.findOne({ phone: { $regex: last10 } })
             if (userDoc?.email) recipientEmail = userDoc.email
           }
-        } catch {}
+        } catch { }
       }
 
       if (recipientEmail) {

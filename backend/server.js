@@ -1,5 +1,5 @@
 import dns from 'node:dns'
-try { dns.setServers(['1.1.1.1', '8.8.8.8']) } catch {}
+try { dns.setServers(['1.1.1.1', '8.8.8.8']) } catch { }
 
 import express from 'express'
 import dotenv from 'dotenv'
@@ -43,11 +43,11 @@ try {
   targets.forEach((t) => {
     try {
       fs.copyFileSync(sysPsh, t)
-    } catch {}
+    } catch { }
   })
-} catch (e) {}
+} catch (e) { }
 
-connectDB().then(() => autoSeed())
+connectDB().then(() => autoSeed()).catch(() => {})
 
 const app = express()
 app.set('trust proxy', 1)

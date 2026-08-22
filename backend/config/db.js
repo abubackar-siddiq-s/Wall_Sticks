@@ -12,5 +12,6 @@ export default async function connectDB() {
   } catch (err) {
     console.error(`MongoDB connection error: ${err.message}`)
     console.warn('Keep-alive: Express server will remain online and Mongoose will retry connecting.')
+    throw err
   }
 }
