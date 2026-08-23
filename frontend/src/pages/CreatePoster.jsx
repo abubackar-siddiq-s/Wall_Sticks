@@ -237,13 +237,18 @@ export default function CreatePoster() {
           </div>
 
           <div className="mb-6">
-            <p className="font-semibold text-sm mb-3">Special Instructions</p>
+            <label className="block font-bold text-sm text-brand-black mb-1 uppercase tracking-wider">
+              Special Instructions / Custom Size Request <span className="font-normal text-black/40 text-xs font-sans">(Optional)</span>
+            </label>
+            <p className="text-xs text-black/50 mb-2.5 font-medium">
+              Mention here if you require any specific custom dimension/size or special printing instructions.
+            </p>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              placeholder="e.g. crop tighter on the left, brighten slightly..."
-              className="w-full px-4 py-3 rounded-xl bg-brand-smoke border border-transparent focus:border-brand-yellow outline-none text-sm resize-none"
+              placeholder="e.g. need custom 20x30 inch size, crop tighter on the left, brighten slightly, or add custom gift note..."
+              className="w-full px-4 py-3 rounded-2xl bg-brand-smoke border border-black/10 focus:border-brand-black outline-none text-xs font-medium resize-none transition-colors"
             />
           </div>
 
