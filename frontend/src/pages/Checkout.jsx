@@ -7,6 +7,7 @@ import { useSettings } from '../hooks/useSettings'
 import { useCustomerAuth } from '../context/CustomerAuthContext'
 import { imgSrc } from '../lib/imageUrl'
 import { INDIA_STATES_DISTRICTS } from '../data/indiaLocations'
+import { getItemUnitPrice } from '../lib/priceUtils'
 
 export default function Checkout() {
   const { items = [], subtotal = 0 } = useCart() || {}
@@ -295,6 +296,7 @@ export default function Checkout() {
             {validItems.map((item) => {
               const product = item.product || {}
               const imageSrc = imgSrc(product.images?.[0])
+              const unitPrice = getItemUnitPrice(item, settings?.sizePrices)
 
               return (
                 <div key={item.key} className="flex gap-3 text-sm">
@@ -308,7 +310,7 @@ export default function Checkout() {
                       )}
                     </p>
                   </div>
-                  <p className="font-semibold">₹{(product.price || 0) * item.quantity}</p>
+                  <p className="font-semibold">₹{unitPrice * item.quantity}</p>
                 </div>
               )
             })}

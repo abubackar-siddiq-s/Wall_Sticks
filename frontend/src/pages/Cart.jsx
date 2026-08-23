@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import { useCart } from '../context/CartContext'
 import { useSettings } from '../hooks/useSettings'
 import { imgSrc } from '../lib/imageUrl'
+import { getItemUnitPrice } from '../lib/priceUtils'
 
 export default function Cart() {
   const { items = [], removeFromCart, updateQuantity, subtotal = 0 } = useCart() || {}
@@ -76,7 +77,7 @@ export default function Cart() {
                       </>
                     )}
                   </div>
-                  <p className="font-bold">₹{product.price || item.priceAtAdd || 0}</p>
+                  <p className="font-bold">₹{getItemUnitPrice(item, settings?.sizePrices)}</p>
                 </div>
                 <div className="flex flex-col items-end justify-between">
                   <button

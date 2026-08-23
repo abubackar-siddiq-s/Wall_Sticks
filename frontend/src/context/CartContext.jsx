@@ -3,6 +3,8 @@ import toast from 'react-hot-toast'
 import api from '../lib/api'
 import { getSessionId } from '../lib/session'
 import { useCustomerAuth } from './CustomerAuthContext'
+import { useSettings } from '../hooks/useSettings'
+import { getItemUnitPrice } from '../lib/priceUtils'
 
 const CartContext = createContext(null)
 
@@ -11,7 +13,7 @@ const toServerItem = (i) => ({
   customImage: i.product?.isCustom ? (i.product.customImage || { url: i.product.images?.[0] }) : undefined,
   isCustom: !!i.product?.isCustom,
   size: i.size, finish: i.finish, border: i.border, borderColor: i.borderColor, orientation: i.orientation,
-  quantity: i.quantity, notes: i.notes, priceAtAdd: i.product?.price,
+  quantity: i.quantity, notes: i.notes, priceAtAdd: i.priceAtAdd ?? i.product?.price,
 })
 
 const fromServerItem = (i) => ({
@@ -20,10 +22,12 @@ const fromServerItem = (i) => ({
     ? { _id: `custom-${i.customImage?.url}`, name: 'Custom Poster', isCustom: true, price: i.priceAtAdd, images: [i.customImage?.url], customImage: i.customImage }
     : i.product,
   quantity: i.quantity, size: i.size, finish: i.finish, border: i.border, borderColor: i.borderColor, orientation: i.orientation, notes: i.notes,
+  priceAtAdd: i.priceAtAdd,
 })
 
 export function CartProvider({ children }) {
   const { customer } = useCustomerAuth()
+  const { settings } = useSettings()
   
   const getStorageKey = () => (customer?.phone ? `pw_cart_${customer.phone.replace(/\D/g, '')}` : `pw_cart_guest_${getSessionId()}`)
   const getActiveSessionId = () => (customer?.phone ? customer.phone.replace(/\D/g, '') : getSessionId())
@@ -71,7 +75,8 @@ export function CartProvider({ children }) {
     const border = options.border || 'No Border'
     const borderColor = options.borderColor || ''
     const quantity = options.quantity || 1
-    const finalOptions = { ...options, size, finish, border, borderColor, quantity }
+    const computedPrice = getItemUnitPrice({ product, size }, settings?.sizePrices)
+    const finalOptions = { ...options, size, finish, border, borderColor, quantity, priceAtAdd: computedPrice }
 
     setItems((prev) => {
       const key = `${product._id}-${size}-${finish}-${border}-${borderColor}`
@@ -79,7 +84,7 @@ export function CartProvider({ children }) {
       if (existing) {
         return prev.map((i) => i.key === key ? { ...i, quantity: i.quantity + quantity } : i)
       }
-      return [...prev, { key, product, ...finalOptions }]
+      return [...prev, { key, product: { ...product, price: computedPrice }, ...finalOptions }]
     })
     toast.success(`Added "${product.name}" to cart`)
   }
@@ -99,10 +104,10 @@ export function CartProvider({ children }) {
     api.delete(`/cart/${sessionId}`).catch(() => {})
   }
 
-  const subtotal = items.reduce((sum, i) => sum + ((i.product?.price || 0) * i.quantity), 0)
+  const subtotal = items.reduce((sum, i) => sum + (getItemUnitPrice(i, settings?.sizePrices) * i.quantity), 0)
 
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, subtotal }}>
+    <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, subtotal, getItemUnitPrice: (item) => getItemUnitPrice(item, settings?.sizePrices) }}>
       {children}
     </CartContext.Provider>
   )

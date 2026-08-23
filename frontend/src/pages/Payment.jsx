@@ -7,6 +7,7 @@ import { useSettings } from '../hooks/useSettings'
 import { useCustomerAuth } from '../context/CustomerAuthContext'
 import api from '../lib/api'
 import { imgSrc } from '../lib/imageUrl'
+import { getItemUnitPrice } from '../lib/priceUtils'
 
 export default function Payment() {
   const { items = [], subtotal = 0, clearCart } = useCart() || {}
@@ -72,7 +73,7 @@ export default function Payment() {
             borderColor: i.borderColor,
             orientation: i.orientation,
             quantity: i.quantity,
-            price: i.product?.price || i.priceAtAdd || 0,
+            price: getItemUnitPrice(i, settings?.sizePrices),
             notes: i.notes,
             customImage: i.product?.isCustom ? (i.product.customImage || { url: imgUrl }) : undefined,
           }
