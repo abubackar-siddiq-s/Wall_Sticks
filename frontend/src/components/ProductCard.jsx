@@ -6,7 +6,7 @@ import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
 import { responsiveImgProps } from '../lib/imageUrl'
 
-export default function ProductCard({ product, onQuickView, showPrice = false }) {
+export default function ProductCard({ product, onQuickView, showPrice = true }) {
   const { toggleWishlist, isWishlisted } = useWishlist()
   const { addToCart } = useCart()
   const wishlisted = isWishlisted(product._id)

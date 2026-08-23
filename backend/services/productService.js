@@ -36,12 +36,31 @@ export async function getProducts(queryParams) {
 }
 
 export async function getTrendingProducts() {
-  const trendingDocs = await Trending.find().populate('product').sort('order')
-  return trendingDocs.map((t) => t.product).filter((p) => p && p.active)
+  const trendingDocs = await Trending.find().populate({ path: 'product', populate: { path: 'category', select: 'name slug' } }).sort('order')
+  const configuredTrending = trendingDocs
+    .map((t) => t.product)
+    .filter((p) => p && p.active !== false)
+
+  if (configuredTrending.length > 0) {
+    return configuredTrending
+  }
+
+  // Fallback 1: Products explicitly flagged with trending = true
+  const flaggedTrending = await Product.find({ trending: true, active: { $ne: false } }).populate('category', 'name slug')
+  if (flaggedTrending.length > 0) {
+    return flaggedTrending
+  }
+
+  // Fallback 2: Recent active products
+  return await Product.find({ active: { $ne: false } }).populate('category', 'name slug').sort('-createdAt').limit(8)
 }
 
 export async function getBestSellerProducts() {
-  return await Product.find({ bestSeller: true, active: true })
+  const flagged = await Product.find({ bestSeller: true, active: { $ne: false } }).populate('category', 'name slug')
+  if (flagged.length > 0) {
+    return flagged
+  }
+  return await Product.find({ active: { $ne: false } }).populate('category', 'name slug').sort('-reviewsCount -rating').limit(8)
 }
 
 export async function getProductById(id) {

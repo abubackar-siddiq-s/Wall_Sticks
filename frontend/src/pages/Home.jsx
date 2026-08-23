@@ -49,9 +49,21 @@ export default function Home() {
   const { data: featuredReviews } = useApiData('/reviews/featured', [])
   const reviews = Array.isArray(featuredReviews) ? featuredReviews : []
   const { lite } = useDeviceCapability()
-  const bestSellers = (bestSellersData && bestSellersData.length > 0)
+  const trendingList = (trending && trending.length > 0)
+    ? trending
+    : (products && products.length > 0)
+      ? products.filter((p) => p.trending).length > 0
+        ? products.filter((p) => p.trending)
+        : products.slice(0, 8)
+      : []
+
+  const bestSellersList = (bestSellersData && bestSellersData.length > 0)
     ? bestSellersData
-    : products.filter((p) => p.bestSeller)
+    : (products && products.length > 0)
+      ? products.filter((p) => p.bestSeller).length > 0
+        ? products.filter((p) => p.bestSeller)
+        : products.slice(0, 8)
+      : []
 
   return (
     <div>
@@ -97,12 +109,12 @@ export default function Home() {
           <p className="text-brand-gold font-bold text-xs tracking-widest uppercase mb-2">Admin's picks</p>
           <h2 className="text-3xl md:text-4xl font-extrabold">Trending right now</h2>
         </div>
-        {trendingLoading ? (
+        {(trendingLoading && productsLoading) ? (
           <ProductGridSkeleton count={4} />
-        ) : trending.length === 0 ? (
+        ) : trendingList.length === 0 ? (
           <p className="text-black/40 text-sm font-medium italic bg-brand-smoke p-8 rounded-xl2 text-center">New trending posters coming soon.</p>
         ) : (
-          <ProductSlider products={trending} onQuickView={setQuickView} autoPlay={true} autoPlayInterval={3500} />
+          <ProductSlider products={trendingList} onQuickView={setQuickView} autoPlay={true} autoPlayInterval={3500} />
         )}
       </section>
 
@@ -134,10 +146,10 @@ export default function Home() {
         </div>
         {(productsLoading || bestSellersLoading) ? (
           <ProductGridSkeleton count={4} />
-        ) : bestSellers.length === 0 ? (
+        ) : bestSellersList.length === 0 ? (
           <p className="text-black/40 text-sm font-medium italic bg-brand-smoke p-8 rounded-xl2 text-center">Our best-selling collection will appear here soon.</p>
         ) : (
-          <ProductSlider products={bestSellers} onQuickView={setQuickView} autoPlay={true} autoPlayInterval={3500} />
+          <ProductSlider products={bestSellersList} onQuickView={setQuickView} autoPlay={true} autoPlayInterval={3500} />
         )}
       </section>
 
