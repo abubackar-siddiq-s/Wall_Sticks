@@ -16,6 +16,7 @@ router.get('/', [
 
 router.get('/trending', productController.getTrendingProducts)
 router.get('/bestsellers', productController.getBestSellerProducts)
+router.put('/reorder', protectAdmin, productController.reorderProducts)
 router.get('/:id', productController.getProductById)
 router.get('/:id/recommended', productController.getRecommendedProducts)
 

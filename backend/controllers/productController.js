@@ -89,3 +89,8 @@ export const deleteProduct = asyncHandler(async (req, res) => {
   const result = await productService.deleteProduct(req.params.id)
   res.json(result)
 })
+
+export const reorderProducts = asyncHandler(async (req, res) => {
+  const result = await productService.reorderProducts(req.body.items || [])
+  res.json(result)
+})

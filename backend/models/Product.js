@@ -18,6 +18,7 @@ const productSchema = new mongoose.Schema({
   bestSeller: { type: Boolean, default: false },
   trending: { type: Boolean, default: false },
   trendingOrder: { type: Number, default: 0 },
+  displayOrder: { type: Number, default: 0 },
   active: { type: Boolean, default: true },
 }, { timestamps: true })
 

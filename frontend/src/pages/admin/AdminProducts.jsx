@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, Star, X, Sparkles, Check, Upload, Image as ImageIcon, ChevronUp, ChevronDown } from 'lucide-react'
+import { Plus, Pencil, Trash2, Star, X, Sparkles, Check, Upload, Image as ImageIcon, ChevronUp, ChevronDown, GripVertical } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AdminLayout from '../../components/AdminLayout'
 import api from '../../lib/api'
@@ -365,6 +365,8 @@ function ProductModal({ product, onClose, onSave }) {
 export default function AdminProducts() {
   const [list, setList] = useState([])
   const [modal, setModal] = useState(null)
+  const [dragIndex, setDragIndex] = useState(null)
+  const [savingOrder, setSavingOrder] = useState(false)
 
   const fetchProducts = () => {
     api.get('/products')
@@ -380,6 +382,35 @@ export default function AdminProducts() {
   useEffect(() => {
     fetchProducts()
   }, [])
+
+  const onDragStart = (i) => () => setDragIndex(i)
+  const onDragOver = (i) => (e) => {
+    e.preventDefault()
+    if (dragIndex === null || dragIndex === i) return
+    setList((prev) => {
+      const next = [...prev]
+      const [moved] = next.splice(dragIndex, 1)
+      next.splice(i, 0, moved)
+      return next
+    })
+    setDragIndex(i)
+  }
+  const onDragEnd = () => setDragIndex(null)
+
+  const saveOrder = async () => {
+    if (list.length === 0) return
+    setSavingOrder(true)
+    try {
+      await api.put('/products/reorder', {
+        items: list.map((p, order) => ({ id: p._id, order })),
+      })
+      toast.success('Catalog poster order saved to database!')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not save poster order')
+    } finally {
+      setSavingOrder(false)
+    }
+  }
 
   const save = async (formData, id) => {
     try {
@@ -415,18 +446,28 @@ export default function AdminProducts() {
   return (
     <AdminLayout title="Poster Catalog">
       {/* HEADER & ACTION */}
-      <div className="flex items-center justify-between gap-4 mb-6 bg-white p-5 rounded-2xl shadow-soft border border-black/5">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6 bg-white p-5 rounded-2xl shadow-soft border border-black/5">
         <div>
           <h2 className="font-extrabold text-lg text-brand-black">Posters ({list.length})</h2>
-          <p className="text-xs text-black/50">Manage poster artwork catalog</p>
+          <p className="text-xs text-black/50">Drag rows to reorder catalog display, then click Save Order</p>
         </div>
 
-        <button
-          onClick={() => setModal('new')}
-          className="bg-brand-black text-brand-yellow font-extrabold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 hover:shadow-md transition-all shrink-0"
-        >
-          <Plus size={16} /> Add New Poster
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setModal('new')}
+            className="border-2 border-black/10 hover:border-brand-black text-brand-black font-extrabold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-colors shrink-0"
+          >
+            <Plus size={16} /> Add New Poster
+          </button>
+
+          <button
+            onClick={saveOrder}
+            disabled={savingOrder}
+            className="bg-brand-black text-brand-yellow font-extrabold px-5 py-2.5 rounded-xl text-xs hover:shadow-md transition-all flex items-center gap-1.5 shrink-0 disabled:opacity-50"
+          >
+            <Sparkles size={14} /> {savingOrder ? 'Saving...' : 'Save Order'}
+          </button>
+        </div>
       </div>
 
       {/* POSTERS TABLE */}
@@ -435,6 +476,7 @@ export default function AdminProducts() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-black/10 text-[11px] uppercase tracking-wider font-extrabold text-black/45 bg-brand-smoke/40">
+                <th className="py-4 px-4 w-12 text-center">#</th>
                 <th className="py-4 px-4">Poster</th>
                 <th className="py-4 px-4">Rating</th>
                 <th className="py-4 px-4">Badges</th>
@@ -442,8 +484,25 @@ export default function AdminProducts() {
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5 text-xs font-medium">
-              {list.map((p) => (
-                <tr key={p._id} className="hover:bg-brand-smoke/40 transition-colors">
+              {list.map((p, idx) => (
+                <tr
+                  key={p._id}
+                  draggable
+                  onDragStart={onDragStart(idx)}
+                  onDragOver={onDragOver(idx)}
+                  onDragEnd={onDragEnd}
+                  className={`hover:bg-brand-smoke/40 transition-colors cursor-grab active:cursor-grabbing ${
+                    dragIndex === idx ? 'opacity-40 bg-brand-smoke' : ''
+                  }`}
+                >
+                  {/* DRAG HANDLE & NUMBER */}
+                  <td className="py-3.5 px-4 text-center">
+                    <div className="flex items-center justify-center gap-1.5 text-black/30">
+                      <GripVertical size={16} className="shrink-0" />
+                      <span className="font-extrabold text-[11px] text-black/60">{idx + 1}</span>
+                    </div>
+                  </td>
+
                   {/* POSTER (IMAGE + NAME) */}
                   <td className="py-3.5 px-4 flex items-center gap-3.5">
                     <img

@@ -19,7 +19,7 @@ export async function getProducts(queryParams) {
   }
 
   const sortMap = {
-    newest: '-createdAt',
+    newest: 'displayOrder -createdAt',
     popular: '-reviewsCount',
     rating: '-rating',
     'price-low': 'price',
@@ -27,12 +27,25 @@ export async function getProducts(queryParams) {
 
   const products = await Product.find(filter)
     .populate('category', 'name slug')
-    .sort(sortMap[sort] || '-createdAt')
+    .sort(sortMap[sort] || 'displayOrder -createdAt')
     .skip((page - 1) * limit)
     .limit(Number(limit))
 
   const total = await Product.countDocuments(filter)
   return { products, total, page: Number(page), pages: Math.ceil(total / limit) }
+}
+
+export async function reorderProducts(items = []) {
+  const operations = items.map(({ id, order }) => ({
+    updateOne: {
+      filter: { _id: id },
+      update: { $set: { displayOrder: Number(order) || 0 } },
+    },
+  }))
+  if (operations.length > 0) {
+    await Product.bulkWrite(operations)
+  }
+  return { message: 'Products reordered successfully' }
 }
 
 export async function getTrendingProducts() {
