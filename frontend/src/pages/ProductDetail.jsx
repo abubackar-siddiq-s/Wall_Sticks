@@ -134,14 +134,15 @@ export default function ProductDetail() {
     ? settings.sizeDescriptions
     : {}
 
-  const availableSizes = Array.from(new Set([
-    ...Object.keys(activeSizePrices),
-    ...(product.sizes || []),
-  ])).filter((s) => activeSizePrices[s] !== undefined || product.sizes?.includes(s))
+  const availableSizes = (settings?.sizePrices && Object.keys(settings.sizePrices).length > 0)
+    ? Object.keys(settings.sizePrices)
+    : (Array.isArray(product.sizes) && product.sizes.length > 0)
+      ? product.sizes
+      : []
 
   useEffect(() => {
     if (availableSizes.length > 0 && (!selectedSize || !availableSizes.includes(selectedSize))) {
-      setSelectedSize(availableSizes.includes('A3') ? 'A3' : availableSizes[0])
+      setSelectedSize(availableSizes[0])
     }
   }, [availableSizes, selectedSize])
 

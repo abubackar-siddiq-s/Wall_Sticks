@@ -66,7 +66,7 @@ export function CartProvider({ children }) {
   }, [items, customer?.phone])
 
   const addToCart = (product, options = {}) => {
-    const size = options.size || product.sizes?.[2] || 'A3'
+    const size = options.size || product.sizes?.[0] || 'A4'
     const finish = options.finish || product.finishes?.[0] || 'Premium Matte'
     const border = options.border || 'No Border'
     const borderColor = options.borderColor || ''

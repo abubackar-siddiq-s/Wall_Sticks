@@ -18,8 +18,15 @@ export default function CreatePoster() {
   const { settings, loading: settingsLoading } = useSettings()
   const availableSizes = settings?.sizePrices && typeof settings.sizePrices === 'object' ? Object.keys(settings.sizePrices) : []
 
-  const [selectedSize, setSelectedSize] = useState('A3')
-  const size = availableSizes.includes(selectedSize) ? selectedSize : (availableSizes[0] || 'A3')
+  const [selectedSize, setSelectedSize] = useState('')
+
+  useEffect(() => {
+    if (availableSizes.length > 0 && (!selectedSize || !availableSizes.includes(selectedSize))) {
+      setSelectedSize(availableSizes[0])
+    }
+  }, [availableSizes, selectedSize])
+
+  const size = availableSizes.includes(selectedSize) ? selectedSize : (availableSizes[0] || '')
 
   // Border Selection State
   const [selectedBorder, setSelectedBorder] = useState('No Border')
