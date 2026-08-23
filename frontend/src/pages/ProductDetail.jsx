@@ -75,11 +75,10 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1)
   const [isLandscape, setIsLandscape] = useState(false)
 
-  // Border Selection State & Notes
+  // Border Selection State
   const [selectedBorder, setSelectedBorder] = useState('No Border')
   const [customBorderColor, setCustomBorderColor] = useState('#C1272D')
   const [showColorPicker, setShowColorPicker] = useState(false)
-  const [notes, setNotes] = useState('')
 
   useEffect(() => {
     setIsLandscape(false)
@@ -170,7 +169,7 @@ export default function ProductDetail() {
 
     addToCart(
       { ...product, price: currentPrice },
-      { size: selectedSize, quantity, border: borderLabel, borderColor: colorHex, notes: notes.trim() }
+      { size: selectedSize, quantity, border: borderLabel, borderColor: colorHex }
     )
   }
 
@@ -433,19 +432,7 @@ export default function ProductDetail() {
             )}
           </div>
 
-          {/* SPECIAL INSTRUCTIONS / NOTES */}
-          <div className="mb-8">
-            <label className="block font-bold text-sm text-black/80 mb-2 uppercase tracking-wider">
-              Special Instructions / Notes <span className="font-normal text-black/40 text-xs font-sans">(Optional)</span>
-            </label>
-            <textarea
-              rows={2}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. crop tightly on the left, brighten slightly, or add custom gift note..."
-              className="w-full px-4 py-3 rounded-2xl bg-brand-smoke border border-black/10 focus:border-brand-black outline-none text-xs font-medium resize-none transition-colors"
-            />
-          </div>
+
 
           {/* QUANTITY & WISHLIST BUTTON */}
           <div className="flex items-center gap-4 mb-6">
