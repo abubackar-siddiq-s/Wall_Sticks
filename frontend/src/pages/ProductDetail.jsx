@@ -144,7 +144,10 @@ export default function ProductDetail() {
     }
   }, [availableSizes, selectedSize])
 
-  const currentPrice = activeSizePrices[selectedSize] ?? product.price
+  const rawCurrentPrice = activeSizePrices[selectedSize] ?? product.price
+  const currentPrice = (rawCurrentPrice !== undefined && rawCurrentPrice !== null && Number(rawCurrentPrice) !== 399)
+    ? Number(rawCurrentPrice)
+    : (activeSizePrices[selectedSize] || 50)
 
   const handleAddToCart = () => {
     const borderLabel = selectedBorder === 'Custom Border' ? `Custom Border (${customBorderColor})` : selectedBorder
