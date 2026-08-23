@@ -52,18 +52,18 @@ export default function ProductCard({ product, onQuickView, showPrice = false })
         </button>
 
         {/* Individual Card Quick Action overlay on card hover */}
-        <div className="absolute inset-x-3 bottom-3 flex gap-2 opacity-0 group-hover/card:opacity-100 translate-y-2 group-hover/card:translate-y-0 transition-all duration-300 z-10">
+        <div className="absolute inset-x-2 sm:inset-x-3 bottom-2.5 sm:bottom-3 flex gap-1.5 sm:gap-2 opacity-0 group-hover/card:opacity-100 translate-y-2 group-hover/card:translate-y-0 transition-all duration-300 z-10">
           <button
             onClick={(e) => { e.preventDefault(); onQuickView?.(product) }}
-            className="flex-1 bg-white/95 text-black text-xs font-semibold py-2.5 rounded-full flex items-center justify-center gap-1.5 hover:bg-white shadow-sm"
+            className="flex-1 bg-white/95 text-black text-[11px] sm:text-xs font-semibold py-2 sm:py-2.5 px-1.5 sm:px-2 rounded-full flex items-center justify-center gap-1 sm:gap-1.5 hover:bg-white shadow-sm"
           >
-            <Eye size={14} /> Quick View
+            <Eye size={13} className="shrink-0" /> <span className="truncate">Quick View</span>
           </button>
           <button
             onClick={(e) => { e.preventDefault(); addToCart(product) }}
-            className="flex-1 bg-brand-black text-brand-yellow text-xs font-semibold py-2.5 rounded-full flex items-center justify-center gap-1.5 shadow-sm hover:bg-black"
+            className="flex-1 bg-brand-black text-brand-yellow text-[11px] sm:text-xs font-semibold py-2 sm:py-2.5 px-1.5 sm:px-2 rounded-full flex items-center justify-center gap-1 sm:gap-1.5 shadow-sm hover:bg-black"
           >
-            <ShoppingBag size={14} /> Add
+            <ShoppingBag size={13} className="shrink-0" /> <span>Add</span>
           </button>
         </div>
       </Link>

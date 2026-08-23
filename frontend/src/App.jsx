@@ -36,7 +36,7 @@ const AdminReviews = lazy(() => import('./pages/admin/AdminReviews'))
 
 export default function App() {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white overflow-x-hidden w-full max-w-full">
       <ScrollToTop />
       <MobileLoginModal />
       <Suspense fallback={<PageLoader />}>

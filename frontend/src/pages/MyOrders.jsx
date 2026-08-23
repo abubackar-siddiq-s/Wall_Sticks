@@ -23,8 +23,8 @@ function OrderCard({ order }) {
             <p className="text-xs text-black/45">{order.date} · ₹{order.total}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-bold bg-brand-yellow/20 text-brand-gold px-3 py-1.5 rounded-full hidden sm:inline">{stages[order.stage]}</span>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="text-[11px] sm:text-xs font-bold bg-brand-yellow/20 text-brand-gold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full inline">{stages[order.stage]}</span>
           <ChevronDown size={18} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
         </div>
       </button>

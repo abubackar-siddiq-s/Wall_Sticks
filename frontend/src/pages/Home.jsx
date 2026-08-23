@@ -80,22 +80,22 @@ export default function Home() {
           </Hero3DErrorBoundary>
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/0 to-white pointer-events-none" />
-        <div className="relative z-10 max-w-7xl mx-auto px-5 md:px-8 w-full pointer-events-none">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-5 md:px-8 w-full pointer-events-none">
           <motion.div initial="hidden" animate="show" variants={fadeUp} className="max-w-xl pointer-events-auto">
-            <h1 className="text-5xl md:text-7xl font-extrabold leading-[0.95] tracking-tight mb-6">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold leading-[0.95] tracking-tight mb-6">
               Walls worth
               <br />
               <span className="text-gradient-gold">looking twice</span> at.
             </h1>
-            <p className="text-black/60 text-lg mb-9 max-w-lg leading-relaxed">
+            <p className="text-black/60 text-base sm:text-lg mb-8 sm:mb-9 max-w-lg leading-relaxed">
               Give your room an instant upgrade. Choose from hundreds of exclusive poster designs or print your custom art with pan-India fast delivery.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <Link to="/shop" className="group bg-brand-black text-brand-yellow font-bold px-7 py-4 rounded-full flex items-center gap-2 hover:shadow-glow transition-shadow">
+            <div className="flex flex-wrap gap-3 sm:gap-4">
+              <Link to="/shop" className="group bg-brand-black text-brand-yellow font-bold px-6 sm:px-7 py-3.5 sm:py-4 rounded-full flex items-center gap-2 hover:shadow-glow transition-shadow text-sm sm:text-base">
                 Shop Posters
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </Link>
-              <Link to="/create-your-own" className="font-bold px-7 py-4 rounded-full border-2 border-black/10 hover:border-brand-black transition-colors">
+              <Link to="/create-your-own" className="font-bold px-6 sm:px-7 py-3.5 sm:py-4 rounded-full border-2 border-black/10 hover:border-brand-black transition-colors text-sm sm:text-base">
                 Create Your Own
               </Link>
             </div>
@@ -104,7 +104,7 @@ export default function Home() {
       </section>
 
       {/* TRENDING */}
-      <section className="max-w-7xl mx-auto px-5 md:px-8 mt-24">
+      <section className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8 mt-16 md:mt-24">
         <div className="mb-8">
           <p className="text-brand-gold font-bold text-xs tracking-widest uppercase mb-2">Admin's picks</p>
           <h2 className="text-3xl md:text-4xl font-extrabold">Trending right now</h2>
@@ -119,8 +119,8 @@ export default function Home() {
       </section>
 
       {/* EXPLORE ALL POSTERS BANNER */}
-      <section className="max-w-7xl mx-auto px-5 md:px-8 mt-24">
-        <div className="relative rounded-xl3 overflow-hidden bg-brand-black text-white p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8 shadow-card">
+      <section className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8 mt-16 md:mt-24">
+        <div className="relative rounded-xl3 overflow-hidden bg-brand-black text-white p-6 sm:p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8 shadow-card">
           <div className="max-w-xl">
             <p className="text-brand-yellow font-bold text-xs tracking-widest uppercase mb-3">Complete Collection</p>
             <h3 className="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">Explore All Posters</h3>

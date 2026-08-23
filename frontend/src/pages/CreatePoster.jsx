@@ -183,7 +183,7 @@ export default function CreatePoster() {
           {/* BORDER SELECTOR */}
           <div className="mb-6">
             <p className="font-semibold text-sm mb-3 uppercase tracking-wider">Select Border Option</p>
-            <div className="grid grid-cols-3 gap-2.5 mb-3">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5 mb-3">
               {[
                 { id: 'No Border', label: 'No Border' },
                 { id: 'White Border', label: 'White Border' },
@@ -195,18 +195,18 @@ export default function CreatePoster() {
                     key={b.id}
                     type="button"
                     onClick={() => setSelectedBorder(b.id)}
-                    className={`py-3 px-2 rounded-2xl text-xs font-bold border-2 transition-all flex items-center justify-center gap-1.5 ${isSelected
+                    className={`py-2.5 sm:py-3 px-1.5 sm:px-2 rounded-2xl text-[11px] sm:text-xs font-bold border-2 transition-all flex items-center justify-center gap-1 sm:gap-1.5 ${isSelected
                         ? 'bg-brand-black text-brand-yellow border-brand-black shadow-md'
                         : 'bg-white border-black/10 hover:border-black/30 text-black/80'
                       }`}
                   >
                     {b.id === 'Custom Border' && (
                       <span
-                        className="w-3.5 h-3.5 rounded-full border border-white/50 shrink-0 inline-block shadow-sm"
+                        className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border border-white/50 shrink-0 inline-block shadow-sm"
                         style={{ backgroundColor: customBorderColor }}
                       />
                     )}
-                    <span>{b.label}</span>
+                    <span className="truncate">{b.label}</span>
                   </button>
                 )
               })}

@@ -45,18 +45,18 @@ export default function Navbar() {
   return (
     <>
       <header className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'glass shadow-soft' : 'bg-white/95'}`}>
-        <div className="max-w-7xl mx-auto px-5 md:px-8 h-20 flex items-center justify-between">
-          <Link to="/" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="flex items-center gap-2.5 group">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-5 md:px-8 h-20 flex items-center justify-between">
+          <Link to="/" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="flex items-center gap-1.5 sm:gap-2.5 group">
             <img
               src="/logo.jpeg"
               alt="WallSticks Logo"
-              className="w-10 h-10 object-contain rounded-xl drop-shadow-md group-hover:scale-105 transition-transform"
+              className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl drop-shadow-md group-hover:scale-105 transition-transform"
               onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling.style.display = 'flex' }}
             />
-            <span className="w-9 h-9 rounded-xl2 bg-brand-black hidden items-center justify-center">
-              <span className="text-brand-yellow font-extrabold text-lg leading-none">W</span>
+            <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl2 bg-brand-black hidden items-center justify-center">
+              <span className="text-brand-yellow font-extrabold text-base sm:text-lg leading-none">W</span>
             </span>
-            <span className="font-extrabold text-xl tracking-tight">Wall<span className="text-brand-yellow">Sticks</span></span>
+            <span className="font-extrabold text-lg sm:text-xl tracking-tight">Wall<span className="text-brand-yellow">Sticks</span></span>
           </Link>
 
           <nav className="hidden lg:flex items-center gap-9">

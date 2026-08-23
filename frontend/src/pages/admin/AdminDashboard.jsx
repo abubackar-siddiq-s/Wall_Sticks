@@ -260,7 +260,7 @@ function RevenueFinancialAnalytics({ stats = {} }) {
           )}
 
           {/* MAIN GRAPH CANVAS WITH RIGHT SCALE */}
-          <div className="grid grid-cols-[1fr_80px] bg-[#FAFAFB] rounded-2xl border border-black/10 overflow-hidden shadow-inner">
+          <div className="grid grid-cols-[1fr_64px] sm:grid-cols-[1fr_80px] bg-[#FAFAFB] rounded-2xl border border-black/10 overflow-hidden shadow-inner">
             {/* SVG CANVAS AREA */}
             <div className="relative h-64 pt-6 pb-2 px-3">
               {/* BACKGROUND GRID LINES */}

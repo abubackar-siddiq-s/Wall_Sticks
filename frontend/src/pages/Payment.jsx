@@ -126,13 +126,13 @@ export default function Payment() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-5 md:px-8 py-10">
+    <div className="max-w-5xl mx-auto px-4 sm:px-5 md:px-8 py-8 md:py-10">
       <h1 className="text-3xl md:text-4xl font-extrabold mb-2">Payment</h1>
       <p className="text-black/50 mb-8">Pay via UPI, then submit your transaction details below for verification.</p>
 
       <div className="grid md:grid-cols-2 gap-10">
         {/* LEFT: QR */}
-        <div className="bg-brand-smoke rounded-xl3 p-8 text-center">
+        <div className="bg-brand-smoke rounded-xl3 p-5 sm:p-8 text-center">
           <div className="w-56 h-56 bg-white rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-soft overflow-hidden p-2">
             {settings?.upiQr?.url ? (
               <img src={settings.upiQr.url} alt="UPI QR Code" className="w-full h-full object-contain" />

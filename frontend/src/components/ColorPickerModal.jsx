@@ -287,10 +287,19 @@ export default function ColorPickerModal({
   const handleHueMove = (e) => {
     if (!hueRef.current) return
     const rect = hueRef.current.getBoundingClientRect()
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY
-    let y = Math.max(0, Math.min(rect.height, clientY - rect.top))
+    const isHorizontal = rect.width > rect.height * 1.5
+    let ratio = 0
+    if (isHorizontal) {
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX
+      let x = Math.max(0, Math.min(rect.width, clientX - rect.left))
+      ratio = x / rect.width
+    } else {
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY
+      let y = Math.max(0, Math.min(rect.height, clientY - rect.top))
+      ratio = y / rect.height
+    }
 
-    const newH = Math.round((y / rect.height) * 360)
+    const newH = Math.round(ratio * 360)
     const rgbObj = hsbToRgb(newH, currentHsb.s, currentHsb.b)
     updateAllFromHex(rgbToHex(rgbObj.r, rgbObj.g, rgbObj.b))
   }
@@ -449,19 +458,32 @@ export default function ColorPickerModal({
                 </div>
               </div>
 
-              {/* VERTICAL HUE BAR */}
+              {/* HUE BAR (HORIZONTAL ON MOBILE, VERTICAL ON DESKTOP) */}
               <div 
                 ref={hueRef}
                 onMouseDown={handleHueDown}
                 onTouchStart={handleHueDown}
-                className="relative w-full h-full min-h-[220px] rounded-2xl overflow-hidden cursor-pointer shadow-lg border border-white/15"
-                style={{
-                  background: 'linear-gradient(to bottom, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)',
-                }}
+                className="relative w-full h-7 md:h-full min-h-0 md:min-h-[220px] rounded-2xl overflow-hidden cursor-pointer shadow-lg border border-white/15 shrink-0"
               >
                 <div 
-                  className="absolute left-0 right-0 h-3.5 bg-white rounded-md border border-black/80 shadow-md pointer-events-none -translate-y-1/2"
+                  className="w-full h-full block md:hidden"
+                  style={{
+                    background: 'linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)',
+                  }}
+                />
+                <div 
+                  className="w-full h-full hidden md:block"
+                  style={{
+                    background: 'linear-gradient(to bottom, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)',
+                  }}
+                />
+                <div 
+                  className="absolute hidden md:block left-0 right-0 h-3.5 bg-white rounded-md border border-black/80 shadow-md pointer-events-none -translate-y-1/2"
                   style={{ top: `${(currentHsb.h / 360) * 100}%` }}
+                />
+                <div 
+                  className="absolute md:hidden top-0 bottom-0 w-3.5 bg-white rounded-md border border-black/80 shadow-md pointer-events-none -translate-x-1/2"
+                  style={{ left: `${(currentHsb.h / 360) * 100}%` }}
                 />
               </div>
 

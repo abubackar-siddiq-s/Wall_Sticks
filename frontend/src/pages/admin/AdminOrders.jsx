@@ -706,13 +706,13 @@ export default function AdminOrders() {
                         </div>
 
                         {/* DIRECT BORDER BADGE */}
-                        <div className="flex items-center gap-1 shrink-0 bg-white px-2 py-1 rounded-lg border border-black/10 text-[10px] font-bold text-brand-black">
+                        <div className="flex items-center gap-1 shrink-0 bg-white px-1.5 sm:px-2 py-1 rounded-lg border border-black/10 text-[10px] font-bold text-brand-black">
                           {it.borderColor ? (
                             <span className="w-2.5 h-2.5 rounded-full border border-black/30 shrink-0" style={{ backgroundColor: it.borderColor }} />
                           ) : (
                             <span className="w-2.5 h-2.5 rounded-full bg-gray-200 border border-black/20 shrink-0" />
                           )}
-                          <span className="truncate max-w-[90px]">{it.border || 'No Border'}</span>
+                          <span className="truncate max-w-[70px] sm:max-w-[90px]">{it.border || 'No Border'}</span>
                         </div>
                       </div>
                     ))}

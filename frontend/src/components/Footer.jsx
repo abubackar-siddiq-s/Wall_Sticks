@@ -5,8 +5,8 @@ import { useSettings } from '../hooks/useSettings'
 export default function Footer() {
   const { settings } = useSettings()
   return (
-    <footer className="bg-brand-black text-white mt-24">
-      <div className="max-w-7xl mx-auto px-5 md:px-8 py-16 grid grid-cols-2 md:grid-cols-4 gap-10">
+    <footer className="bg-brand-black text-white mt-16 md:mt-24 w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8 py-12 md:py-16 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10">
         <div className="col-span-2 md:col-span-1">
           <div className="flex items-center gap-2.5 mb-4">
             <img
@@ -47,12 +47,12 @@ export default function Footer() {
           </ul>
         </div>
 
-        <div>
+        <div className="col-span-2 md:col-span-1">
           <h4 className="font-semibold text-brand-yellow mb-4 text-sm tracking-wide">Get in touch</h4>
           <ul className="space-y-2.5 text-sm text-white/60">
-            <li className="flex items-center gap-2"><Phone size={14} /> {settings.phone}</li>
-            <li className="flex items-center gap-2"><Mail size={14} /> {settings.email}</li>
-            <li className="flex items-start gap-2"><MapPin size={14} className="mt-0.5 shrink-0" /> {settings.address}</li>
+            <li className="flex items-center gap-2"><Phone size={14} className="shrink-0" /> <span className="break-all">{settings.phone}</span></li>
+            <li className="flex items-center gap-2"><Mail size={14} className="shrink-0" /> <span className="break-all">{settings.email}</span></li>
+            <li className="flex items-start gap-2"><MapPin size={14} className="mt-0.5 shrink-0" /> <span>{settings.address}</span></li>
           </ul>
         </div>
       </div>

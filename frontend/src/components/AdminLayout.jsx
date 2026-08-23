@@ -224,7 +224,7 @@ export default function AdminLayout({ children, title }) {
         document.body
       )}
 
-      <main className="flex-1 p-6 md:p-10 overflow-x-hidden">
+      <main className="flex-1 p-3.5 sm:p-6 md:p-10 overflow-x-hidden">
         <h1 className="text-2xl md:text-3xl font-extrabold mb-8">{title}</h1>
         {children}
       </main>

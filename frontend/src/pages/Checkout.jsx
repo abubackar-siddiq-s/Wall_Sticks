@@ -124,7 +124,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-5 md:px-8 py-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-5 md:px-8 py-8 md:py-10">
       <h1 className="text-3xl md:text-4xl font-extrabold mb-8">Checkout</h1>
       <div className="grid md:grid-cols-[1fr_340px] gap-10">
         <form onSubmit={handleContinue} className="space-y-8">
