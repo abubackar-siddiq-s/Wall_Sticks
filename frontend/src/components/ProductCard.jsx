@@ -6,7 +6,7 @@ import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
 import { responsiveImgProps } from '../lib/imageUrl'
 
-export default function ProductCard({ product, onQuickView, showPrice = true }) {
+export default function ProductCard({ product, onQuickView, showPrice = false }) {
   const { toggleWishlist, isWishlisted } = useWishlist()
   const { addToCart } = useCart()
   const wishlisted = isWishlisted(product._id)
@@ -72,23 +72,13 @@ export default function ProductCard({ product, onQuickView, showPrice = true }) 
         <Link to={`/product/${product._id}`} className="font-bold text-sm text-brand-black truncate hover:underline mb-1">
           {product.name}
         </Link>
-        <div className="flex items-center justify-between">
-          {showPrice && (
-            <div className="flex items-baseline gap-1.5">
-              <span className="font-extrabold text-sm text-brand-black">₹{product.price}</span>
-              {product.mrp > product.price && (
-                <span className="text-xs text-black/40 line-through">₹{product.mrp}</span>
-              )}
-            </div>
-          )}
-          {product.reviewsCount > 0 && (
-            <div className={`flex items-center gap-1 text-xs text-black/60 font-medium ${!showPrice ? 'ml-auto' : ''}`}>
-              <Star size={12} fill="#FFD000" stroke="#FFD000" />
-              <span>{product.rating}</span>
-              <span className="text-black/35">({product.reviewsCount})</span>
-            </div>
-          )}
-        </div>
+        {product.reviewsCount > 0 && (
+          <div className="flex items-center gap-1 text-xs text-black/60 font-medium">
+            <Star size={12} fill="#FFD000" stroke="#FFD000" />
+            <span>{product.rating}</span>
+            <span className="text-black/35">({product.reviewsCount})</span>
+          </div>
+        )}
       </div>
     </motion.div>
   )
