@@ -12,14 +12,7 @@ import { useAuth } from '../context/AuthContext'
 import { responsiveImgProps } from '../lib/imageUrl'
 import ColorPickerModal from '../components/ColorPickerModal'
 
-const defaultSizePrices = {
-  A5: 259,
-  A4: 319,
-  A3: 399,
-  '12x18': 499,
-  '18x24': 699,
-  '24x36': 997,
-}
+
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -131,29 +124,20 @@ export default function ProductDetail() {
       })
   }, [id, product._id])
 
-  const { settings } = useSettings()
-
-  const defaultDescriptions = {
-    A5: 'Small Compact Desk/Shelf Poster (5.8 x 8.3 in)',
-    A4: 'Standard Frame Document Poster (8.3 x 11.7 in)',
-    A3: 'Medium Wall Accent Poster (11.7 x 16.5 in)',
-    '12x18': 'Large Classic Wall Frame Poster (12 x 18 in)',
-    '18x24': 'Extra Large Gallery Wall Poster (18 x 24 in)',
-    '24x36': 'Masterpiece Giant Wall Art Poster (24 x 36 in)',
-  }
+  const { settings, loading: settingsLoading } = useSettings()
 
   const activeSizePrices = (settings?.sizePrices && typeof settings.sizePrices === 'object')
     ? settings.sizePrices
-    : defaultSizePrices
+    : {}
 
   const activeSizeDescriptions = (settings?.sizeDescriptions && typeof settings.sizeDescriptions === 'object')
-    ? { ...defaultDescriptions, ...settings.sizeDescriptions }
-    : defaultDescriptions
+    ? settings.sizeDescriptions
+    : {}
 
   const availableSizes = Array.from(new Set([
     ...Object.keys(activeSizePrices),
     ...(product.sizes || []),
-  ])).filter((s) => activeSizePrices[s] !== undefined)
+  ])).filter((s) => activeSizePrices[s] !== undefined || product.sizes?.includes(s))
 
   useEffect(() => {
     if (availableSizes.length > 0 && (!selectedSize || !availableSizes.includes(selectedSize))) {
@@ -161,7 +145,7 @@ export default function ProductDetail() {
     }
   }, [availableSizes, selectedSize])
 
-  const currentPrice = activeSizePrices[selectedSize] ?? product.price ?? 399
+  const currentPrice = activeSizePrices[selectedSize] ?? product.price
 
   const handleAddToCart = () => {
     const borderLabel = selectedBorder === 'Custom Border' ? `Custom Border (${customBorderColor})` : selectedBorder
@@ -332,12 +316,16 @@ export default function ProductDetail() {
 
           {/* DYNAMIC PRICE BASED ONLY ON SIZE */}
           <div className="mb-8">
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-extrabold text-brand-black">₹{currentPrice}</span>
-              <span className="text-xs text-black/40 font-semibold uppercase tracking-wider">
-                for size {selectedSize}
-              </span>
-            </div>
+            {settingsLoading ? (
+              <div className="h-10 w-36 bg-black/10 rounded-2xl animate-pulse" />
+            ) : (
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-extrabold text-brand-black">₹{currentPrice || product.price || 399}</span>
+                <span className="text-xs text-black/40 font-semibold uppercase tracking-wider">
+                  for size {selectedSize}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* SIZE SELECTOR */}
@@ -345,29 +333,37 @@ export default function ProductDetail() {
             <label className="block font-bold text-sm text-black/80 mb-3 uppercase tracking-wider">
               Select Size
             </label>
-            <div className="grid grid-cols-3 gap-2.5">
-              {availableSizes.map((s) => {
-                const sizePrice = activeSizePrices[s] ?? product.price ?? 399
-                const isSelected = selectedSize === s
-                return (
-                  <button
-                    key={s}
-                    onClick={() => setSelectedSize(s)}
-                    className={`py-3 px-3 rounded-2xl text-xs font-bold border-2 transition-all flex flex-col items-center gap-1 ${
-                      isSelected
-                        ? 'bg-brand-black text-brand-yellow border-brand-black shadow-md'
-                        : 'bg-white border-black/10 hover:border-black/30 text-black/80'
-                    }`}
-                  >
-                    <span>{s}</span>
-                    <span className={`text-[11px] font-semibold ${isSelected ? 'text-brand-yellow/80' : 'text-black/45'}`}>
-                      ₹{sizePrice}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-            {activeSizeDescriptions[selectedSize] && (
+            {settingsLoading ? (
+              <div className="grid grid-cols-3 gap-2.5">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-14 rounded-2xl bg-black/5 animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2.5">
+                {availableSizes.map((s) => {
+                  const sizePrice = activeSizePrices[s] ?? product.price ?? 399
+                  const isSelected = selectedSize === s
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => setSelectedSize(s)}
+                      className={`py-3 px-3 rounded-2xl text-xs font-bold border-2 transition-all flex flex-col items-center gap-1 ${
+                        isSelected
+                          ? 'bg-brand-black text-brand-yellow border-brand-black shadow-md'
+                          : 'bg-white border-black/10 hover:border-black/30 text-black/80'
+                      }`}
+                    >
+                      <span>{s}</span>
+                      <span className={`text-[11px] font-semibold ${isSelected ? 'text-brand-yellow/80' : 'text-black/45'}`}>
+                        ₹{sizePrice}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            {!settingsLoading && activeSizeDescriptions[selectedSize] && (
               <p className="text-xs text-black/60 font-medium mt-3 flex items-center gap-1.5 bg-brand-smoke/60 px-3.5 py-2 rounded-xl border border-black/5">
                 <span>📐</span> <span className="font-bold text-brand-black">{selectedSize}:</span> {activeSizeDescriptions[selectedSize]}
               </p>

@@ -4,27 +4,10 @@ import toast from 'react-hot-toast'
 import AdminLayout from '../../components/AdminLayout'
 import api from '../../lib/api'
 
-const defaultPrices = {
-  A5: 259,
-  A4: 319,
-  A3: 399,
-  '12x18': 499,
-  '18x24': 699,
-  '24x36': 997,
-}
-
-const defaultDescriptions = {
-  A5: 'Small Compact Desk/Shelf Poster (5.8 x 8.3 in)',
-  A4: 'Standard Frame Document Poster (8.3 x 11.7 in)',
-  A3: 'Medium Wall Accent Poster (11.7 x 16.5 in)',
-  '12x18': 'Large Classic Wall Frame Poster (12 x 18 in)',
-  '18x24': 'Extra Large Gallery Wall Poster (18 x 24 in)',
-  '24x36': 'Masterpiece Giant Wall Art Poster (24 x 36 in)',
-}
-
 export default function AdminSizePricing() {
-  const [sizePrices, setSizePrices] = useState(defaultPrices)
-  const [descriptions, setDescriptions] = useState(defaultDescriptions)
+  const [sizePrices, setSizePrices] = useState({})
+  const [descriptions, setDescriptions] = useState({})
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
 
@@ -36,18 +19,15 @@ export default function AdminSizePricing() {
   useEffect(() => {
     api.get('/settings')
       .then(({ data }) => {
-        if (data?.sizePrices && typeof data.sizePrices === 'object' && Object.keys(data.sizePrices).length > 0) {
+        if (data?.sizePrices && typeof data.sizePrices === 'object') {
           setSizePrices(data.sizePrices)
-        } else {
-          setSizePrices(defaultPrices)
         }
-        if (data?.sizeDescriptions && typeof data.sizeDescriptions === 'object' && Object.keys(data.sizeDescriptions).length > 0) {
+        if (data?.sizeDescriptions && typeof data.sizeDescriptions === 'object') {
           setDescriptions(data.sizeDescriptions)
-        } else {
-          setDescriptions(defaultDescriptions)
         }
       })
       .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   const handlePriceChange = (size, value) => {
@@ -155,7 +135,14 @@ export default function AdminSizePricing() {
             <span className="text-xs font-bold text-black/40">{sizeKeys.length} Configured Sizes</span>
           </div>
 
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {loading ? (
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-44 rounded-2xl bg-black/5 animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
             {sizeKeys.map((sizeKey) => (
               <div key={sizeKey} className="bg-brand-smoke/60 p-4 rounded-2xl border border-black/5 space-y-3 relative group">
                 <div className="flex items-center justify-between">
@@ -207,6 +194,7 @@ export default function AdminSizePricing() {
               </div>
             ))}
           </div>
+          )}
 
           <div className="pt-4 border-t border-black/10 flex justify-between items-center">
             <span className="text-xs text-black/40 font-medium">Click save after adding, editing or deleting sizes.</span>

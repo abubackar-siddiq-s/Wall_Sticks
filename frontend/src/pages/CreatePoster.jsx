@@ -8,8 +8,6 @@ import api from '../lib/api'
 import ImageCropperModal from '../components/ImageCropperModal'
 import ColorPickerModal from '../components/ColorPickerModal'
 
-const defaultSizes = ['A5', 'A4', 'A3', '12x18', '18x24', '24x36']
-
 export default function CreatePoster() {
   const [preview, setPreview] = useState(null)
   const [fileName, setFileName] = useState('')
@@ -17,11 +15,11 @@ export default function CreatePoster() {
   const [customImageInfo, setCustomImageInfo] = useState(null)
   const [pendingFile, setPendingFile] = useState(null)
   const [isLandscape, setIsLandscape] = useState(false)
-  const { settings } = useSettings()
-  const availableSizes = settings?.sizePrices && typeof settings.sizePrices === 'object' ? Object.keys(settings.sizePrices) : defaultSizes
+  const { settings, loading: settingsLoading } = useSettings()
+  const availableSizes = settings?.sizePrices && typeof settings.sizePrices === 'object' ? Object.keys(settings.sizePrices) : []
 
   const [selectedSize, setSelectedSize] = useState('A3')
-  const size = availableSizes.includes(selectedSize) ? selectedSize : availableSizes[0]
+  const size = availableSizes.includes(selectedSize) ? selectedSize : (availableSizes[0] || 'A3')
 
   // Border Selection State
   const [selectedBorder, setSelectedBorder] = useState('No Border')
@@ -68,7 +66,7 @@ export default function CreatePoster() {
     uploadFile(croppedFile)
   }
 
-  const customPrice = settings?.sizePrices?.[size] ?? { A5: 259, A4: 319, A3: 399, '12x18': 499, '18x24': 699, '24x36': 997 }[size] ?? 399
+  const customPrice = settings?.sizePrices?.[size] ?? 399
 
   const handleAdd = (buyNow) => {
     if (uploading) return toast.error('Please wait for the image to finish uploading')
@@ -155,12 +153,20 @@ export default function CreatePoster() {
           {/* POSTER SIZE */}
           <div className="mb-6">
             <p className="font-semibold text-sm mb-3">Poster Size</p>
-            <div className="flex flex-wrap gap-2">
-              {availableSizes.map((s) => (
-                <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 rounded-full text-sm font-medium border-2 ${size === s ? 'bg-brand-black text-brand-yellow border-brand-black' : 'border-black/10'}`}>{s}</button>
-              ))}
-            </div>
-            {settings?.sizeDescriptions?.[size] && (
+            {settingsLoading ? (
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="w-16 h-9 rounded-full bg-black/5 animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {availableSizes.map((s) => (
+                  <button key={s} onClick={() => setSelectedSize(s)} className={`px-4 py-2 rounded-full text-sm font-medium border-2 ${size === s ? 'bg-brand-black text-brand-yellow border-brand-black' : 'border-black/10'}`}>{s}</button>
+                ))}
+              </div>
+            )}
+            {!settingsLoading && settings?.sizeDescriptions?.[size] && (
               <p className="text-xs text-black/60 font-medium mt-2.5 flex items-center gap-1.5 bg-brand-smoke/60 px-3.5 py-2 rounded-xl border border-black/5">
                 <span>📐</span> <span className="font-bold text-brand-black">{size}:</span> {settings.sizeDescriptions[size]}
               </p>
