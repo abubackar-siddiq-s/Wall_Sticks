@@ -19,9 +19,7 @@ export default function ProductDetail() {
   const { product: fetched } = useProduct(id)
 
   const product = {
-    sizes: ['A5', 'A4', 'A3', '12x18', '18x24', '24x36'],
     images: [],
-    price: 399,
     rating: 0,
     reviewsCount: 0,
     ...fetched,
