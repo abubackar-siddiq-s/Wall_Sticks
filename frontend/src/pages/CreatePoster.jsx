@@ -68,7 +68,7 @@ export default function CreatePoster() {
     uploadFile(croppedFile)
   }
 
-  const customPrice = settings?.sizePrices?.[size] || { A5: 259, A4: 319, A3: 399, '12x18': 499, '18x24': 699, '24x36': 997 }[size] || 399
+  const customPrice = settings?.sizePrices?.[size] ?? { A5: 259, A4: 319, A3: 399, '12x18': 499, '18x24': 699, '24x36': 997 }[size] ?? 399
 
   const handleAdd = (buyNow) => {
     if (uploading) return toast.error('Please wait for the image to finish uploading')

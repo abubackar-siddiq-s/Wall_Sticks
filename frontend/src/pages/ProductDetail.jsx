@@ -156,7 +156,13 @@ export default function ProductDetail() {
     ...(product.sizes || []),
   ])).filter((s) => activeSizePrices[s] !== undefined)
 
-  const currentPrice = activeSizePrices[selectedSize] || 399
+  useEffect(() => {
+    if (availableSizes.length > 0 && (!selectedSize || !availableSizes.includes(selectedSize))) {
+      setSelectedSize(availableSizes.includes('A3') ? 'A3' : availableSizes[0])
+    }
+  }, [availableSizes, selectedSize])
+
+  const currentPrice = activeSizePrices[selectedSize] ?? product.price ?? 399
 
   const handleAddToCart = () => {
     const borderLabel = selectedBorder === 'Custom Border' ? `Custom Border (${customBorderColor})` : selectedBorder
@@ -342,7 +348,7 @@ export default function ProductDetail() {
             </label>
             <div className="grid grid-cols-3 gap-2.5">
               {availableSizes.map((s) => {
-                const sizePrice = activeSizePrices[s] || 399
+                const sizePrice = activeSizePrices[s] ?? product.price ?? 399
                 const isSelected = selectedSize === s
                 return (
                   <button

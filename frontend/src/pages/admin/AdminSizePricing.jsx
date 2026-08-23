@@ -36,11 +36,15 @@ export default function AdminSizePricing() {
   useEffect(() => {
     api.get('/settings')
       .then(({ data }) => {
-        if (data?.sizePrices && typeof data.sizePrices === 'object') {
-          setSizePrices({ ...defaultPrices, ...data.sizePrices })
+        if (data?.sizePrices && typeof data.sizePrices === 'object' && Object.keys(data.sizePrices).length > 0) {
+          setSizePrices(data.sizePrices)
+        } else {
+          setSizePrices(defaultPrices)
         }
-        if (data?.sizeDescriptions && typeof data.sizeDescriptions === 'object') {
-          setDescriptions({ ...defaultDescriptions, ...data.sizeDescriptions })
+        if (data?.sizeDescriptions && typeof data.sizeDescriptions === 'object' && Object.keys(data.sizeDescriptions).length > 0) {
+          setDescriptions(data.sizeDescriptions)
+        } else {
+          setDescriptions(defaultDescriptions)
         }
       })
       .catch(() => {})
@@ -108,6 +112,7 @@ export default function AdminSizePricing() {
 
     try {
       await api.put('/settings', { sizePrices, sizeDescriptions: descriptions })
+      window.dispatchEvent(new Event('settingsUpdated'))
       toast.success('Size pricing matrix & descriptions saved to database!')
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Could not save size prices')

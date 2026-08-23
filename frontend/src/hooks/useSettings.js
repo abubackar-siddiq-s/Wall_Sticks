@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useApiData } from './useApiData'
 
 const defaultSettings = {
@@ -32,6 +33,13 @@ const defaultSettings = {
 }
 
 export function useSettings() {
-  const { data, loading, error } = useApiData('/settings', null)
-  return { settings: data || defaultSettings, loading, error }
+  const { data, loading, error, refetch } = useApiData('/settings', null)
+
+  useEffect(() => {
+    const handleUpdate = () => refetch()
+    window.addEventListener('settingsUpdated', handleUpdate)
+    return () => window.removeEventListener('settingsUpdated', handleUpdate)
+  }, [refetch])
+
+  return { settings: data || defaultSettings, loading, error, refetch }
 }
