@@ -577,11 +577,6 @@ export default function AdminDashboard() {
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-brand-black truncate">{p.name}</p>
-                  <div className="flex items-center gap-2 text-[11px] text-black/45 mt-0.5">
-                    <span className="font-semibold text-brand-black">₹{p.price}</span>
-                    <span>·</span>
-                    <span className="text-amber-500 font-bold">★ {p.rating}</span>
-                  </div>
                 </div>
               </div>
             ))}
