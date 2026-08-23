@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Upload, ImageIcon, Loader2, Palette } from 'lucide-react'
 import toast from 'react-hot-toast'
