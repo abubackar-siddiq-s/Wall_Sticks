@@ -1,5 +1,9 @@
 import mongoose from 'mongoose'
 
+/**
+ * Fallback SRV resolver via DNS-over-HTTPS (DoH) for environments
+ * where Node.js SRV UDP queries encounter ECONNREFUSED / ETIMEOUT (e.g. Windows dev environments).
+ */
 async function resolveSrvDoH(srvUri) {
   try {
     const match = srvUri.match(/^mongodb\+srv:\/\/([^:]+):([^@]+)@([^\/\?]+)(\/.*)?$/)
@@ -18,38 +22,48 @@ async function resolveSrvDoH(srvUri) {
       return `mongodb://${user}:${pass}@${seeds}${rest}${joiner}ssl=true&authSource=admin`
     }
   } catch (e) {
-    console.warn('DNS-over-HTTPS resolution error:', e.message)
+    console.warn('DoH SRV resolution warning:', e.message)
   }
   return srvUri
 }
 
-export default async function connectDB() {
-  let uri = process.env.MONGO_URI
+const connectDB = async () => {
+  const uri = process.env.MONGO_URI
+  if (!uri) {
+    console.error('CRITICAL: MONGO_URI is missing in process.env!')
+    throw new Error('MONGO_URI is missing')
+  }
+
   try {
     const conn = await mongoose.connect(uri, {
       maxPoolSize: 50,
       minPoolSize: 5,
       socketTimeoutMS: 45000,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
     })
-    console.log(`MongoDB connected: ${conn.connection.host}`)
+    console.log(`MongoDB Connected: ${conn.connection.host}`)
   } catch (err) {
-    if (err.message.includes('querySrv') || err.message.includes('ECONNREFUSED')) {
-      console.warn('SRV DNS lookup failed on Windows Node.js. Resolving MongoDB Atlas seedlist via DoH...')
-      const fallbackUri = await resolveSrvDoH(uri)
-      if (fallbackUri !== uri) {
-        const conn = await mongoose.connect(fallbackUri, {
-          maxPoolSize: 50,
-          minPoolSize: 5,
-          socketTimeoutMS: 45000,
-          serverSelectionTimeoutMS: 5000,
-        })
-        console.log(`MongoDB connected via fallback seedlist: ${conn.connection.host}`)
-        return
+    if (uri.startsWith('mongodb+srv://') && (err.message.includes('querySrv') || err.message.includes('ECONNREFUSED') || err.message.includes('ETIMEOUT'))) {
+      console.warn('Standard SRV DNS lookup failed. Resolving Atlas seedlist via DoH...')
+      try {
+        const fallbackUri = await resolveSrvDoH(uri)
+        if (fallbackUri && fallbackUri !== uri) {
+          const conn = await mongoose.connect(fallbackUri, {
+            maxPoolSize: 50,
+            minPoolSize: 5,
+            socketTimeoutMS: 45000,
+            serverSelectionTimeoutMS: 10000,
+          })
+          console.log(`MongoDB Connected via fallback seedlist: ${conn.connection.host}`)
+          return
+        }
+      } catch (fallbackErr) {
+        console.error(`DoH Fallback Connection Error: ${fallbackErr.message}`)
       }
     }
-    console.error(`MongoDB connection error: ${err.message}`)
-    console.warn('Keep-alive: Express server will remain online and Mongoose will retry connecting.')
+    console.error(`MongoDB Connection Error: ${err.message}`)
     throw err
   }
 }
+
+export default connectDB
