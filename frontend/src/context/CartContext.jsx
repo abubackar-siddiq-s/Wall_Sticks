@@ -50,7 +50,12 @@ export function CartProvider({ children }) {
     const sessionId = getActiveSessionId()
     api.get(`/cart/${sessionId}`)
       .then(({ data }) => {
-        if (data?.items?.length) setItems(data.items.map(fromServerItem))
+        if (data?.items?.length) {
+          const validItems = data.items
+            .map(fromServerItem)
+            .filter((i) => i.product && (i.product.isCustom || i.product._id))
+          setItems(validItems)
+        }
       })
       .catch(() => {})
       .finally(() => { hydrated.current = true })

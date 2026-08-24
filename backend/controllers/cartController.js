@@ -24,6 +24,13 @@ export const getCart = asyncHandler(async (req, res) => {
     throw new Error('Access denied to requested cart')
   }
   const cart = await Cart.findOne({ sessionId: req.params.sessionId }).populate('items.product')
+  if (cart && cart.items && cart.items.length > 0) {
+    const validItems = cart.items.filter((item) => item.isCustom || (item.product && item.product._id))
+    if (validItems.length !== cart.items.length) {
+      cart.items = validItems
+      await cart.save()
+    }
+  }
   res.json(cart || { sessionId: req.params.sessionId, items: [] })
 })
 
@@ -32,11 +39,12 @@ export const updateCart = asyncHandler(async (req, res) => {
     res.status(403)
     throw new Error('Access denied to requested cart')
   }
+  const sanitizedItems = (req.body.items || []).filter((item) => item.isCustom || item.product)
   const cart = await Cart.findOneAndUpdate(
     { sessionId: req.params.sessionId },
-    { items: req.body.items },
+    { items: sanitizedItems },
     { new: true, upsert: true }
-  )
+  ).populate('items.product')
   res.json(cart)
 })
 
