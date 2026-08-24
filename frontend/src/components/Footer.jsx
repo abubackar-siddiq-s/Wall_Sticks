@@ -31,7 +31,7 @@ export default function Footer() {
           <h4 className="font-semibold text-brand-yellow mb-4 text-sm tracking-wide">Shop</h4>
           <ul className="space-y-2.5 text-sm text-white/60">
             <li><Link to="/shop" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">All Posters</Link></li>
-            <li><Link to="/create-your-own" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Create Your Own</Link></li>
+            <li><Link to="/create-your-own" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Create Custom Poster</Link></li>
             <li><Link to="/shop" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Best Sellers</Link></li>
             <li><Link to="/wishlist" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Wishlist</Link></li>
           </ul>

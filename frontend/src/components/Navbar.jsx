@@ -82,9 +82,9 @@ export default function Navbar() {
             <Link
               to="/create-your-own"
               onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })}
-              className="text-sm font-bold bg-brand-black text-brand-yellow px-5 py-2.5 rounded-full hover:shadow-glow transition-shadow"
+              className="text-xs sm:text-sm font-bold bg-brand-black text-brand-yellow px-4 sm:px-5 py-2 sm:py-2.5 rounded-full hover:shadow-glow transition-shadow shrink-0"
             >
-              Create Your Own
+              Create Custom Poster
             </Link>
           </nav>
 
@@ -210,7 +210,7 @@ export default function Navbar() {
                 </div>
 
                 <Link to="/create-your-own" onClick={() => setOpen(false)} className="text-center font-bold bg-brand-yellow text-brand-black px-5 py-3 rounded-full text-sm mt-auto shadow-md hover:shadow-glow transition-shadow">
-                  Create Your Own
+                  Create Custom Poster
                 </Link>
               </motion.div>
             </motion.div>

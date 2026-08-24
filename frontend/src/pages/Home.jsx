@@ -96,7 +96,7 @@ export default function Home() {
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link to="/create-your-own" className="font-bold px-6 sm:px-7 py-3.5 sm:py-4 rounded-full border-2 border-black/10 hover:border-brand-black transition-colors text-sm sm:text-base">
-                Create Your Own
+                Create Custom Poster
               </Link>
             </div>
           </motion.div>
